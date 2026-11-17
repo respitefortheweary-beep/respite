@@ -6,6 +6,7 @@ export type Room = {
   id: string; slug: string; name: string; kind: string; floor: string; bathroom: string;
   rentCents: number; depositCents: number; summary: string; description: string;
   features: string; photos: string; tone: string; sortOrder: number; hidden: boolean; createdAt: Date;
+  houseId: string | null;
 };
 export type Bed = { id: string; label: string; roomId: string; availableFrom: Date | null };
 export type Request = {
@@ -29,11 +30,18 @@ export type Charge = {
 /** The house's billing rules, set by the owners on the Payments page. */
 export type BillingPolicy = { lateFeeCents: number; lateFeeAfterDays: number; partialPayments: boolean; minPartCents: number };
 
+/** One property. Rooms belong to a house; `states` and `labels` list its beds in order. */
+export type HouseBrief = { id: string; slug: string; name: string; town: string; address: string; hidden: boolean };
+export type Property = HouseBrief & {
+  summary: string; sortOrder: number; createdAt: Date;
+  rooms: number; beds: number; open: number; states: BedState[]; labels: string[];
+};
 export type BedView = {
-  id: string; label: string; roomSlug: string; roomName: string; state: BedState;
+  id: string; label: string; roomSlug: string; roomName: string; houseId: string | null; houseName: string; state: BedState;
   availableFrom: Date | null; residentName?: string | null;
 };
 export type RoomWithBeds = Room & {
+  house: HouseBrief | null;
   beds: Bed[];
   states: { label: string; state: BedState; availableFrom: Date | null }[];
   open: number;

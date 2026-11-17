@@ -29,6 +29,24 @@ class AdminUser(Base):
     resetExpiresAt: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
 
 
+class House(Base):
+    """One property. Rooms belong to a house; the owners can run several."""
+
+    __tablename__ = "House"
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=new_id)
+    slug: Mapped[str] = mapped_column(String, unique=True)
+    name: Mapped[str] = mapped_column(String)
+    address: Mapped[str] = mapped_column(String, default="")  # street, town, state and zip
+    town: Mapped[str] = mapped_column(String, default="")  # the short place name, e.g. "Chester"
+    summary: Mapped[str] = mapped_column(Text, default="")
+    sortOrder: Mapped[int] = mapped_column(Integer, default=0)
+    # hidden houses (and every room in them) stay off the public site
+    hidden: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+    createdAt: Mapped[datetime] = mapped_column(UtcDateTime, default=now)
+
+    rooms: Mapped[list["Room"]] = relationship(back_populates="house")
+
+
 class Room(Base):
     __tablename__ = "Room"
     id: Mapped[str] = mapped_column(String, primary_key=True, default=new_id)
@@ -48,7 +66,10 @@ class Room(Base):
     # hidden rooms stay in the dashboard but drop off the public site
     hidden: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
     createdAt: Mapped[datetime] = mapped_column(UtcDateTime, default=now)
+    # set for every room once the API has started; nullable only so older databases can gain the column
+    houseId: Mapped[str | None] = mapped_column(ForeignKey("House.id"), nullable=True)
 
+    house: Mapped[House | None] = relationship(back_populates="rooms")
     beds: Mapped[list["Bed"]] = relationship(back_populates="room", cascade="all, delete-orphan")
 
 

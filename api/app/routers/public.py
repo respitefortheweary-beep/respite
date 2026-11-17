@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..models import Request, Room, Tour, WaitlistEntry
-from ..services.availability import get_beds, get_rooms_with_beds
+from ..services.availability import get_beds, get_houses, get_rooms_with_beds
 from ..serialize import iso
 from ..services import ics, notify, tours
 from ..services.email import site_url
@@ -28,6 +28,11 @@ EMAIL = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 @router.get("/rooms")
 def rooms(db: Session = Depends(get_db)):
     return get_rooms_with_beds(db, public=True)
+
+
+@router.get("/houses")
+def houses(db: Session = Depends(get_db)):
+    return get_houses(db, public=True)
 
 
 @router.get("/beds")

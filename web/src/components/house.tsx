@@ -1,29 +1,24 @@
 import type { BedState } from "@/lib/availability";
+import { shortLabel, windowsFor } from "./house-windows";
 
 /**
  * The signature: the house itself, drawn as a line elevation.
  * One window per bed. Lit = open, dim glow = opening soon, dark = taken.
- * Window order matches the real house: ground floor Bed 1 & 2, upstairs Bed 3–6.
+ * The windows follow the number of beds (see house-windows.ts); six gives the original house.
  */
-const WINDOWS: { x: number; y: number; w: number; h: number }[] = [
-  { x: 66, y: 214, w: 50, h: 58 }, // Bed 1 — Porch Room
-  { x: 284, y: 214, w: 50, h: 58 }, // Bed 2 — Garden Room
-  { x: 58, y: 128, w: 40, h: 48 }, // Bed 3 — Maple
-  { x: 112, y: 128, w: 40, h: 48 }, // Bed 4 — Maple
-  { x: 248, y: 128, w: 40, h: 48 }, // Bed 5 — Dogwood
-  { x: 302, y: 128, w: 40, h: 48 }, // Bed 6 — Dogwood
-];
-
 export function House({
   states,
   animate = true,
   className = "",
   showLabels = false,
+  labels,
 }: {
   states: BedState[];
   animate?: boolean;
   className?: string;
   showLabels?: boolean;
+  /** what to write over each window when showLabels is on; defaults to 1, 2, 3… */
+  labels?: string[];
 }) {
   const open = states.filter((s) => s === "open").length;
   return (
@@ -61,8 +56,8 @@ export function House({
         <path d="M44 300 q8 -26 26 -20 q10 -16 26 -2 q14 -8 18 22" fill="var(--moss)" opacity="0.35" stroke="none" />
         <path d="M282 300 q6 -22 22 -18 q10 -14 24 0 q14 -6 20 18" fill="var(--moss)" opacity="0.35" stroke="none" />
 
-        {WINDOWS.map((w, i) => {
-          const s = states[i] ?? "taken";
+        {windowsFor(states.length).map((w, i) => {
+          const s = states[i];
           const lit = s === "open";
           const soon = s === "soon";
           const delay = { animationDelay: `${600 + i * 180}ms` };
@@ -99,7 +94,7 @@ export function House({
               <path d={`M${w.x - 4} ${w.y + w.h + 2} H${w.x + w.w + 4}`} strokeWidth="2" />
               {showLabels && (
                 <text x={w.x + w.w / 2} y={w.y - 6} textAnchor="middle" fontSize="8" fill="var(--moss)" stroke="none" style={{ fontFamily: "var(--font-geist-mono)" }}>
-                  {i + 1}
+                  {labels?.[i] ? shortLabel(labels[i]) : i + 1}
                 </text>
               )}
             </g>
@@ -133,7 +128,7 @@ export function WindowRow({ states, size = 10 }: { states: BedState[]; size?: nu
 }
 
 /** The night drawing, static: used on dark panels in the dashboard and at the door (login). */
-export function HouseNight({ states, className = "", labels = false }: { states: BedState[]; className?: string; labels?: boolean }) {
+export function HouseNight({ states, className = "", labels = false }: { states: BedState[]; className?: string; labels?: boolean | string[] }) {
   const open = states.filter((s) => s === "open").length;
   return (
     <svg viewBox="0 0 400 310" className={className} role="img" aria-label={`The house at night. ${open} of ${states.length} windows lit for open beds.`}>
@@ -163,8 +158,8 @@ export function HouseNight({ states, className = "", labels = false }: { states:
         <path d="M168 292 H232 V298 H168 Z" fill="#101311" />
         <circle cx="200" cy="208" r="26" fill="url(#hn-glow)" stroke="none" />
         <circle cx="200" cy="208" r="2.4" fill="#ffd98f" stroke="none" />
-        {WINDOWS.map((w, i) => {
-          const s = states[i] ?? "taken";
+        {windowsFor(states.length).map((w, i) => {
+          const s = states[i];
           const lit = s === "open";
           return (
             <g key={i}>
@@ -175,7 +170,7 @@ export function HouseNight({ states, className = "", labels = false }: { states:
               <rect x={w.x} y={w.y} width={w.w} height={w.h} />
               {labels && (
                 <text x={w.x + w.w / 2} y={w.y - 6} textAnchor="middle" fontSize="8" fill="rgb(255 255 255 / .45)" stroke="none" style={{ fontFamily: "var(--font-geist-mono)" }}>
-                  {i + 1}
+                  {Array.isArray(labels) && labels[i] ? shortLabel(labels[i]) : i + 1}
                 </text>
               )}
             </g>

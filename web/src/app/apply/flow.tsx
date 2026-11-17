@@ -8,7 +8,7 @@ import { House, WindowRow } from "@/components/house";
 import type { BedState } from "@/lib/availability";
 import { money, shortDate } from "@/lib/format";
 
-type RoomOpt = { slug: string; name: string; kind: string; floor: string; rentCents: number; tone: string; states: BedState[]; open: number; soon: string | null };
+type RoomOpt = { slug: string; name: string; house?: string; kind: string; floor: string; rentCents: number; tone: string; states: BedState[]; open: number; soon: string | null };
 type Data = Partial<RequestInput> & { programSkipped?: boolean };
 type StepId = "forWhom" | "referrer" | "program" | "room" | "moveIn" | "payment" | "contact" | "message";
 
@@ -168,6 +168,7 @@ export function Flow({ rooms, initialRoom, initialFor, phone }: { rooms: RoomOpt
                         >
                           <span className="flex w-full items-start justify-between gap-3">
                             <span>
+                              {r.house && <span className="mono block text-[0.7rem] uppercase tracking-[0.02em] text-ink/55">{r.house}</span>}
                               <span className="block text-[1.05rem] font-semibold">{r.name}</span>
                               <span className="block text-[0.9rem] text-ink/60">
                                 {r.kind === "PRIVATE" ? "Private" : "Shared"} · {r.floor === "Ground" ? "No stairs" : "Upstairs"} · {money(r.rentCents)}/mo
@@ -370,7 +371,7 @@ function Done({ name, rooms, phone }: { name: string; rooms: RoomOpt[]; phone: {
       className="flex flex-col items-center text-center"
     >
       {/* Every window lights up for the celebration */}
-      <House states={states.map(() => "open")} className="w-64 sm:w-80" />
+      <House states={states.slice(0, 6).map(() => "open")} className="w-64 sm:w-80" />
       <h1 tabIndex={-1} className="display-2 mt-6 text-[clamp(2.4rem,6vw,3.8rem)] outline-none">Request sent, {name}.</h1>
       <p className="mt-4 max-w-md text-[1.08rem] text-ink/70">
         We&apos;ll call within one business day. If it&apos;s urgent, call us at{" "}

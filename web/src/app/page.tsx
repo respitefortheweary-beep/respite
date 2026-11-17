@@ -24,6 +24,9 @@ export default async function HomePage() {
   const { home, who, faq, house } = content;
   const photo = home.photos;
   const open = beds.filter((b) => b.state === "open").length;
+  // the hero photograph is of the first house, so only its beds light its windows
+  const firstHouse = beds.filter((b) => b.houseId === beds[0]?.houseId);
+  const several = new Set(rooms.map((r) => r.houseId)).size > 1;
 
   return (
     <>
@@ -31,7 +34,7 @@ export default async function HomePage() {
       <main id="main" tabIndex={-1} className="outline-none">
         {/* ───────── Hero: the house at night; windows light up for open beds ───────── */}
         <section data-night className="-mt-16">
-          <HouseScene states={beds.map((b) => b.state)}>
+          <HouseScene states={firstHouse.map((b) => b.state)}>
             {/* top padding = the 64px header the hero sits under, plus Spacing-600 (mobile) / Spacing-800 (desktop) */}
             <div className="mx-auto max-w-[1280px] px-4 pt-28 sm:px-6 md:pt-36">
               {/* proof signal: the live bed count */}
@@ -186,7 +189,7 @@ export default async function HomePage() {
             <div className="grid gap-x-5 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
               {rooms.map((r, i) => (
                 <Reveal key={r.id} delay={i * 70}>
-                  <RoomCard room={r} />
+                  <RoomCard room={r} showHouse={several} />
                 </Reveal>
               ))}
             </div>

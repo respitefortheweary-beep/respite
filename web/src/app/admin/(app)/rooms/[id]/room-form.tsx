@@ -17,9 +17,10 @@ type RoomFields = {
   description: string;
   features: string[];
   bedCount: number;
+  houseId: string | null;
 };
 
-export function RoomForm({ room }: { room: RoomFields }) {
+export function RoomForm({ room, houses = [] }: { room: RoomFields; houses?: { id: string; name: string }[] }) {
   const [state, action] = useActionState(saveRoom.bind(null, room.id), null);
   return (
     <form action={action} className="grid gap-4 p-5 pt-4 sm:p-6 sm:pt-4">
@@ -39,6 +40,19 @@ export function RoomForm({ room }: { room: RoomFields }) {
         <Label>Room name</Label>
         <input name="name" defaultValue={room.name} required maxLength={120} className={input} />
       </label>
+      {houses.length > 1 && (
+        <label>
+          <Label>House</Label>
+          <select name="houseId" defaultValue={room.houseId ?? houses[0].id} className={select}>
+            {houses.map((h) => (
+              <option key={h.id} value={h.id}>
+                {h.name}
+              </option>
+            ))}
+          </select>
+          <span className="mt-1.5 block text-[0.82rem] text-moss">Moving the room renumbers its beds to follow on from that house&apos;s beds.</span>
+        </label>
+      )}
       <div className="grid gap-4 sm:grid-cols-3">
         <label>
           <Label>Kind</Label>

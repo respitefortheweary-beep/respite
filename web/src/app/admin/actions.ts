@@ -106,6 +106,7 @@ export async function saveRoom(id: string, _: FormState, form: FormData): Promis
       floor: str(form, "floor") || undefined,
       bathroom: str(form, "bathroom") || undefined,
       hidden: !form.has("visible"),
+      houseId: str(form, "houseId") || undefined,
     });
     return { ok: "Saved" };
   });
@@ -125,6 +126,7 @@ export async function createRoom(form: FormData): Promise<{ id?: string; error?:
       rentCents: cents(form.get("rent")),
       depositCents: cents(form.get("deposit")) || 0,
       beds: kind === "PRIVATE" ? 1 : Number(str(form, "beds")) || 1,
+      houseId: str(form, "houseId") || undefined,
     });
     refresh();
     return { id: room.id };
@@ -147,6 +149,53 @@ export async function moveRoom(ids: string[], index: number, by: -1 | 1) {
   const next = [...ids];
   [next[index], next[to]] = [next[to], next[index]];
   await admin.post("/admin/rooms/order", { ids: next });
+  refresh();
+}
+
+/* ───── Houses ───── */
+const houseBody = (form: FormData) => ({
+  name: str(form, "name").trim(),
+  address: str(form, "address").trim(),
+  town: str(form, "town").trim(),
+  summary: str(form, "summary").trim(),
+  hidden: !form.has("visible"),
+});
+
+export async function createHouse(_: FormState, form: FormData): Promise<FormState> {
+  let id = "";
+  const state = await attempt(async () => {
+    id = (await admin.post<{ id: string }>("/admin/houses", houseBody(form))).id;
+  });
+  refresh();
+  if (id) redirect(`/admin/rooms?house=added#house-${id}`);
+  return state;
+}
+
+export async function saveHouse(id: string, _: FormState, form: FormData): Promise<FormState> {
+  const state = await attempt(async () => {
+    await admin.put(`/admin/houses/${id}`, houseBody(form));
+    return { ok: "Saved" };
+  });
+  refresh();
+  return state;
+}
+
+export async function deleteHouse(id: string): Promise<FormState> {
+  const state = await attempt(async () => {
+    await admin.delete(`/admin/houses/${id}`);
+  });
+  if (state?.error) return state;
+  refresh();
+  redirect("/admin/rooms?house=deleted");
+}
+
+/** Moves a house one place up or down: the order the dashboard and the site list them in. */
+export async function moveHouse(ids: string[], index: number, by: -1 | 1) {
+  const to = index + by;
+  if (to < 0 || to >= ids.length) return;
+  const next = [...ids];
+  [next[index], next[to]] = [next[to], next[index]];
+  await admin.post("/admin/houses/order", { ids: next });
   refresh();
 }
 

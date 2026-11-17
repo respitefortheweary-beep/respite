@@ -10,7 +10,7 @@ export function availabilityText(room: Pick<RoomWithBeds, "open" | "soon" | "sta
   return "Full · join the waitlist";
 }
 
-export function RoomCard({ room, priority = false }: { room: RoomWithBeds; priority?: boolean }) {
+export function RoomCard({ room, priority = false, showHouse = false }: { room: RoomWithBeds; priority?: boolean; showHouse?: boolean }) {
   const photos = parseList(room.photos);
   return (
     <Link href={`/rooms/${room.slug}`} className="group block" prefetch={priority}>
@@ -29,6 +29,12 @@ export function RoomCard({ room, priority = false }: { room: RoomWithBeds; prior
       </div>
       <div className="mt-3.5 flex items-start justify-between gap-4 px-0.5">
         <div className="min-w-0">
+          {showHouse && room.house && (
+            <p className="mono truncate text-[0.72rem] uppercase tracking-[0.02em] text-moss">
+              {room.house.name}
+              {room.house.town ? ` · ${room.house.town}` : ""}
+            </p>
+          )}
           <h3 className="truncate text-[1.15rem] font-medium tracking-[-0.03em]">{room.name}</h3>
           <p className="text-[0.9rem] text-moss">
             {room.kind === "PRIVATE" ? "Private room" : "Shared room"} · {room.floor === "Ground" ? "Ground floor" : "Upstairs"} · {room.bathroom} bath

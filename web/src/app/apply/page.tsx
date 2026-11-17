@@ -9,11 +9,13 @@ export const dynamic = "force-dynamic";
 export default async function ApplyPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const sp = await searchParams;
   const [rooms, house] = await Promise.all([getRoomsWithBeds(), getHouse()]);
+  const several = new Set(rooms.map((r) => r.houseId)).size > 1;
   return (
     <Flow
       rooms={rooms.map((r) => ({
         slug: r.slug,
         name: r.name,
+        house: several ? r.house?.name : undefined,
         kind: r.kind,
         floor: r.floor,
         rentCents: r.rentCents,

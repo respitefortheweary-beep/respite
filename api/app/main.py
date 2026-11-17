@@ -11,6 +11,7 @@ from .db import Base, SessionLocal, engine
 from .models import AdminUser
 from .routers import admin, auth, hooks, notifications, portal, public, records
 from .security import hash_password
+from .services.houses import ensure_houses
 from .services.notify import outbox
 
 log = logging.getLogger("respite")
@@ -43,6 +44,7 @@ def bootstrap() -> None:
     add_missing_columns()
     s = get_settings()
     with SessionLocal() as db:
+        ensure_houses(db)
         if db.scalar(select(func.count()).select_from(AdminUser)):
             return
         if s.admin_email and s.admin_password:

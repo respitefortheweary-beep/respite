@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowUpRight, EyeOff, Trash2, X } from "lucide-react";
 import { admin, orNull } from "@/lib/api";
-import type { Bed, Resident, Room } from "@/lib/types";
+import type { Bed, HouseBrief, Property, Resident, Room } from "@/lib/types";
 import { parseList } from "@/lib/format";
 import { setBedOpening, removePhoto, coverPhoto, renameBed, deleteBed, deleteRoom } from "../../../actions";
 import { Page, Card, CardHead, Label, Notice, btnQuiet, input, link } from "../../ui";
@@ -14,9 +14,10 @@ import { AddBed, RoomForm } from "./room-form";
 
 export default async function RoomEdit({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ new?: string; photos?: string }> }) {
   const [{ id }, { new: isNew, photos: photoNote }] = await Promise.all([params, searchParams]);
-  const [room, { canUploadPhotos }] = await Promise.all([
-    orNull(admin.get<Room & { beds: (Bed & { resident: Resident | null })[] }>(`/admin/rooms/${encodeURIComponent(id)}`)),
+  const [room, { canUploadPhotos }, houses] = await Promise.all([
+    orNull(admin.get<Room & { house: HouseBrief | null; beds: (Bed & { resident: Resident | null })[] }>(`/admin/rooms/${encodeURIComponent(id)}`)),
     admin.get<{ canUploadPhotos: boolean }>("/admin/config"),
+    admin.get<Property[]>("/admin/houses"),
   ]);
   if (!room) notFound();
   const photos = parseList(room.photos);
@@ -34,6 +35,14 @@ export default async function RoomEdit({ params, searchParams }: { params: Promi
             Rooms
           </Link>
           <span aria-hidden>/</span>
+          {houses.length > 1 && room.house && (
+            <>
+              <Link href={`/admin/houses/${room.house.id}`} className="hover:text-ink">
+                {room.house.name}
+              </Link>
+              <span aria-hidden>/</span>
+            </>
+          )}
           <span>{room.kind === "PRIVATE" ? "Private room" : "Shared room"}</span>
           {room.hidden && (
             <span className="inline-flex items-center gap-1 text-ink">
@@ -95,7 +104,9 @@ export default async function RoomEdit({ params, searchParams }: { params: Promi
                 description: room.description,
                 features: parseList(room.features),
                 bedCount: beds.length,
+                houseId: room.houseId,
               }}
+              houses={houses.map((h) => ({ id: h.id, name: h.name }))}
             />
           </Card>
         </div>

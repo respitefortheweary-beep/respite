@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { admin } from "@/lib/api";
-import type { BedView, Charge, Request, Resident, Room } from "@/lib/types";
+import type { BedView, Charge, Property, Request, Resident, Room } from "@/lib/types";
 import { money, timeAgo, shortDate } from "@/lib/format";
 import { PROGRAMS, type Program } from "@/lib/labels";
 import { HouseNight } from "@/components/house";
@@ -9,13 +9,15 @@ import { Card, CardHead, Empty, StatusPill, ChargePill, isOverdue } from "./ui";
 
 export default async function Overview() {
   const now = new Date();
-  const { beds, requests: active, due, collectedThisMonthCents } = await admin.get<{
+  const { beds, houses = [], requests: active, due, collectedThisMonthCents } = await admin.get<{
     beds: BedView[];
+    houses?: Property[];
     requests: (Request & { room: Room | null })[];
     due: (Charge & { resident: Resident })[];
     collectedThisMonthCents: number;
   }>("/admin/overview");
   const open = beds.filter((b) => b.state === "open").length;
+  const several = houses.length > 1;
   const fresh = active.filter((r) => r.status === "NEW").length;
   const owed = due.reduce((n, c) => n + c.amountCents, 0);
   const late = due.filter(isOverdue);
@@ -31,7 +33,7 @@ export default async function Overview() {
       ? { text: `${money(lateTotal)} is past due from ${new Set(late.map((c) => c.residentId)).size === 1 ? late[0].resident.name.split(" ")[0] : `${new Set(late.map((c) => c.residentId)).size} residents`}.`, href: "/admin/payments", cta: "Open payments" }
       : open
         ? { text: `${open} ${open === 1 ? "bed is" : "beds are"} open and showing on the site.`, href: "/admin/rooms", cta: "Rooms & beds" }
-        : { text: "The house is full and everyone is paid up.", href: "/admin/residents", cta: "Residents" };
+        : { text: `${several ? "Every house" : "The house"} is full and everyone is paid up.`, href: "/admin/residents", cta: "Residents" };
 
   const facts: [string, string, string][] = [
     ["Open beds", `${open}/${beds.length}`, "/admin/rooms"],
@@ -54,9 +56,13 @@ export default async function Overview() {
               {next.cta} <ArrowRight size={16} />
             </Link>
           </div>
-          <div className="flex items-end px-6 md:px-0 md:pr-9">
-            <HouseNight states={beds.map((b) => b.state)} labels className="w-full" />
-          </div>
+          {several ? (
+            <Houses houses={houses} />
+          ) : (
+            <div className="flex items-end px-6 md:px-0 md:pr-9">
+              <HouseNight states={beds.map((b) => b.state)} labels={beds.map((b) => b.label)} className="w-full" />
+            </div>
+          )}
         </div>
         <dl className="relative grid grid-cols-2 border-t border-white/10 md:grid-cols-4">
           {facts.map(([k, v, href], i) => (
@@ -125,8 +131,12 @@ export default async function Overview() {
         <Card className="lg:col-span-2 xl:col-span-1">
           <CardHead title="Beds" action={<Link href="/admin/rooms" className="text-[0.86rem] text-moss hover:text-ink">Manage</Link>} />
           <ul className="mt-3 grid sm:grid-cols-2 xl:grid-cols-1">
-            {beds.map((b) => (
-              <li key={b.id} className="flex items-center gap-3 border-t border-line px-5 py-3 text-[0.92rem] sm:px-6">
+            {beds.map((b, i) => (
+              <li key={b.id} className="contents">
+                {several && b.houseId !== beds[i - 1]?.houseId && (
+                  <p className="mono border-t border-line bg-oat/60 px-5 py-2 text-[0.7rem] uppercase tracking-[0.02em] text-moss sm:col-span-2 sm:px-6 xl:col-span-1">{b.houseName}</p>
+                )}
+                <div className="flex items-center gap-3 border-t border-line px-5 py-3 text-[0.92rem] sm:px-6">
                 <span
                   aria-hidden
                   className="h-[18px] w-3.5 shrink-0 rounded-[2px]"
@@ -142,11 +152,34 @@ export default async function Overview() {
                   </span>
                 </span>
                 {b.state === "soon" && <span className="mono text-[0.76rem] text-moss">opens {shortDate(b.availableFrom!)}</span>}
+                </div>
               </li>
             ))}
           </ul>
         </Card>
       </div>
     </main>
+  );
+}
+
+/** With more than one house, the hero shows each one as its own small house, lit by its own beds. */
+function Houses({ houses }: { houses: Property[] }) {
+  return (
+    <ul className={`grid content-end gap-2 px-6 pb-6 md:px-0 md:pb-9 md:pr-9 ${houses.length > 2 ? "grid-cols-2" : "grid-cols-2 md:grid-cols-1"}`}>
+      {houses.map((h) => (
+        <li key={h.id}>
+          <Link href={`/admin/rooms#house-${h.id}`} className="group flex items-center gap-3 rounded-2xl p-2 ring-1 ring-white/10 transition-colors hover:bg-white/[.05]">
+            <HouseNight states={h.states} className="w-20 shrink-0 sm:w-24" />
+            <span className="min-w-0">
+              <span className="block truncate text-[0.95rem] font-medium">{h.name}</span>
+              <span className="mono tabular block text-[0.78rem] text-white/55">
+                {h.beds ? `${h.open} of ${h.beds} open` : "No beds yet"}
+                {h.hidden ? " · hidden" : ""}
+              </span>
+            </span>
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }

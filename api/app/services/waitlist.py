@@ -27,16 +27,22 @@ def _opening(room: dict) -> str | None:
 
 def announce(db: Session) -> int:
     """Emails everyone waiting whose room (or any room) has a bed open or opening. Returns how many were told."""
-    rooms = [r for r in get_rooms_with_beds(db, public=True) if _opening(r)]
+    every = get_rooms_with_beds(db, public=True)
+    rooms = [r for r in every if _opening(r)]
     if not rooms:
         return 0
+    several = len({r["houseId"] for r in every}) > 1
+
+    def name(r: dict) -> str:
+        return f"{r['name']}, {r['house']['name']}" if several and r.get("house") else r["name"]
+
     waiting = db.scalars(select(WaitlistEntry).where(WaitlistEntry.status == "WAITING").order_by(WaitlistEntry.createdAt)).all()
     told = 0
     for w in waiting:
         fits = [r for r in rooms if not w.roomId or r["id"] == w.roomId]
         if not fits:
             continue
-        lines = "\n".join(f"· {r['name']}: {_opening(r)}\n  {site_url()}/apply?room={r['slug']}" for r in fits)
+        lines = "\n".join(f"· {name(r)}: {_opening(r)}\n  {site_url()}/apply?room={r['slug']}" for r in fits)
         notify.email(
             db, w.email, "A bed is opening at Respite for the Weary",
             f"Hi {first_name(w.name)},\n\nYou asked us to tell you when a bed opens. One has:\n\n{lines}\n\n"

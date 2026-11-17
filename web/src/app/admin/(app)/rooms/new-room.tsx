@@ -7,7 +7,7 @@ import { sendPhotos } from "@/lib/shrink-photo";
 import { Card, CardHead, Label, btnPrimary, btnQuiet, input, select } from "../ui";
 
 /** Closed by default: most visits to Rooms are to change a date, not to build a room. */
-export function NewRoom() {
+export function NewRoom({ houseId, houseName }: { houseId?: string; houseName?: string }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [kind, setKind] = useState("SHARED");
@@ -39,14 +39,15 @@ export function NewRoom() {
   if (!open)
     return (
       <button type="button" onClick={() => setOpen(true)} className={btnQuiet}>
-        <Plus size={16} /> Add a room
+        <Plus size={16} /> Add a room{houseName ? <span className="sr-only"> to {houseName}</span> : null}
       </button>
     );
 
   return (
-    <Card className="mb-6 w-full">
-      <CardHead title="Add a room" hint="It stays hidden from the site until you switch it on, so you can check the photos and words first." />
+    <Card className="w-full">
+      <CardHead title={houseName ? `Add a room to ${houseName}` : "Add a room"} hint="It stays hidden from the site until you switch it on, so you can check the photos and words first." />
       <form onSubmit={submit} className="grid gap-4 p-5 pt-4 sm:grid-cols-2 sm:p-6 sm:pt-4">
+        {houseId && <input type="hidden" name="houseId" value={houseId} />}
         <label className="sm:col-span-2">
           <Label>Room name</Label>
           <input name="name" required maxLength={120} placeholder="The Garden Room" className={input} autoFocus />

@@ -15,11 +15,12 @@ from sqlalchemy.orm import Session, selectinload
 
 from ..config import get_settings
 from ..db import get_db, now
-from ..models import AdminUser, Bed, Charge, RepairRequest, Request, Resident, Room, Tour, WaitlistEntry
+from ..models import AdminUser, Bed, Charge, House, RepairRequest, Request, Resident, Room, Tour, WaitlistEntry
 from ..security import current_admin, owner_only
 from ..services.payments import apply_plan, refund, send_receipt
 from ..serialize import row, rows
-from ..services.availability import get_beds, get_rooms_with_beds, sorted_beds
+from ..services.availability import get_beds, get_houses, get_rooms_with_beds, sorted_beds
+from ..services.houses import first_house_id, house_brief, make_slug, next_sort
 from ..services.billing import Policy, bill_rent, get_policy, save_policy
 from ..services import content, notify, tours, waitlist
 from ..services.email import site_url
@@ -82,6 +83,7 @@ def overview(db: Session = Depends(get_db)):
     collected, _ = _sum(db, Charge.status == "PAID", Charge.paidAt >= month_start(now()))
     return {
         "beds": get_beds(db),
+        "houses": get_houses(db),
         "requests": [row(r, room=row(r.room)) for r in active],
         "due": [row(c, resident=row(c.resident)) for c in due],
         "collectedThisMonthCents": collected,
@@ -188,7 +190,7 @@ def list_rooms(db: Session = Depends(get_db)):
 @router.get("/rooms/{room_id}")
 def get_room(room_id: str, db: Session = Depends(get_db)):
     room = _get(db, Room, room_id, "room")
-    return row(room, beds=[row(b, resident=row(b.resident)) for b in sorted_beds(list(room.beds))])
+    return row(room, house=house_brief(room.house), beds=[row(b, resident=row(b.resident)) for b in sorted_beds(list(room.beds))])
 
 
 Kind = Literal["PRIVATE", "SHARED"]
@@ -208,6 +210,7 @@ class RoomPatch(BaseModel):
     floor: Floor | None = None
     bathroom: Bath | None = None
     hidden: bool | None = None
+    houseId: str | None = None
 
 
 @router.put("/rooms/{room_id}")
@@ -221,6 +224,18 @@ def update_room(room_id: str, body: RoomPatch, db: Session = Depends(get_db)):
     for k in ("kind", "floor", "bathroom", "hidden"):
         if getattr(body, k) is not None:
             setattr(room, k, getattr(body, k))
+    if body.houseId and body.houseId != room.houseId:
+        _get(db, House, body.houseId, "house")
+        room.houseId = body.houseId
+        db.flush()
+        # bed numbers run per house, so beds that move take the next free numbers in their new house
+        moving = sorted_beds(list(room.beds))
+        for b in moving:
+            b.label = ""
+        db.flush()
+        for b in moving:
+            b.label = _next_bed_label(db, body.houseId)
+            db.flush()
     db.commit()
     if body.hidden is False:
         waitlist.announce(db)
@@ -228,16 +243,13 @@ def update_room(room_id: str, body: RoomPatch, db: Session = Depends(get_db)):
 
 
 def _slug(db: Session, name: str) -> str:
-    base = re.sub(r"[^a-z0-9]+", "-", re.sub(r"^the\s+", "", name.lower())).strip("-") or "room"
-    slug, n = base[:60], 2
-    while db.scalar(select(Room.id).where(Room.slug == slug)):
-        slug, n = f"{base[:56]}-{n}", n + 1
-    return slug
+    return make_slug(db, name, Room, "room")
 
 
-def _next_bed_label(db: Session) -> str:
-    """Bed numbers run across the house (Bed 1 to Bed 6), so a new bed takes the next free number."""
-    used = {int(m.group(1)) for label in db.scalars(select(Bed.label)) if (m := re.fullmatch(r"Bed (\d+)", label))}
+def _next_bed_label(db: Session, house_id: str | None) -> str:
+    """Bed numbers run across each house (Bed 1, Bed 2…), so a new bed takes its house's next free number."""
+    labels = db.scalars(select(Bed.label).join(Bed.room).where(Room.houseId == house_id))
+    used = {int(m.group(1)) for label in labels if (m := re.fullmatch(r"Bed (\d+)", label))}
     n = 1
     while n in used:
         n += 1
@@ -251,7 +263,8 @@ class RoomIn(BaseModel):
     bathroom: Bath
     rentCents: int = Field(ge=0)
     depositCents: int = Field(ge=0)
-    beds: int = Field(ge=1, le=6)
+    beds: int = Field(ge=1, le=12)
+    houseId: str | None = None  # left out: the first house
     hidden: bool = True  # new rooms start hidden so they can be finished before anyone sees them
 
 
@@ -260,8 +273,13 @@ def create_room(body: RoomIn, db: Session = Depends(get_db)):
     name = body.name.strip()
     if body.kind == "PRIVATE" and body.beds != 1:
         raise HTTPException(400, "A private room has one bed. Choose shared for more.")
+    house_id = body.houseId or first_house_id(db)
+    if not house_id:
+        raise HTTPException(400, "Add a house first.")
+    _get(db, House, house_id, "house")
     last = db.scalar(select(func.max(Room.sortOrder))) or 0
     room = Room(
+        houseId=house_id,
         slug=_slug(db, name), name=name, kind=body.kind, floor=body.floor, bathroom=body.bathroom,
         rentCents=body.rentCents, depositCents=body.depositCents, summary="", description="",
         features="[]", photos="[]", tone="oat", sortOrder=last + 1, hidden=body.hidden,
@@ -269,7 +287,7 @@ def create_room(body: RoomIn, db: Session = Depends(get_db)):
     db.add(room)
     db.flush()
     for _ in range(body.beds):
-        db.add(Bed(label=_next_bed_label(db), roomId=room.id))
+        db.add(Bed(label=_next_bed_label(db, house_id), roomId=room.id))
         db.flush()
     db.commit()
     return row(room)
@@ -314,7 +332,7 @@ def add_bed(room_id: str, body: BedIn, db: Session = Depends(get_db)):
         raise HTTPException(400, "A private room has one bed. Change it to shared to add another.")
     if len(room.beds) >= 6:
         raise HTTPException(400, "A room can hold six beds at most.")
-    bed = Bed(label=body.label.strip() or _next_bed_label(db), roomId=room.id)
+    bed = Bed(label=body.label.strip() or _next_bed_label(db, room.houseId), roomId=room.id)
     db.add(bed)
     db.commit()
     waitlist.announce(db)
@@ -420,6 +438,70 @@ def cover_photo(room_id: str, body: PhotoRef, db: Session = Depends(get_db)):
     room.photos = json.dumps([body.src, *[p for p in photos if p != body.src]])
     db.commit()
     return {"photos": _photos(room)}
+
+# ───── Houses ─────
+
+@router.get("/houses")
+def list_houses(db: Session = Depends(get_db)):
+    return get_houses(db)
+
+
+class HouseIn(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    address: str = Field(default="", max_length=200)
+    town: str = Field(default="", max_length=80)
+    summary: str = Field(default="", max_length=600)
+    hidden: bool = False
+
+
+@router.post("/houses", status_code=201)
+def create_house(body: HouseIn, db: Session = Depends(get_db)):
+    name = body.name.strip()
+    house = House(
+        slug=make_slug(db, name), name=name, address=body.address.strip(), town=body.town.strip(),
+        summary=body.summary.strip(), hidden=body.hidden, sortOrder=next_sort(db),
+    )
+    db.add(house)
+    db.commit()
+    return row(house)
+
+
+@router.put("/houses/{house_id}")
+def update_house(house_id: str, body: HouseIn, db: Session = Depends(get_db)):
+    house = _get(db, House, house_id, "house")
+    house.name, house.address, house.town = body.name.strip(), body.address.strip(), body.town.strip()
+    house.summary, house.hidden = body.summary.strip(), body.hidden
+    db.commit()
+    if not body.hidden:
+        waitlist.announce(db)
+    return row(house)
+
+
+@router.delete("/houses/{house_id}", status_code=204)
+def delete_house(house_id: str, db: Session = Depends(get_db)):
+    house = _get(db, House, house_id, "house")
+    if house.rooms:
+        raise HTTPException(400, "This house still has rooms. Move them to another house or delete them first.")
+    if db.scalar(select(func.count()).select_from(House)) <= 1:
+        raise HTTPException(400, "Keep at least one house.")
+    db.delete(house)
+    db.commit()
+
+
+class HouseOrder(BaseModel):
+    ids: list[str] = Field(min_length=1, max_length=50)
+
+
+@router.post("/houses/order")
+def reorder_houses(body: HouseOrder, db: Session = Depends(get_db)):
+    houses = {h.id: h for h in db.scalars(select(House))}
+    if set(body.ids) != set(houses):
+        raise HTTPException(400, "The house list changed. Reload and try again.")
+    for i, hid in enumerate(body.ids, start=1):
+        houses[hid].sortOrder = i
+    db.commit()
+    return get_houses(db)
+
 
 # ───── Residents ─────
 

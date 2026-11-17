@@ -497,7 +497,8 @@ def _new_resident(client, auth, name: str, email: str | None, phone: str = "804 
     from app.routers.admin import _next_bed_label
 
     with SessionLocal() as db:  # a fresh bed each time, so earlier tests can't fill the house
-        bed = Bed(label=_next_bed_label(db), roomId=db.query(Room).first().id)
+        room = db.query(Room).first()
+        bed = Bed(label=_next_bed_label(db, room.houseId), roomId=room.id)
         db.add(bed)
         db.commit()
         bed = {"id": bed.id}
@@ -981,3 +982,50 @@ def test_photos_go_to_cloudinary_when_set(client, monkeypatch):
     site = client.post("/admin/content/photo", headers=auth, files={"photo": ("k.png", b"\x89PNG fake", "image/png")})
     assert site.json()["src"].startswith("https://res.cloudinary.com/")
 
+
+
+def test_houses_rooms_move_hide_and_delete(client):
+    auth = _login(client)
+    houses = client.get("/admin/houses", headers=auth).json()
+    assert len(houses) == 1 and houses[0]["rooms"] >= 4  # existing rooms land in the first house
+    first = houses[0]
+    assert all(r["house"]["id"] == first["id"] for r in client.get("/public/rooms").json())
+
+    r = client.post("/admin/houses", headers=auth, json={"name": "The Maple Street House", "address": "12 Maple St, Petersburg, VA", "town": "Petersburg, Virginia"})
+    assert r.status_code == 201, r.text
+    second = r.json()
+    assert second["slug"] == "maple-street-house"
+
+    room = client.post("/admin/rooms", headers=auth, json={
+        "name": "The Bay Room", "kind": "SHARED", "floor": "Ground", "bathroom": "Shared",
+        "rentCents": 50000, "depositCents": 10000, "beds": 2, "houseId": second["id"], "hidden": False}).json()
+    detail = client.get(f"/admin/rooms/{room['id']}", headers=auth).json()
+    assert detail["house"]["id"] == second["id"]
+    assert [b["label"] for b in detail["beds"]] == ["Bed 1", "Bed 2"]  # numbers start again per house
+
+    public = client.get("/public/houses").json()
+    assert [h["name"] for h in public][-1] == "The Maple Street House" and public[-1]["beds"] == 2
+    # the street address stays off the public site: people get it when they book a tour
+    assert all(h["address"] == "" for h in public)
+    assert all(r["house"]["address"] == "" for r in client.get("/public/rooms").json())
+    beds = client.get("/public/beds").json()
+    assert {b["houseName"] for b in beds} >= {first["name"], "The Maple Street House"}
+
+    # hiding a house hides its rooms and beds from the site
+    client.put(f"/admin/houses/{second['id']}", headers=auth, json={"name": "The Maple Street House", "hidden": True})
+    assert all(r["houseId"] != second["id"] for r in client.get("/public/rooms").json())
+    assert all(h["id"] != second["id"] for h in client.get("/public/houses").json())
+    assert any(h["id"] == second["id"] for h in client.get("/admin/houses", headers=auth).json())
+
+    # can't delete a house that still has rooms; moving a room renumbers its beds in the new house
+    assert client.delete(f"/admin/houses/{second['id']}", headers=auth).status_code == 400
+    moved = client.put(f"/admin/rooms/{room['id']}", headers=auth, json={
+        "name": "The Bay Room", "summary": "", "description": "", "rentCents": 50000, "depositCents": 10000,
+        "features": [], "houseId": first["id"]})
+    assert moved.status_code == 200, moved.text
+    labels = [b["label"] for b in client.get(f"/admin/rooms/{room['id']}", headers=auth).json()["beds"]]
+    taken = {b["label"] for b in client.get("/admin/beds", headers=auth).json() if b["houseId"] == first["id"] and b["roomSlug"] != "bay-room"}
+    assert not set(labels) & taken
+    assert client.delete(f"/admin/houses/{second['id']}", headers=auth).status_code == 204
+    assert client.delete(f"/admin/houses/{first['id']}", headers=auth).status_code == 400  # keep at least one
+    assert client.delete(f"/admin/rooms/{room['id']}", headers=auth).status_code == 204

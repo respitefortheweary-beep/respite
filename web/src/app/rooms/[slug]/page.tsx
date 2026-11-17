@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ArrowLeft, CalendarDays, Check, Phone, MapPin } from "lucide-react";
-import { getRoomsWithBeds } from "@/lib/availability";
+import { getHouses, getRoomsWithBeds } from "@/lib/availability";
 import { money, parseList, longDate } from "@/lib/format";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 import { RoomImage } from "@/components/room-art";
@@ -24,8 +24,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 
 export default async function RoomPage({ params }: { params: Promise<{ slug: string }> }) {
-  const [{ room, rooms }, house] = await Promise.all([load((await params).slug), getHouse()]);
+  const [{ room, rooms }, house, houses] = await Promise.all([load((await params).slug), getHouse(), getHouses()]);
   if (!room) notFound();
+  // the neighbourhood notes below are about the first house; any other house speaks for itself
+  const home = houses.find((h) => h.id === room.houseId);
+  const firstHouse = !home || home.id === houses[0]?.id;
   const photos = parseList(room.photos);
   const slots = photos.length ? Math.min(photos.length, 3) : 3;
   const features = parseList(room.features);
@@ -129,11 +132,18 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
 
             <section className="border-t border-line pt-10">
               <h2 className="mb-6 text-xl font-semibold tracking-tight">Where it is</h2>
-              <p className="flex items-center gap-2 text-ink/80"><MapPin size={16} /> {house.town}</p>
+              <p className="flex items-center gap-2 text-ink/80">
+                <MapPin size={16} /> {houses.length > 1 && home ? `${home.name} · ${home.town || house.town}` : home?.town || house.town}
+              </p>
+              {!firstHouse && home?.summary && <p className="mt-4 max-w-2xl text-ink/70">{home.summary}</p>}
               <ul className="mt-5 grid gap-3 text-[0.95rem] text-ink/70 sm:grid-cols-2">
-                <li>About 15 minutes to the Richmond VA Medical Center</li>
-                <li>Close to I-95 and Route 10</li>
-                <li>Near grocery stores, pharmacies and bus service</li>
+                {firstHouse && (
+                  <>
+                    <li>About 15 minutes to the Richmond VA Medical Center</li>
+                    <li>Close to I-95 and Route 10</li>
+                    <li>Near grocery stores, pharmacies and bus service</li>
+                  </>
+                )}
                 <li>
                   Exact address shared when you{" "}
                   <Link href="/tour" className="font-medium text-ink underline underline-offset-4">
