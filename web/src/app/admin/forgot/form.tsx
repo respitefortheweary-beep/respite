@@ -10,7 +10,7 @@ export function ForgotForm() {
     return (
       <AuthShell>
         <div className={authCard} role="status">
-          <p className="mono text-[0.7rem] uppercase tracking-[0.02em] text-white/45">Check your email</p>
+          <p className="mono text-[0.7rem] uppercase tracking-[0.02em] text-white/55">Check your email</p>
           <h1 className="mt-2 text-[1.5rem] font-semibold leading-tight tracking-[-0.03em]">A link is on its way.</h1>
           <p className="mt-2 text-[0.93rem] leading-snug text-white/60 [text-wrap:pretty]">
             If {state.ok} has a login here, we just sent it a link to choose a new password. The link works for one hour.
@@ -22,7 +22,7 @@ export function ForgotForm() {
   return (
     <AuthShell>
       <form action={action} className={authCard}>
-        <p className="mono text-[0.7rem] uppercase tracking-[0.02em] text-white/45">Forgot password</p>
+        <p className="mono text-[0.7rem] uppercase tracking-[0.02em] text-white/55">Forgot password</p>
         <h1 className="mt-2 text-[1.5rem] font-semibold leading-tight tracking-[-0.03em]">Let&apos;s get you back in.</h1>
         <p className="mt-1.5 text-[0.93rem] leading-snug text-white/60">Enter the email you log in with and we&apos;ll send a reset link.</p>
         <label className="mt-6 block">

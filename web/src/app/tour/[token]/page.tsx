@@ -22,7 +22,7 @@ export default async function YourTour({ params, searchParams }: { params: Promi
 
   return (
     <Shell>
-      <p className="mono text-[0.72rem] uppercase text-white/45">{tour.status === "CANCELLED" ? "Cancelled" : live ? "Your tour" : "Past tour"}</p>
+      <p className="mono text-[0.72rem] uppercase text-white/55">{tour.status === "CANCELLED" ? "Cancelled" : live ? "Your tour" : "Past tour"}</p>
       <h1 className="display-2 mt-3 text-[clamp(2rem,7vw,2.8rem)]" style={{ textWrap: "balance" }}>
         {tour.when}
       </h1>

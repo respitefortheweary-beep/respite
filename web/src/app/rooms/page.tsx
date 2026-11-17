@@ -51,7 +51,7 @@ export default async function RoomsPage({ searchParams }: { searchParams: Promis
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto max-w-[1240px] px-4 pb-28 sm:px-6">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-[1240px] px-4 pb-28 sm:px-6">
         <div className="sticky top-16 z-30 -mx-4 border-b border-line bg-oat/85 px-4 py-4 backdrop-blur-md sm:-mx-6 sm:px-6">
           <div className="flex justify-center">
             <SearchBar compact initial={{ program: sp.program ?? "", kind: sp.kind ?? "", when: sp.when ?? "" }} />

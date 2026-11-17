@@ -20,7 +20,7 @@ export default async function PrivacyPage() {
         <p>We only collect what you type into a form, plus the records we keep once you live here.</p>
         <ul>
           <li>
-            <strong>Room requests:</strong> your name, phone, email if you give it, who the room is for, which program fits (veteran, recovery or senior), when you hope to move in, how you plan to pay and anything you write to us. If a caseworker or counselor refers you, we also keep their name, organization, phone and email.
+            <strong>Room requests:</strong> your name, phone, email if you give it, who the room is for, which program fits (veteran, recovery or senior) if you choose to say, when you hope to move in, how you plan to pay and anything you write to us. If a caseworker or counselor refers you, we also keep their name, organization, phone and email.
           </li>
           <li>
             <strong>Tours:</strong> your name, phone, email if you give it, the time you picked and any note.

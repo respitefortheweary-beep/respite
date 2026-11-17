@@ -88,7 +88,7 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
           <Card>
             <CardHead title="The request" hint={`Received ${longDate(r.createdAt)}`} />
             <dl className="mt-2 divide-y divide-line px-5 pb-2 sm:px-6">
-              <Prop label="Looking for">{PROGRAMS[r.program as keyof typeof PROGRAMS]?.long}</Prop>
+              <Prop label="Looking for">{PROGRAMS[r.program as keyof typeof PROGRAMS]?.long ?? "Didn't say"}</Prop>
               <Prop label="Request from">{FOR_WHOM[r.forWhom as keyof typeof FOR_WHOM]}</Prop>
               <Prop label="Room">
                 {r.room ? (

@@ -19,7 +19,7 @@
   --ink: #0f1110;        /* text */
   --pine: #0f1110;       /* dark surfaces, primary buttons */
   --night: #000000;      /* hero sky (flat, from the approved dark set) */
-  --moss: #6d716e;       /* secondary text */
+  --moss: #5e625f;       /* secondary text */
   --porch: #f0a53a;      /* the light — availability + primary moment */
   --porch-glow: #ffd98f;
   --ember: #c24a2c;      /* overdue / errors */
@@ -140,7 +140,10 @@ body {
 .hairline > * { background: var(--paper); }
 }
 
-:focus-visible { outline: 2px solid var(--porch); outline-offset: 3px; border-radius: 6px; }
+/* Keyboard focus: dark on light pages, the porch light on dark ones (both clear 3:1 against what's behind) */
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 6px; }
+:where(.bg-night, .bg-ink, .bg-pine, [data-night], [data-tone="night"], footer, #mobile-menu) :focus-visible { outline-color: var(--porch); }
+#main:focus { outline: none; }
 
 /* Lit window glow used by the signature element */
 @keyframes flicker-on {

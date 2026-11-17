@@ -135,7 +135,7 @@ async function EmailList({ status }: { status: string }) {
                   className={`inline-flex h-9 items-center gap-1.5 rounded-full px-3 transition-colors sm:h-8 ${on ? "bg-ink text-white" : "text-moss hover:bg-ink/[.05] hover:text-ink"}`}
                 >
                   {label}
-                  <span className={`mono tabular text-[0.72rem] ${on ? "text-white/60" : k === "FAILED" && n ? "text-ember" : "text-ink/40"}`}>{n}</span>
+                  <span className={`mono tabular text-[0.72rem] ${on ? "text-white/60" : k === "FAILED" && n ? "text-ember" : "text-ink/60"}`}>{n}</span>
                 </Link>
               );
             })}

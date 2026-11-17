@@ -33,7 +33,7 @@ export default async function Requests({ searchParams }: { searchParams: Promise
         <span className="mono shrink-0 pt-0.5 text-[0.72rem] uppercase text-moss">{timeAgo(r.createdAt)}</span>
       </span>
       <span className="mt-1 block text-[0.86rem] text-moss">
-        {PROGRAMS[r.program as Program]?.long} · {r.room?.name.replace("The ", "") ?? "Any room"}
+        {PROGRAMS[r.program as Program]?.long ?? "Not said"} · {r.room?.name.replace("The ", "") ?? "Any room"}
       </span>
       <span className="mt-3 flex flex-wrap gap-1.5 text-[0.76rem]">
         <span className="rounded-md bg-ink/[.05] px-1.5 py-0.5">{MOVE_IN[r.moveIn as keyof typeof MOVE_IN] ?? r.moveIn}</span>
@@ -75,7 +75,7 @@ export default async function Requests({ searchParams }: { searchParams: Promise
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-medium">{r.name}</span>
                       <span className="block truncate text-[0.85rem] text-moss">
-                        {PROGRAMS[r.program as Program]?.long} · {timeAgo(r.createdAt)}
+                        {PROGRAMS[r.program as Program]?.long ?? "Not said"} · {timeAgo(r.createdAt)}
                       </span>
                     </span>
                     <StatusPill status={r.status} />

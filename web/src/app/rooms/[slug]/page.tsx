@@ -34,7 +34,7 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto max-w-[1240px] px-4 pb-24 pt-6 sm:px-6">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-[1240px] px-4 pb-24 pt-6 sm:px-6">
         <Link href="/rooms" className="press mb-6 inline-flex items-center gap-2 rounded-full py-2 pr-3 text-[0.92rem] text-ink/65 hover:text-ink">
           <ArrowLeft size={16} /> All rooms
         </Link>
@@ -89,7 +89,7 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
                       <WindowRow states={[b.state]} size={11} />
                       <span className="font-medium">{b.label}</span>
                     </span>
-                    <span className={`text-[0.92rem] ${b.state === "open" ? "font-semibold text-pine" : "text-ink/55"}`}>
+                    <span className={`text-[0.92rem] ${b.state === "open" ? "font-semibold text-pine" : "text-ink/60"}`}>
                       {b.state === "open" ? "Open now" : b.state === "soon" ? `Opens ${longDate(b.availableFrom!)}` : "Taken"}
                     </span>
                   </li>
@@ -126,7 +126,7 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
             <div className="rounded-[28px] bg-paper p-7 shadow-[0_24px_60px_-28px_rgb(23_33_28/.35)] ring-1 ring-line">
               <p>
                 <span className="display tabular text-4xl">{money(room.rentCents)}</span>
-                <span className="text-ink/55"> / month{room.kind === "SHARED" ? " per bed" : ""}</span>
+                <span className="text-ink/60"> / month{room.kind === "SHARED" ? " per bed" : ""}</span>
               </p>
               <p className="mt-1 text-[0.92rem] text-ink/60">{money(room.depositCents)} deposit, paid online at move-in</p>
 
@@ -144,7 +144,7 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
               <a href={house.phoneHref} className="press mono mt-2.5 flex h-10 w-full items-center justify-center gap-2 rounded-full text-[0.88rem] text-ink/65 hover:text-ink">
                 <Phone size={14} /> {house.phone}
               </a>
-              <p className="mt-4 text-center text-[0.85rem] text-ink/55">Requesting is free. We&apos;ll call you before anything is final.</p>
+              <p className="mt-4 text-center text-[0.85rem] text-ink/60">Requesting is free. We&apos;ll call you before anything is final.</p>
             </div>
           </aside>
         </div>
@@ -172,7 +172,7 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
           <div className="min-w-0">
             <p className="leading-tight">
               <span className="tabular font-semibold">{money(room.rentCents)}</span>
-              <span className="text-[0.9rem] text-ink/55"> / mo</span>
+              <span className="text-[0.9rem] text-ink/60"> / mo</span>
             </p>
             <p className="truncate text-[0.82rem] text-ink/60">{availabilityText(room)}</p>
           </div>

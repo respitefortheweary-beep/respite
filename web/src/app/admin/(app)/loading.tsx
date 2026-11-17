@@ -1,7 +1,7 @@
 /** Shown while a dashboard screen loads. Same shape as a page, so nothing jumps. */
 export default function Loading() {
   return (
-    <main className="mx-auto w-full max-w-[1080px] px-4 pb-16 pt-6 sm:px-8 md:pt-12" aria-busy="true">
+    <main id="main" tabIndex={-1} className="mx-auto w-full max-w-[1080px] px-4 pb-16 pt-6 sm:px-8 md:pt-12" aria-busy="true">
       <span className="sr-only">Loading</span>
       <div className="animate-pulse motion-reduce:animate-none">
         <div className="h-3 w-28 rounded bg-ink/[.07]" />

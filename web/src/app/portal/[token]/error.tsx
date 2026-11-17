@@ -8,7 +8,7 @@ export default function PortalError({ error, reset }: { error: Error & { digest?
   }, [error]);
   return (
     <div className="min-h-dvh bg-oat text-ink">
-      <main className="mx-auto max-w-xl px-4 pb-20 pt-16 sm:px-5">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-xl px-4 pb-20 pt-16 sm:px-5">
         <p className="eyebrow">Something went wrong</p>
         <h1 className="display-2 mt-3 text-[clamp(2.2rem,8vw,3rem)]">That didn&apos;t go through.</h1>
         <p className="mt-4 max-w-md text-[0.98rem] leading-relaxed text-moss">You have not been charged. Try again, and if it happens twice, call the house and we will sort it out.</p>

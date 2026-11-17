@@ -60,7 +60,7 @@ export default async function HomePage() {
                 <Search size={18} />
                 <span className="flex-1">
                   <span className="title-3 block">Find a bed</span>
-                  <span className="caption-5 block text-ink/50">Who it&apos;s for · Room · Move in</span>
+                  <span className="caption-5 block text-ink/60">Who it&apos;s for · Room · Move in</span>
                 </span>
                 <span className="grid h-10 w-10 place-items-center rounded-full bg-porch">
                   <ArrowRight size={17} />
@@ -201,7 +201,7 @@ export default async function HomePage() {
         {/* ───────── For professionals ───────── */}
         <section id="referrals" className="bg-night text-white">
           <div className="mx-auto grid max-w-[1280px] gap-12 px-4 py-28 sm:px-6 md:grid-cols-12 md:py-40">
-            <p className="eyebrow !text-white/40 md:col-span-3 md:pt-3">Case managers & discharge planners</p>
+            <p className="eyebrow !text-white/55 md:col-span-3 md:pt-3">Case managers & discharge planners</p>
             <div className="md:col-span-9 lg:col-span-5">
               <Reveal>
                 <h2 className="display-2 text-[clamp(2.4rem,5.4vw,4.8rem)]">
@@ -209,7 +209,7 @@ export default async function HomePage() {
                   {home.referralsLine2 && (
                     <>
                       <br />
-                      <span className="text-white/40">{home.referralsLine2}</span>
+                      <span className="text-white/55">{home.referralsLine2}</span>
                     </>
                   )}
                 </h2>

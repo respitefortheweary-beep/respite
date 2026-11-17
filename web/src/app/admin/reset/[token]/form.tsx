@@ -9,7 +9,7 @@ export function ResetForm({ token, email }: { token: string; email: string }) {
   return (
     <AuthShell>
       <form action={action} className={authCard}>
-        <p className="mono text-[0.7rem] uppercase tracking-[0.02em] text-white/45">New password</p>
+        <p className="mono text-[0.7rem] uppercase tracking-[0.02em] text-white/55">New password</p>
         <h1 className="mt-2 text-[1.5rem] font-semibold leading-tight tracking-[-0.03em]">Choose a new password.</h1>
         <p className="mt-1.5 text-[0.93rem] leading-snug text-white/60 [text-wrap:pretty]">
           For {email}. Use at least 10 characters. Any other device logged in will be signed out.

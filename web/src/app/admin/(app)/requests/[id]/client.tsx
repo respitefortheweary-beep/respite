@@ -90,7 +90,7 @@ export function Notes({ id, initial }: { id: string; initial: string }) {
         rows={5}
         aria-label="Your notes"
         placeholder="Call notes, tour time, anything to remember"
-        className="block w-full resize-y rounded-xl bg-oat p-3.5 text-[1rem] leading-relaxed outline-none ring-1 ring-transparent transition-shadow placeholder:text-ink/35 focus:bg-paper focus:ring-2 focus:ring-ink sm:text-[0.95rem]"
+        className="block w-full resize-y rounded-xl bg-oat p-3.5 text-[1rem] leading-relaxed outline-none ring-1 ring-transparent transition-shadow placeholder:text-ink/60 focus:bg-paper focus:ring-2 focus:ring-ink sm:text-[0.95rem]"
       />
       <p className="mono mt-2 h-4 text-[0.72rem] uppercase text-moss" aria-live="polite">
         {state === "saving" ? "Saving" : state === "saved" ? "Saved" : "Only you can see this"}

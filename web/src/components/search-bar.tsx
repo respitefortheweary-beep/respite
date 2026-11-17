@@ -51,9 +51,20 @@ export function SearchBar({ initial = {}, compact = false }: { initial?: Partial
     setOpen(f);
   }
 
+  // keyboard: focus moves into the menu when it opens, and back to its button on Escape
+  useEffect(() => {
+    if (open) root.current?.querySelector<HTMLButtonElement>(`[data-menu="${open}"] [aria-pressed="true"], [data-menu="${open}"] button`)?.focus();
+  }, [open]);
+
   useEffect(() => {
     const close = (e: MouseEvent) => !root.current?.contains(e.target as Node) && setOpen(null);
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && setOpen(null);
+    const esc = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setOpen((f) => {
+        if (f) root.current?.querySelector<HTMLButtonElement>(`[data-trigger="${f}"]`)?.focus();
+        return null;
+      });
+    };
     document.addEventListener("mousedown", close);
     document.addEventListener("keydown", esc);
     return () => {
@@ -87,20 +98,20 @@ export function SearchBar({ initial = {}, compact = false }: { initial?: Partial
               <button
                 type="button"
                 aria-expanded={active}
-                aria-haspopup="listbox"
+                data-trigger={f}
                 onClick={(e) => toggle(f, e.currentTarget)}
                 className={`press w-full rounded-full px-4 py-2 text-left transition-colors ${
                   active ? "bg-paper shadow-[0_6px_24px_-8px_rgb(23_33_28/.3)]" : "hover:bg-ink/5"
                 }`}
               >
-                <span className="mono caption-4 block uppercase tracking-[0.02em] text-ink/55">{o.label}</span>
-                <span className={`body-6 block truncate ${values[f] ? "text-ink" : "text-ink/50"}`}>
+                <span className="mono caption-4 block uppercase tracking-[0.02em] text-ink/60">{o.label}</span>
+                <span className={`body-6 block truncate ${values[f] ? "text-ink" : "text-ink/60"}`}>
                   {values[f] ? current?.[1] : o.placeholder}
                 </span>
               </button>
               {active && (
                 <ul
-                  role="listbox"
+                  data-menu={f}
                   aria-label={o.label}
                   className={`absolute left-0 z-30 w-[min(320px,calc(100vw-2rem))] ${up ? "bottom-[calc(100%+10px)] origin-bottom-left" : "top-[calc(100%+10px)] origin-top-left"} rounded-3xl bg-paper p-2 shadow-[0_24px_60px_-16px_rgb(23_33_28/.35)] ring-1 ring-line [animation:pop_180ms_var(--ease-out)]`}
                 >
@@ -108,8 +119,7 @@ export function SearchBar({ initial = {}, compact = false }: { initial?: Partial
                     <li key={v || "any"}>
                       <button
                         type="button"
-                        role="option"
-                        aria-selected={values[f] === v}
+                        aria-pressed={values[f] === v}
                         onClick={() => {
                           const next = { ...values, [f]: v };
                           setValues(next);
@@ -120,7 +130,7 @@ export function SearchBar({ initial = {}, compact = false }: { initial?: Partial
                       >
                         <span>
                           <span className="block font-medium">{label}</span>
-                          {hint && <span className="block text-sm text-ink/55">{hint}</span>}
+                          {hint && <span className="block text-sm text-ink/60">{hint}</span>}
                         </span>
                         {values[f] === v && <Check size={18} className="text-ink" />}
                       </button>

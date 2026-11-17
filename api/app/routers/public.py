@@ -44,7 +44,7 @@ def content(db: Session = Depends(get_db)):
 
 class RequestIn(BaseModel):
     forWhom: Literal["SELF", "FAMILY", "PROFESSIONAL"]
-    program: Literal["VETERAN", "RECOVERY", "SENIOR"]
+    program: Literal["VETERAN", "RECOVERY", "SENIOR"] | None = None  # optional: it shapes support, never who gets a room
     room: str | None = None
     moveIn: Literal["ASAP", "30_DAYS", "60_DAYS", "EXPLORING"]
     payment: Literal["VA", "SSI", "PRIVATE", "OTHER", "UNSURE"]
@@ -80,7 +80,7 @@ def submit_request(body: RequestIn, db: Session = Depends(get_db)):
 
     room = db.scalar(select(Room).where(Room.slug == d["room"])) if d["room"] else None
     req = Request(
-        forWhom=d["forWhom"], program=d["program"], moveIn=d["moveIn"], payment=d["payment"],
+        forWhom=d["forWhom"], program=d["program"] or "", moveIn=d["moveIn"], payment=d["payment"],  # "" = they chose not to say
         name=d["name"], phone=d["phone"], email=d["email"], message=d["message"],
         roomId=room.id if room else None,
         referrerName=d["referrerName"], referrerOrg=d["referrerOrg"],
@@ -91,13 +91,13 @@ def submit_request(body: RequestIn, db: Session = Depends(get_db)):
 
     lines = [
         f"{d['name']} · {d['phone']}" + (f" · {d['email']}" if d["email"] else ""),
-        f"For: {FOR_WHOM[d['forWhom']]} · {PROGRAMS[d['program']]['long']}",
+        f"For: {FOR_WHOM[d['forWhom']]}" + (f" · {PROGRAMS[d['program']]['long']}" if d["program"] else ""),
         f"Room: {room.name if room else 'Any'} · Move in: {MOVE_IN[d['moveIn']]} · Pays with: {PAYMENT[d['payment']]}",
         f"Referred by {d['referrerName']}" + (f", {d['referrerOrg']}" if d["referrerOrg"] else "") + f" {d['referrerPhone'] or ''}" if d["referrerName"] else "",
         f'\n"{d["message"]}"' if d["message"] else "",
     ]
     notify.owner(
-        db, "request.new", f"New room request: {d['name']} ({PROGRAMS[d['program']]['label']})",
+        db, "request.new", f"New room request: {d['name']}" + (f" ({PROGRAMS[d['program']]['label']})" if d["program"] else ""),
         "\n".join(x for x in lines if x), f"/admin/requests/{req.id}",
     )
 

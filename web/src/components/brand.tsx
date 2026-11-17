@@ -17,7 +17,7 @@ export function Logo({ light = false }: { light?: boolean }) {
         <rect x="9.5" y="12.5" width="5" height="5" fill="var(--porch)" />
       </svg>
       <span className={`text-[1.06rem] font-semibold leading-none tracking-[-0.045em] ${light ? "text-white" : ""}`}>
-        Respite <span className={`hidden font-normal min-[420px]:inline ${light ? "text-white/50" : "opacity-50"}`}>for the Weary</span>
+        Respite <span className={`hidden font-normal min-[420px]:inline ${light ? "text-white/55" : "opacity-60"}`}>for the Weary</span>
       </span>
     </Link>
   );

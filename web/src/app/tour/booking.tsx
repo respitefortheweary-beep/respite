@@ -143,9 +143,9 @@ export function Booking({ days: initialDays, phone, address }: { days: Day[]; ph
                                 }}
                                 className={`${tile(on)} !w-[4.6rem] shrink-0 !items-center !px-2 !py-3.5 text-center`}
                               >
-                                <span className="mono text-[0.72rem] uppercase text-ink/55">{c.weekday}</span>
+                                <span className="mono text-[0.72rem] uppercase text-ink/60">{c.weekday}</span>
                                 <span className="mt-0.5 text-[1.5rem] font-semibold leading-none tabular">{c.day}</span>
-                                <span className="mt-1 text-[0.78rem] text-ink/55">{c.month}</span>
+                                <span className="mt-1 text-[0.78rem] text-ink/60">{c.month}</span>
                               </button>
                             );
                           })}
@@ -205,7 +205,7 @@ export function Booking({ days: initialDays, phone, address }: { days: Day[]; ph
                         rows={3}
                         maxLength={1000}
                         placeholder="Coming with a family member, need a ramp, running late…"
-                        className="w-full resize-none rounded-2xl bg-paper p-5 text-[1.05rem] ring-1 ring-line outline-none transition-shadow placeholder:text-ink/35 focus:ring-2 focus:ring-pine"
+                        className="w-full resize-none rounded-2xl bg-paper p-5 text-[1.05rem] ring-1 ring-line outline-none transition-shadow placeholder:text-ink/60 focus:ring-2 focus:ring-pine"
                       />
                     </label>
                   </div>

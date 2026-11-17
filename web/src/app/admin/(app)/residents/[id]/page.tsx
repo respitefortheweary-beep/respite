@@ -3,9 +3,9 @@ import { notFound } from "next/navigation";
 import { Phone, Printer } from "lucide-react";
 import { admin, orNull } from "@/lib/api";
 import { siteUrl } from "@/lib/site";
-import type { Bed, Charge, Request, Resident, ResidentDocument, ResidentNote, Room } from "@/lib/types";
+import type { AdminUser, Bed, Charge, Request, Resident, ResidentDocument, ResidentNote, Room } from "@/lib/types";
 import { longDate, money } from "@/lib/format";
-import { addCharge, moveOut, sendPayLink } from "../../../actions";
+import { addCharge, moveOut, replacePayLink, sendPayLink } from "../../../actions";
 import { Page, Card, CardHead, Notice, Label, Prop, isOverdue, btnPrimary, btnQuiet, input, link } from "../../ui";
 import { SubmitButton } from "../../submit";
 import { ConfirmAction } from "../../confirm";
@@ -13,16 +13,17 @@ import { ChargeList } from "../../payments/charge-table";
 import { PayLink, EditResident } from "./client";
 import { DepositCard, DocumentsCard, NotesCard } from "./records";
 
-export default async function ResidentDetail({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ welcome?: string }> }) {
+export default async function ResidentDetail({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ welcome?: string; newlink?: string }> }) {
   const { id } = await params;
-  const { welcome } = await searchParams;
+  const { welcome, newlink } = await searchParams;
   const r = await orNull(
     admin.get<Resident & { bed: (Bed & { room: Room }) | null; charges: Charge[]; request: Request | null }>(`/admin/residents/${encodeURIComponent(id)}`),
   );
   if (!r) notFound();
-  const [notes, docs] = await Promise.all([
+  const [notes, docs, me] = await Promise.all([
     admin.get<ResidentNote[]>(`/admin/residents/${r.id}/notes`),
     admin.get<ResidentDocument[]>(`/admin/residents/${r.id}/documents`),
+    admin.get<AdminUser>("/auth/me"),
   ]);
   const depositPaid = r.charges.filter((c) => c.label === "Security deposit" && c.status === "PAID").reduce((s, c) => s + c.amountCents, 0);
   const due = r.charges.filter((c) => c.status === "DUE");
@@ -65,12 +66,14 @@ export default async function ResidentDetail({ params, searchParams }: { params:
         </Notice>
       )}
 
+      {newlink && <Notice>{newlink}</Notice>}
+
       <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
         {/* What they owe and how they pay */}
         <section className="relative overflow-hidden rounded-2xl bg-night p-5 text-white sm:p-6 lg:col-start-2 lg:row-start-1">
           {owed > 0 && <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(60%_100%_at_85%_0%,rgb(240_165_58/0.16),transparent_70%)]" />}
           <div className="relative">
-            <p className="mono text-[0.7rem] uppercase tracking-[0.02em] text-white/45">{owed ? (late ? "Past due" : "Waiting to be paid") : "Balance"}</p>
+            <p className="mono text-[0.7rem] uppercase tracking-[0.02em] text-white/55">{owed ? (late ? "Past due" : "Waiting to be paid") : "Balance"}</p>
             <p className={`mono tabular mt-2 text-[2.6rem] font-medium leading-none tracking-[-0.055em] ${owed ? "text-porch-glow" : ""}`}>{owed ? money(owed) : "Paid up"}</p>
             <p className="mt-2.5 text-[0.86rem] text-white/55">
               {money(r.rentCents)} a month · {money(paid)} paid so far
@@ -78,6 +81,23 @@ export default async function ResidentDetail({ params, searchParams }: { params:
             <div className="mt-5 border-t border-white/10 pt-4">
               <p className="mb-2 text-[0.86rem] font-medium text-white/80">Pay link</p>
               <PayLink url={portal} phone={r.phone} firstName={first} hasEmail={!!r.email} send={sendPayLink.bind(null, r.id)} />
+              {me.role === "OWNER" && (
+                <ConfirmAction
+                  action={replacePayLink.bind(null, r.id)}
+                  label="Replace this link"
+                  className="press mt-1 inline-flex h-10 items-center rounded-full text-[0.84rem] text-white/60 underline underline-offset-4 hover:text-white"
+                  title={`Give ${first} a new pay link?`}
+                  body={
+                    <>
+                      Use this if the link was shared, forwarded or lost. The old link stops working right away, and anyone holding it can no longer see {first}&apos;s page.
+                      <span className="mt-2 block">
+                        {r.email ? `The new link is emailed to ${r.email}.` : `There's no email on file, so text ${first} the new link.`} Their balance, payments and autopay stay as they are.
+                      </span>
+                    </>
+                  }
+                  confirmLabel="Replace link"
+                />
+              )}
             </div>
           </div>
         </section>

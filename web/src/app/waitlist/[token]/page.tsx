@@ -20,7 +20,7 @@ export default async function WaitlistPlace({ params }: { params: Promise<{ toke
 
   return (
     <QuietPage>
-      <p className="mono text-[0.72rem] uppercase text-white/45">{left ? "Off the waitlist" : "On the waitlist"}</p>
+      <p className="mono text-[0.72rem] uppercase text-white/55">{left ? "Off the waitlist" : "On the waitlist"}</p>
       <h1 className="display-2 mt-3 text-[clamp(2rem,7vw,2.8rem)]" style={{ textWrap: "balance" }}>
         {left ? `You're off the list, ${entry.firstName}.` : `Leave the waitlist, ${entry.firstName}?`}
       </h1>
@@ -43,7 +43,7 @@ export default async function WaitlistPlace({ params }: { params: Promise<{ toke
           See the rooms
         </Link>
       </div>
-      <p className="mono mt-8 text-[0.8rem] text-white/40">
+      <p className="mono mt-8 text-[0.8rem] text-white/55">
         Questions? <a href={house.phoneHref} className="underline underline-offset-4 hover:text-white/70">{house.phone}</a>
       </p>
     </QuietPage>

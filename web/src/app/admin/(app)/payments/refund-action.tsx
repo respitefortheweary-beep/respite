@@ -84,7 +84,7 @@ export function RefundAction({ amount, online, refund }: { amount: string; onlin
               onChange={(e) => setNote(e.target.value)}
               maxLength={500}
               placeholder="Overpaid by mistake"
-              className="h-10 w-full rounded-xl bg-paper px-3 text-[0.92rem] ring-1 ring-line-strong outline-none placeholder:text-ink/35 focus:ring-2 focus:ring-ink"
+              className="h-10 w-full rounded-xl bg-paper px-3 text-[0.92rem] ring-1 ring-line-strong outline-none placeholder:text-ink/60 focus:ring-2 focus:ring-ink"
             />
           </label>
           <div className="mt-3 flex gap-2">

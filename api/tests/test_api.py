@@ -72,6 +72,14 @@ def test_me_and_no_hash_leak(client, auth):
     assert "passwordHash" not in me and "tokenVersion" not in me
 
 
+def test_request_without_program(client, auth):
+    """Saying which group fits is optional (fair housing): the request goes through without it."""
+    r = client.post("/public/requests", json={"forWhom": "SELF", "moveIn": "ASAP", "payment": "UNSURE", "name": "Pat Example", "phone": "804 555 0177"})
+    assert r.status_code == 201, r.text
+    req = client.get(f"/admin/requests/{r.json()['id']}", headers=auth).json()
+    assert not req["program"]
+
+
 def test_apply_then_move_in_then_pay(client, auth):
     bad = client.post("/public/requests", json={"forWhom": "SELF", "program": "SENIOR", "moveIn": "ASAP", "payment": "VA", "name": "A", "phone": "1234567"})
     assert bad.status_code == 400 and bad.json()["detail"] == "Enter a name"
@@ -896,3 +904,28 @@ def test_autopay_through_stripe(client, monkeypatch):
         extra = db.query(Charge).filter_by(residentId=res["id"], status="DUE").one()
         assert extra.autopayStatus == "FAILED"
     assert "autopay.failed" in [k for k, *_ in _emails(recipient="sal@example.com")]
+
+
+def test_replace_pay_link(client):
+    from app.security import login_limiter
+
+    auth = _login(client)
+    res = _new_resident(client, auth, "Lina Link", "lina@example.com")
+    old = res["portalToken"]
+    assert client.get(f"/portal/{old}").status_code == 200
+
+    # staff can send the link, but only an owner can replace it
+    client.post("/admin/users", headers=auth, json={"email": "helper3@example.com", "name": "Helper", "role": "STAFF", "password": "another-long-password"})
+    login_limiter._fails.clear()
+    staff = {"Authorization": f"Bearer {client.post('/auth/login', json={'email': 'helper3@example.com', 'password': 'another-long-password'}).json()['accessToken']}"}
+    assert client.post(f"/admin/residents/{res['id']}/new-link", headers=staff).status_code == 403
+
+    r = client.post(f"/admin/residents/{res['id']}/new-link", headers=auth)
+    assert r.status_code == 200 and "lina@example.com" in r.json()["ok"]
+    new = client.get(f"/admin/residents/{res['id']}", headers=auth).json()["portalToken"]
+    assert new != old
+    assert client.get(f"/portal/{old}").status_code == 404
+    assert client.post(f"/portal/{old}/checkout", json={}).status_code == 404
+    view = client.get(f"/portal/{new}").json()
+    assert view["name"] == "Lina Link" and len(view["charges"]) == 2  # nothing else changes
+    assert [k for k, *_ in _emails(recipient="lina@example.com")].count("resident.pay_link") == 1

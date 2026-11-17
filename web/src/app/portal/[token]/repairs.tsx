@@ -8,7 +8,7 @@ import type { Repair } from "@/lib/types";
 const AREAS = ["Bedroom", "Bathroom", "Kitchen", "Laundry", "Heat or air", "Outside", "Other"];
 const STATUS = { OPEN: "Sent", DOING: "Being fixed", DONE: "Fixed" } as const;
 const field =
-  "w-full rounded-xl bg-paper px-3.5 text-[1rem] ring-1 ring-line-strong outline-none transition-shadow placeholder:text-ink/35 focus:ring-2 focus:ring-ink";
+  "w-full rounded-xl bg-paper px-3.5 text-[1rem] ring-1 ring-line-strong outline-none transition-shadow placeholder:text-ink/60 focus:ring-2 focus:ring-ink";
 const day = (d: Date) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" });
 
 /** Something broken? Residents tell the house here instead of hunting for the manager. */

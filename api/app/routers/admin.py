@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from ..config import get_settings
 from ..db import get_db, now
-from ..models import Bed, Charge, RepairRequest, Request, Resident, Room, Tour, WaitlistEntry
+from ..models import AdminUser, Bed, Charge, RepairRequest, Request, Resident, Room, Tour, WaitlistEntry
 from ..security import current_admin, owner_only
 from ..services.payments import apply_plan, refund, send_receipt
 from ..serialize import row, rows
@@ -511,6 +511,28 @@ def send_pay_link(resident_id: str, db: Session = Depends(get_db)):
     notify.email(db, r.email, subject, text, "resident.pay_link")
     db.commit()
     return {"ok": f"Sent to {r.email}"}
+
+
+@router.post("/residents/{resident_id}/new-link")
+def replace_pay_link(resident_id: str, db: Session = Depends(get_db), user: AdminUser = Depends(owner_only)):
+    """Gives the resident a new pay link and stops the old one working, for when a link was shared or lost. Owners only."""
+    r = _get(db, Resident, resident_id, "resident")
+    r.portalToken = secrets.token_urlsafe(18)
+    link = f"{site_url()}/portal/{r.portalToken}"
+    if r.email:
+        notify.email(
+            db, r.email, "Your new Respite for the Weary pay link",
+            f"Hi {first_name(r.name)},\n\nWe've given you a new pay link. The old one no longer works, so please use this one from now on:\n{link}\n\n"
+            "Your balance, payments and autopay are just as they were. If you didn't expect this, call the house.",
+            "resident.pay_link",
+        )
+    notify.owner(
+        db, "resident.pay_link", f"New pay link for {r.name}",
+        f"{user.name or user.email} replaced it. The old link no longer works." + ("" if r.email else " There's no email on file, so text them the new one."),
+        f"/admin/residents/{r.id}", send_email=False,
+    )
+    db.commit()
+    return {"ok": f"New link made{f' and sent to {r.email}' if r.email else ''}. The old one no longer works."}
 
 
 # ───── Charges & billing ─────

@@ -4,6 +4,7 @@ import { getHouse } from "@/lib/content";
 import { Logo, Roll } from "./brand";
 import { HeaderShell } from "./header-shell";
 import { MobileMenu } from "./mobile-menu";
+import { EqualHousingLogo } from "./equal-housing";
 
 export { Roll, Logo } from "./brand";
 
@@ -61,7 +62,7 @@ export async function SiteFooter() {
   return (
     <footer className="overflow-hidden bg-night text-white">
       <div className="mx-auto max-w-[1280px] px-4 pt-20 sm:px-6">
-        <p className="eyebrow !text-white/40">Call the house</p>
+        <p className="eyebrow !text-white/55">Call the house</p>
         <a
           href={phoneHref}
           className="group mt-4 flex items-baseline gap-4 text-[clamp(3.2rem,13.5vw,12.5rem)] font-semibold leading-[0.85] tracking-[-0.06em] tabular"
@@ -76,7 +77,7 @@ export async function SiteFooter() {
             <p className="mt-4 max-w-sm text-white/55">{house.footerBlurb}</p>
           </div>
           <div>
-            <p className="eyebrow mb-4 !text-white/40">Visit</p>
+            <p className="eyebrow mb-4 !text-white/55">Visit</p>
             <p className="text-white/80">{house.address}</p>
             {house.tourNote && <p className="mt-1 text-white/50">{house.tourNote}</p>}
             <Link href="/tour" className="mt-3 inline-block text-porch hover:text-porch-glow">
@@ -84,7 +85,7 @@ export async function SiteFooter() {
             </Link>
           </div>
           <div>
-            <p className="eyebrow mb-4 !text-white/40">Pages</p>
+            <p className="eyebrow mb-4 !text-white/55">Pages</p>
             <ul className="space-y-1.5 text-white/75">
               {[
                 ["/rooms", "Rooms and availability"],
@@ -103,11 +104,19 @@ export async function SiteFooter() {
             </ul>
           </div>
         </div>
-        <div className="mono flex flex-wrap justify-between gap-2 border-t border-white/10 py-6 text-[0.75rem] text-white/40">
+        <div className="flex items-center gap-3 border-t border-white/10 py-6 text-[0.85rem] leading-snug text-white/65 [--eho-bg:var(--night)]">
+          <EqualHousingLogo className="h-9 w-9 shrink-0 text-white/80" />
+          <p>
+            Equal Housing Opportunity. We follow federal and Virginia fair housing law, and welcome requests for reasonable accommodations.{" "}
+            <Link href="/fair-housing" className="text-white underline underline-offset-4 hover:text-porch">Learn more</Link>
+          </p>
+        </div>
+        <div className="mono flex flex-wrap justify-between gap-2 border-t border-white/10 py-6 text-[0.75rem] text-white/60">
           <span>© {new Date().getFullYear()} Respite for the Weary</span>
           <span className="flex gap-5">
             <Link href="/privacy" className="hover:text-white">Privacy</Link>
             <Link href="/terms" className="hover:text-white">Terms</Link>
+            <Link href="/fair-housing" className="hover:text-white">Fair housing</Link>
           </span>
           {house.footerTagline && <span>{house.footerTagline}</span>}
         </div>

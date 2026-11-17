@@ -57,7 +57,7 @@ export default async function Portal({ params, searchParams }: { params: Promise
         </a>
       </header>
 
-      <main className="mx-auto max-w-xl px-4 pb-20 sm:px-5">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-xl px-4 pb-20 sm:px-5">
         <p className="eyebrow mt-4">{r.active ? (r.bed ? `${r.bed.room.name} · ${r.bed.label}` : "Resident") : "Past resident"}</p>
         <h1 className="display-2 mt-3 text-[clamp(2.4rem,9vw,3.2rem)]">Hi, {first}.</h1>
 

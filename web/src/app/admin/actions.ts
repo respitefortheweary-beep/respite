@@ -278,6 +278,13 @@ export async function sendPayLink(residentId: string): Promise<FormState> {
   return attempt(() => admin.post<{ ok: string }>(`/admin/residents/${residentId}/send-link`));
 }
 
+/** Makes a new pay link and stops the old one working. Owners only. */
+export async function replacePayLink(residentId: string) {
+  const { ok } = await admin.post<{ ok: string }>(`/admin/residents/${residentId}/new-link`);
+  refresh();
+  redirect(`/admin/residents/${residentId}?newlink=${encodeURIComponent(ok)}`);
+}
+
 /* ───── Notifications ───── */
 export async function markAllRead() {
   await admin.post("/admin/notifications/read", {});

@@ -30,7 +30,7 @@ export function PayForm({
               id="amount" name="amount" inputMode="decimal" autoComplete="off" autoFocus required
               value={amount} onChange={(e) => setAmount(e.target.value)}
               placeholder={String(Math.round(total / 200))}
-              className="mono tabular ml-1 min-w-0 flex-1 bg-transparent text-[1.3rem] outline-none placeholder:text-white/25"
+              className="mono tabular ml-1 min-w-0 flex-1 bg-transparent text-[1.3rem] outline-none placeholder:text-white/50"
             />
           </div>
           <p className="mt-2 text-[0.8rem] leading-snug text-white/55">

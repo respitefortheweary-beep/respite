@@ -19,7 +19,7 @@ export default function AdminError({ error, reset }: { error: Error & { digest?:
             Back to the overview
           </a>
         </div>
-        {error.digest && <p className="mono mt-5 text-[0.7rem] uppercase text-ink/35">Ref {error.digest}</p>}
+        {error.digest && <p className="mono mt-5 text-[0.7rem] uppercase text-ink/60">Ref {error.digest}</p>}
       </Card>
     </Page>
   );

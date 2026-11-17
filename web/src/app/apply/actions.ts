@@ -3,7 +3,7 @@ import { api, ApiError } from "@/lib/api";
 
 export type RequestInput = {
   forWhom: "SELF" | "FAMILY" | "PROFESSIONAL";
-  program: "VETERAN" | "RECOVERY" | "SENIOR";
+  program?: "VETERAN" | "RECOVERY" | "SENIOR";
   room?: string;
   moveIn: "ASAP" | "30_DAYS" | "60_DAYS" | "EXPLORING";
   payment: "VA" | "SSI" | "PRIVATE" | "OTHER" | "UNSURE";

@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { X, ArrowLeft, Check, User, Users, Briefcase, Medal, Sprout, Armchair, Loader2 } from "lucide-react";
@@ -9,7 +9,7 @@ import type { BedState } from "@/lib/availability";
 import { money, shortDate } from "@/lib/format";
 
 type RoomOpt = { slug: string; name: string; kind: string; floor: string; rentCents: number; tone: string; states: BedState[]; open: number; soon: string | null };
-type Data = Partial<RequestInput>;
+type Data = Partial<RequestInput> & { programSkipped?: boolean };
 type StepId = "forWhom" | "referrer" | "program" | "room" | "moveIn" | "payment" | "contact" | "message";
 
 export function Flow({ rooms, initialRoom, initialFor, phone }: { rooms: RoomOpt[]; initialRoom?: string; initialFor?: "PROFESSIONAL"; phone: { label: string; href: string } }) {
@@ -28,6 +28,14 @@ export function Flow({ rooms, initialRoom, initialFor, phone }: { rooms: RoomOpt
     return s;
   }, [data.forWhom]);
   const step = steps[i];
+
+  // Each question replaces the last, so move focus to its heading: keyboard and screen reader users land on the new question
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) return void (first.current = false);
+    const t = setTimeout(() => document.querySelector<HTMLElement>("#main h1")?.focus({ preventScroll: true }), reduce ? 20 : 320);
+    return () => clearTimeout(t);
+  }, [step, done, reduce]);
   const progress = done ? 1 : i / steps.length;
 
   const set = (patch: Data) => setData((d) => ({ ...d, ...patch }));
@@ -48,7 +56,7 @@ export function Flow({ rooms, initialRoom, initialFor, phone }: { rooms: RoomOpt
   const canContinue: Record<StepId, boolean> = {
     forWhom: !!data.forWhom,
     referrer: !!data.referrerName?.trim() && !!(data.referrerPhone?.trim() || data.referrerEmail?.trim()),
-    program: !!data.program,
+    program: !!data.program || !!data.programSkipped,
     room: data.room !== undefined,
     moveIn: !!data.moveIn,
     payment: !!data.payment,
@@ -59,7 +67,8 @@ export function Flow({ rooms, initialRoom, initialFor, phone }: { rooms: RoomOpt
   function submit() {
     setError(null);
     start(async () => {
-      const res = await submitRequest({ ...(data as RequestInput), room: data.room || undefined });
+      const { programSkipped: _, ...input } = data;
+      const res = await submitRequest({ ...(input as RequestInput), room: data.room || undefined });
       if (res.ok) setDone(res.firstName);
       else setError(res.error);
     });
@@ -74,7 +83,7 @@ export function Flow({ rooms, initialRoom, initialFor, phone }: { rooms: RoomOpt
         <Link href="/" aria-label="Close and go home" className="press grid h-10 w-10 shrink-0 place-items-center rounded-full text-ink/60 hover:bg-ink/5 hover:text-ink">
           <X size={22} />
         </Link>
-        <div className="relative h-3.5 flex-1 overflow-hidden rounded-full bg-ink/10" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
+        <div className="relative h-3.5 flex-1 overflow-hidden rounded-full bg-ink/10" role="progressbar" aria-label="Progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
           <motion.div
             className="absolute inset-y-0 left-0 rounded-full bg-porch"
             initial={false}
@@ -86,7 +95,7 @@ export function Flow({ rooms, initialRoom, initialFor, phone }: { rooms: RoomOpt
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pb-36 pt-10 sm:px-6 sm:pt-16">
+      <main id="main" tabIndex={-1} className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pb-36 pt-10 sm:px-6 sm:pt-16">
         <AnimatePresence mode="wait" custom={dir} initial={false}>
           {done ? (
             <Done key="done" name={done} rooms={rooms} phone={phone} />
@@ -127,14 +136,18 @@ export function Flow({ rooms, initialRoom, initialFor, phone }: { rooms: RoomOpt
               )}
 
               {step === "program" && (
-                <Q title={data.forWhom === "SELF" ? "Which describes you best?" : "Which describes them best?"}>
+                <Q
+                  title={data.forWhom === "SELF" ? "Which describes you best?" : "Which describes them best?"}
+                  hint="Optional. It helps us plan support. It never decides who gets a room."
+                >
                   <Choices
-                    value={data.program}
-                    onPick={(v) => pick({ program: v as RequestInput["program"] })}
+                    value={data.program ?? (data.programSkipped ? "NONE" : undefined)}
+                    onPick={(v) => pick(v === "NONE" ? { program: undefined, programSkipped: true } : { program: v as RequestInput["program"], programSkipped: false })}
                     options={[
                       ["VETERAN", "Veteran", "Served in the military", Medal],
                       ["RECOVERY", "In recovery", "Looking for a sober living home", Sprout],
                       ["SENIOR", "Independent senior", "Wants support without living alone", Armchair],
+                      ["NONE", "Something else, or rather not say", "That's fine. Everyone is welcome to ask."],
                     ]}
                   />
                 </Q>
@@ -162,7 +175,7 @@ export function Flow({ rooms, initialRoom, initialFor, phone }: { rooms: RoomOpt
                             </span>
                             <WindowRow states={r.states} size={9} />
                           </span>
-                          <span className={`mt-3 block text-[0.85rem] font-medium ${r.open ? "text-pine" : "text-ink/50"}`}>
+                          <span className={`mt-3 block text-[0.85rem] font-medium ${r.open ? "text-pine" : "text-ink/60"}`}>
                             {r.open ? `${r.open} open now` : r.soon ? `Opens ${shortDate(r.soon)}` : "Full — waitlist"}
                           </span>
                         </button>
@@ -228,7 +241,7 @@ export function Flow({ rooms, initialRoom, initialFor, phone }: { rooms: RoomOpt
                     rows={5}
                     maxLength={1500}
                     placeholder={data.forWhom === "PROFESSIONAL" ? "Discharge date, mobility needs, best time to call…" : "Questions, timing, anything that would help…"}
-                    className="w-full resize-none rounded-[22px] bg-paper p-5 text-[1.05rem] ring-1 ring-line outline-none transition-shadow placeholder:text-ink/35 focus:ring-2 focus:ring-pine"
+                    className="w-full resize-none rounded-[22px] bg-paper p-5 text-[1.05rem] ring-1 ring-line outline-none transition-shadow placeholder:text-ink/60 focus:ring-2 focus:ring-pine"
                   />
                   <Summary data={data} rooms={rooms} />
                 </Q>
@@ -275,7 +288,7 @@ export const tile = (on: boolean) =>
 export function Q({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
     <section>
-      <h1 className="display-2 text-[clamp(2.1rem,5.4vw,3.4rem)]">{title}</h1>
+      <h1 tabIndex={-1} className="display-2 text-[clamp(2.1rem,5.4vw,3.4rem)] outline-none">{title}</h1>
       {hint && <p className="mt-3 text-[1.05rem] text-ink/60">{hint}</p>}
       <div className="mt-9">{children}</div>
     </section>
@@ -320,7 +333,7 @@ export function Field({ label, value, onChange, type = "text", ...rest }: { labe
         type={type}
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value)}
-        className="h-14 w-full rounded-2xl bg-paper px-5 text-[1.05rem] ring-1 ring-line outline-none transition-shadow placeholder:text-ink/35 focus:ring-2 focus:ring-pine"
+        className="h-14 w-full rounded-2xl bg-paper px-5 text-[1.05rem] ring-1 ring-line outline-none transition-shadow placeholder:text-ink/60 focus:ring-2 focus:ring-pine"
         {...rest}
       />
     </label>
@@ -339,7 +352,7 @@ function Summary({ data, rooms }: { data: Data; rooms: RoomOpt[] }) {
     <dl className="mt-6 divide-y divide-line rounded-[22px] bg-paper/60 px-5 ring-1 ring-line">
       {rows.map(([k, v]) => (
         <div key={k} className="flex justify-between gap-4 py-3 text-[0.95rem]">
-          <dt className="text-ink/55">{k}</dt>
+          <dt className="text-ink/60">{k}</dt>
           <dd className="truncate font-medium">{v}</dd>
         </div>
       ))}
@@ -358,7 +371,7 @@ function Done({ name, rooms, phone }: { name: string; rooms: RoomOpt[]; phone: {
     >
       {/* Every window lights up for the celebration */}
       <House states={states.map(() => "open")} className="w-64 sm:w-80" />
-      <h1 className="display-2 mt-6 text-[clamp(2.4rem,6vw,3.8rem)]">Request sent, {name}.</h1>
+      <h1 tabIndex={-1} className="display-2 mt-6 text-[clamp(2.4rem,6vw,3.8rem)] outline-none">Request sent, {name}.</h1>
       <p className="mt-4 max-w-md text-[1.08rem] text-ink/70">
         We&apos;ll call within one business day. If it&apos;s urgent, call us at{" "}
         <a href={phone.href} className="font-semibold text-ink underline underline-offset-4">

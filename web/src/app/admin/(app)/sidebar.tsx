@@ -102,7 +102,7 @@ export function Sidebar({ newRequests, overdue, beds, unread, failedEmails, repa
         <Link href="/admin" className="flex items-center gap-2.5 px-3">
           <Mark />
           <span className="text-[1.06rem] font-semibold leading-none tracking-[-0.045em]">
-            Respite <span className="font-normal text-white/45">for the Weary</span>
+            Respite <span className="font-normal text-white/55">for the Weary</span>
           </span>
         </Link>
 
@@ -120,7 +120,7 @@ export function Sidebar({ newRequests, overdue, beds, unread, failedEmails, repa
                       active ? "bg-white/[.09] font-medium text-white" : "text-white/60 hover:bg-white/[.05] hover:text-white"
                     }`}
                   >
-                    <Icon size={17} strokeWidth={1.8} className={active ? "text-porch" : "text-white/45 group-hover:text-white/80"} />
+                    <Icon size={17} strokeWidth={1.8} className={active ? "text-porch" : "text-white/55 group-hover:text-white/80"} />
                     <span className="flex-1">{label}</span>
                     {n > 0 && (
                       <span className={`mono tabular grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-[0.7rem] font-semibold ${"badge" in it && (it.badge === "overdue" || (it.badge === "unread" && failedEmails)) ? "bg-ember text-white" : "bg-porch text-ink"}`}>
@@ -136,7 +136,7 @@ export function Sidebar({ newRequests, overdue, beds, unread, failedEmails, repa
 
         <div className="mt-auto">
           <Link href="/admin/rooms" className="block rounded-xl px-3 py-3 transition-colors hover:bg-white/[.05]">
-            <span className="mono block text-[0.68rem] uppercase tracking-[0.02em] text-white/40">Tonight</span>
+            <span className="mono block text-[0.68rem] uppercase tracking-[0.02em] text-white/55">Tonight</span>
             <span className="mt-2 flex items-center justify-between">
               <Windows beds={beds} />
               <span className="mono text-[0.78rem] text-white/70">
@@ -146,11 +146,11 @@ export function Sidebar({ newRequests, overdue, beds, unread, failedEmails, repa
           </Link>
           <div className="mt-2 border-t border-white/10 pt-2 text-[0.9rem]">
             <Link href="/" target="_blank" className="flex h-10 items-center gap-3 rounded-xl px-3 text-white/60 transition-colors hover:bg-white/[.05] hover:text-white">
-              <ArrowUpRight size={17} className="text-white/45" /> View public site
+              <ArrowUpRight size={17} className="text-white/55" /> View public site
             </Link>
             <form action={logout}>
               <button className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-white/60 transition-colors hover:bg-white/[.05] hover:text-white">
-                <LogOut size={16} className="text-white/45" /> Log out
+                <LogOut size={16} className="text-white/55" /> Log out
               </button>
             </form>
           </div>

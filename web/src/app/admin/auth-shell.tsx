@@ -10,14 +10,14 @@ export const authCard = "rounded-3xl bg-white/[.05] p-6 ring-1 ring-white/10 sm:
 /** The night backdrop shared by forgot password and reset password. */
 export function AuthShell({ children }: { children: React.ReactNode }) {
   return (
-    <main className="relative grid min-h-dvh place-items-center overflow-hidden bg-night px-4 text-white">
+    <main id="main" tabIndex={-1} className="relative grid min-h-dvh place-items-center overflow-hidden bg-night px-4 text-white">
       <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[60vh] bg-[radial-gradient(50%_60%_at_50%_0%,rgb(240_165_58/0.16),transparent_70%)]" />
       <div className="relative w-full max-w-sm">
         <div className="mb-9 flex justify-center">
           <Logo light />
         </div>
         {children}
-        <p className="mt-6 text-center text-[0.86rem] text-white/45">
+        <p className="mt-6 text-center text-[0.86rem] text-white/55">
           <Link href="/admin/login" className="text-white/75 underline decoration-white/25 underline-offset-4 hover:text-white">
             Back to log in
           </Link>

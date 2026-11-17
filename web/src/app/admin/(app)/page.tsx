@@ -41,13 +41,13 @@ export default async function Overview() {
   ];
 
   return (
-    <main className="mx-auto w-full max-w-[1240px] px-4 pb-16 pt-4 sm:px-8 md:pt-8">
+    <main id="main" tabIndex={-1} className="mx-auto w-full max-w-[1240px] px-4 pb-16 pt-4 sm:px-8 md:pt-8">
       {/* The house tonight */}
       <section className="relative overflow-hidden rounded-3xl bg-night text-white">
         <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-[radial-gradient(55%_80%_at_78%_100%,rgb(240_165_58/0.14),transparent_70%)]" />
         <div className="relative grid gap-2 md:grid-cols-[minmax(0,1fr)_minmax(280px,420px)]">
           <div className="p-6 sm:p-9 md:pb-10">
-            <p className="mono text-[0.72rem] uppercase tracking-[0.02em] text-white/45">{today}</p>
+            <p className="mono text-[0.72rem] uppercase tracking-[0.02em] text-white/55">{today}</p>
             <h1 className="display-2 mt-4 text-[clamp(2.2rem,5vw,3.6rem)]">{greeting}</h1>
             <p className="mt-4 max-w-md text-[1.08rem] leading-snug text-white/70">{next.text}</p>
             <Link href={next.href} className="press mt-6 inline-flex h-11 items-center gap-2 rounded-full bg-porch px-5 text-[0.93rem] font-medium text-ink hover:bg-porch-glow">
@@ -83,7 +83,7 @@ export default async function Overview() {
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-medium">{r.name}</span>
                       <span className="block truncate text-[0.85rem] text-moss">
-                        {PROGRAMS[r.program as Program]?.long} · {r.room?.name.replace("The ", "") ?? "Any room"} · {timeAgo(r.createdAt)}
+                        {PROGRAMS[r.program as Program]?.long ?? "Not said"} · {r.room?.name.replace("The ", "") ?? "Any room"} · {timeAgo(r.createdAt)}
                       </span>
                     </span>
                     <StatusPill status={r.status} />
