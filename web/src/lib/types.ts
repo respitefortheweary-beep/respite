@@ -59,7 +59,7 @@ export type Notification = {
 
 /* Words, photos and contact details the owners edit under Website in the dashboard. */
 export type SitePhoto = { src: string; alt: string; caption: string };
-export type House = { phone: string; phoneHref: string; address: string; town: string; tourNote: string; footerBlurb: string; footerTagline: string };
+export type House = { phone: string; phoneHref: string; email: string; address: string; town: string; tourNote: string; footerBlurb: string; footerTagline: string };
 export type IncludedItem = { label: string; title: string; body: string };
 export type HomeCopy = {
   heroLine1: string; heroLine2: string; heroText: string; statement: string;

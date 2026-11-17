@@ -11,6 +11,7 @@ export const getContent = cache(() => api.get<SiteContent>("/public/content"));
 const FALLBACK_HOUSE: House = {
   phone: PHONE,
   phoneHref: PHONE_HREF,
+  email: "support@respite4theweary.com",
   address: "Chester, Virginia 23831",
   town: "Chester, Virginia",
   tourNote: "Tours by appointment.",

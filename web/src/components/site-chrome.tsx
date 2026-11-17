@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, Phone } from "lucide-react";
+import { ArrowUpRight, Mail, Phone } from "lucide-react";
 import { getHouse } from "@/lib/content";
 import { Logo, Roll } from "./brand";
 import { HeaderShell } from "./header-shell";
@@ -70,6 +70,11 @@ export async function SiteFooter() {
           <span className="transition-colors duration-300 group-hover:text-porch">{phone}</span>
           <ArrowUpRight className="hidden h-[0.4em] w-[0.4em] shrink-0 text-white/30 transition-[transform,color] duration-300 ease-[var(--ease-out)] group-hover:-translate-y-1 group-hover:translate-x-1 group-hover:text-porch sm:block" />
         </a>
+        {house.email && (
+          <a href={`mailto:${house.email}`} className="mono mt-6 inline-flex items-center gap-2 text-[0.95rem] text-white/60 transition-colors hover:text-porch">
+            <Mail size={15} /> <Roll>{house.email}</Roll>
+          </a>
+        )}
 
         <div className="mt-20 grid gap-10 border-t border-white/10 py-12 text-[0.95rem] sm:grid-cols-2 md:grid-cols-4">
           <div className="md:col-span-2">

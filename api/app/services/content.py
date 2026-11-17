@@ -34,11 +34,20 @@ class Photo(Clean):
 
 class House(Clean):
     phone: str = _text(40)
+    # optional; a section saved before this field existed picks up the default instead of failing
+    email: str = Field(default="support@respite4theweary.com", max_length=120)
     address: str = _text(160)  # footer "Visit"
     town: str = _text(80)  # the short place name on room pages
     tourNote: str = _text(160, required=False)
     footerBlurb: str = _text(300)
     footerTagline: str = _text(120, required=False)
+
+    @field_validator("email")
+    @classmethod
+    def _email_shape(cls, v: str):
+        if v and not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", v):
+            raise ValueError("Enter an email address like support@example.com, or leave it empty.")
+        return v.lower()
 
 
 class Included(Clean):
@@ -115,6 +124,7 @@ HOME_PHOTOS = ["kitchen", "road", "porch", "referral"]
 DEFAULTS: dict[str, dict] = {
     "house": {
         "phone": "804-803-6248",
+        "email": "support@respite4theweary.com",
         "address": "Chester, Virginia 23831",
         "town": "Chester, Virginia",
         "tourNote": "Tours by appointment.",

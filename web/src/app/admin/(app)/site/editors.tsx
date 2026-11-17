@@ -319,8 +319,9 @@ export function HouseEditor({ initial, defaults }: { initial: HouseFields; defau
       <Section title="Contact" hint="The phone number shows in the header, the footer, every Call button and the emails people get.">
         <div className={pair}>
           <Text label="Phone" value={d.phone} onChange={(phone) => s.set({ phone })} max={40} />
-          <Text label="Town" value={d.town} onChange={(town) => s.set({ town })} max={80} hint="The short place name on each room page." />
+          <Text label="Email" value={d.email} onChange={(email) => s.set({ email })} max={120} optional hint="Under the phone in the footer and on the privacy page. Leave empty to hide it." />
         </div>
+        <Text label="Town" value={d.town} onChange={(town) => s.set({ town })} max={80} hint="The short place name on each room page." />
         <Text label="Address" value={d.address} onChange={(address) => s.set({ address })} max={160} hint="Under Visit in the footer." />
         <Text label="Tours" value={d.tourNote} onChange={(tourNote) => s.set({ tourNote })} max={160} optional />
       </Section>

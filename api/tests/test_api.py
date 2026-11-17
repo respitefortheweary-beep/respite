@@ -328,6 +328,20 @@ def test_site_content_defaults_edit_and_reset(client):
     bad = client.put("/admin/content/house", headers=auth, json={**house, "phone": "  "})
     assert bad.status_code == 400 and "phone" in bad.json()["detail"]
 
+    # the contact email: defaults to support@, can be hidden, rejects junk, and an older saved house without it still loads
+    assert c["house"]["email"] == "support@respite4theweary.com"
+    assert client.put("/admin/content/house", headers=auth, json={**house, "email": " Help@Example.org "}).json()["email"] == "help@example.org"
+    assert client.put("/admin/content/house", headers=auth, json={**house, "email": ""}).json()["email"] == ""
+    assert client.put("/admin/content/house", headers=auth, json={**house, "email": "not an email"}).status_code == 400
+    from app.models import SiteContent
+    import json as _json
+    with SessionLocal() as db:
+        old = {k: v for k, v in house.items() if k != "email"}
+        db.get(SiteContent, "house").value = _json.dumps(old)
+        db.commit()
+    got = client.get("/public/content").json()["house"]
+    assert got["phone"] == "(804) 555-0100" and got["email"] == "support@respite4theweary.com"
+
     items = c["faq"]["items"][::-1] + [{"q": "Pets?", "a": "Ask us."}]
     assert client.put("/admin/content/faq", headers=auth, json={"items": items}).json()["items"][0]["q"] == "Can we visit first?"
     who = c["who"]

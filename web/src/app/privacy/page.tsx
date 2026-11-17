@@ -100,7 +100,15 @@ export default async function PrivacyPage() {
           If we change how we handle your information, we will update this page and the date at the top. Questions? Call us at{" "}
           <a href={house.phoneHref} className="font-medium text-ink underline decoration-ink/25 underline-offset-4 hover:decoration-ink">
             {house.phone}
-          </a>{" "}
+          </a>
+          {house.email && (
+            <>
+              , email{" "}
+              <a href={`mailto:${house.email}`} className="font-medium text-ink underline decoration-ink/25 underline-offset-4 hover:decoration-ink">
+                {house.email}
+              </a>
+            </>
+          )}{" "}
           or visit us at {house.address}. See also our{" "}
           <Link href="/terms" className="font-medium text-ink underline decoration-ink/25 underline-offset-4 hover:decoration-ink">
             terms of use
