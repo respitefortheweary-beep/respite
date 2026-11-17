@@ -39,12 +39,12 @@ export default async function FairHousingPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="Who the house is for">
+      <LegalSection title="Who our houses are for">
         <p>
-          We describe the house as a home for veterans, people in recovery and independent seniors because that is the support we are set up to give. It is not a rule
+          We describe our houses as homes for veterans, people in recovery and independent seniors because that is the support we are set up to give. It is not a rule
           about who can apply. Telling us which of these fits you is optional, and it never decides who gets a room.
         </p>
-        <p>The house is drug and alcohol free. That rule is the same for everyone who lives here.</p>
+        <p>Every house is drug and alcohol free. That rule is the same for everyone who lives in them.</p>
       </LegalSection>
 
       <LegalSection title="Asking for an accommodation">

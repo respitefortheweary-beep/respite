@@ -5,7 +5,7 @@ import { api } from "@/lib/api";
 import { getHouse } from "@/lib/content";
 import { Booking } from "./booking";
 
-export const metadata: Metadata = { title: "Book a tour", description: "Pick a time to visit the house in Chester, Virginia, and see the rooms before you decide." };
+export const metadata: Metadata = { title: "Book a tour", description: "Pick a time to visit a house in Chester, Virginia, and see the rooms before you decide." };
 export const dynamic = "force-dynamic";
 
 type Slots = { enabled: boolean; days: { date: string; times: string[] }[] };
@@ -25,7 +25,7 @@ export default async function TourPage() {
       </header>
       <main id="main" className="mx-auto w-full max-w-3xl flex-1 px-4 pb-24 pt-10 sm:px-6 sm:pt-16">
         <h1 className="display-2 text-[clamp(2.1rem,5.4vw,3.4rem)]" style={{ textWrap: "balance" }}>
-          Come and see the house.
+          Come and see where you&apos;d live.
         </h1>
         <p className="mt-4 max-w-xl text-[1.05rem] text-ink/65" style={{ textWrap: "pretty" }}>
           Call and we&apos;ll set up a time that works for you. {house.tourNote}

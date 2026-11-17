@@ -43,7 +43,7 @@ export default async function TermsPage() {
 
       <LegalSection title="Payments">
         <p>
-          Card and bank payments are processed by Stripe. A payment counts once Stripe confirms it, and your balance updates on your pay page. If something looks wrong, call the house and we will sort it out with you. Deposits are handled as your resident agreement says.
+          Card and bank payments are processed by Stripe. A payment counts once Stripe confirms it, and your balance updates on your pay page. If something looks wrong, call us and we will sort it out with you. Deposits are handled as your resident agreement says.
         </p>
       </LegalSection>
 
@@ -68,7 +68,7 @@ export default async function TermsPage() {
 
       <LegalSection title="Questions">
         <p>
-          Call the house at{" "}
+          Call us at{" "}
           <a href={house.phoneHref} className={link}>
             {house.phone}
           </a>{" "}

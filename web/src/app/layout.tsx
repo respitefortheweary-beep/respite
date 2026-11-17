@@ -6,8 +6,8 @@ import "./globals.css";
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist", display: "swap" });
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono", display: "swap" });
 
-const TITLE = "Respite for the Weary · A home with six beds in Chester, Virginia";
-const DESCRIPTION = "A safe, supportive home in Chester, VA for veterans, people in recovery and independent seniors. See open beds and request a room.";
+const TITLE = "Respite for the Weary · Sober, shared homes in Chester, Virginia";
+const DESCRIPTION = "Safe, supportive shared homes in and around Chester, VA for veterans, people in recovery and independent seniors. See open beds and request a room.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
@@ -18,9 +18,9 @@ export const metadata: Metadata = {
     siteName: "Respite for the Weary",
     title: TITLE,
     description: DESCRIPTION,
-    images: [{ url: "/images/hero/house-dark.webp", alt: "The house in Chester at night with the porch light on" }],
+    images: [{ url: "/images/hero/house-day.webp", alt: "A white clapboard house with a deep front porch on a clear morning" }],
   },
-  twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION, images: ["/images/hero/house-dark.webp"] },
+  twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION, images: ["/images/hero/house-day.webp"] },
   ...(process.env.SHOWCASE ? { robots: { index: false, follow: false } } : {}),
 };
 

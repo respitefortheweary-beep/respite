@@ -11,6 +11,7 @@ from .db import Base, SessionLocal, engine
 from .models import AdminUser
 from .routers import admin, auth, hooks, notifications, portal, public, records
 from .security import hash_password
+from .services.content import refresh_old_wording
 from .services.houses import ensure_houses
 from .services.notify import outbox
 
@@ -45,6 +46,7 @@ def bootstrap() -> None:
     s = get_settings()
     with SessionLocal() as db:
         ensure_houses(db)
+        refresh_old_wording(db)
         if db.scalar(select(func.count()).select_from(AdminUser)):
             return
         if s.admin_email and s.admin_password:

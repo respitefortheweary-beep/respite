@@ -97,7 +97,7 @@ export default async function PrivacyPage() {
 
       <LegalSection title="Changes and questions">
         <p>
-          If we change how we handle your information, we will update this page and the date at the top. Questions? Call the house at{" "}
+          If we change how we handle your information, we will update this page and the date at the top. Questions? Call us at{" "}
           <a href={house.phoneHref} className="font-medium text-ink underline decoration-ink/25 underline-offset-4 hover:decoration-ink">
             {house.phone}
           </a>{" "}

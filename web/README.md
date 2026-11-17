@@ -1,6 +1,6 @@
 # Respite for the Weary
 
-Website and house-management app for Respite for the Weary, a 6-bed home in Chester, VA.
+Website and house-management app for Respite for the Weary, shared sober homes in and around Chester, VA. Owners can run several houses from one dashboard.
 
 - **Public site**: landing page, room listings with live bed availability, a step-by-step room request.
 - **Owner dashboard** (`/admin`): requests board, rooms & photos, residents, rent and payments.

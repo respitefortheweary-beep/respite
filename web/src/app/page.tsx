@@ -24,33 +24,37 @@ export default async function HomePage() {
   const { home, who, faq, house } = content;
   const photo = home.photos;
   const open = beds.filter((b) => b.state === "open").length;
-  // the hero photograph is of the first house, so only its beds light its windows
-  const firstHouse = beds.filter((b) => b.houseId === beds[0]?.houseId);
-  const several = new Set(rooms.map((r) => r.houseId)).size > 1;
+  const houses = new Set(rooms.map((r) => r.houseId)).size;
+  const several = houses > 1;
+  const live = open
+    ? `${open} of ${beds.length} beds open tonight${several ? ` across ${houses} houses` : ""}`
+    : beds.length
+      ? `All ${beds.length} ${beds.length === 1 ? "bed is" : "beds are"} taken tonight · join the waitlist`
+      : "Rooms opening soon · join the waitlist";
 
   return (
     <>
       <SiteHeader />
       <main id="main" tabIndex={-1} className="outline-none">
-        {/* ───────── Hero: the house at night; windows light up for open beds ───────── */}
-        <section data-night className="-mt-16">
-          <HouseScene states={firstHouse.map((b) => b.state)}>
+        {/* ───────── Hero: one screen, the house in the morning, the live count and the search ───────── */}
+        <section className="-mt-16">
+          <HouseScene>
             {/* top padding = the 64px header the hero sits under, plus Spacing-600 (mobile) / Spacing-800 (desktop) */}
             <div className="mx-auto max-w-[1280px] px-4 pt-28 sm:px-6 md:pt-36">
               {/* proof signal: the live bed count */}
-              <p className="mono caption-4 rise flex items-center gap-2 text-white/60">
+              <p className="mono caption-4 rise flex items-center gap-2 text-ink/65">
                 <span className="relative flex h-2 w-2">
                   <span className="absolute inset-0 animate-ping rounded-full bg-porch opacity-60" />
                   <span className="relative h-2 w-2 rounded-full bg-porch" />
                 </span>
-                {open} of {beds.length} beds open tonight
+                {live}
               </p>
               {/* Heading 1 from sm up; Heading 2 on phones so "The porch light" stays on one line */}
               <h1 className="heading-2 sm:heading-1 mt-6 max-w-[680px]">
-                <span className="hero-gradient rise block [animation-delay:80ms]">{home.heroLine1}</span>
-                {home.heroLine2 && <span className="hero-gradient rise block [animation-delay:160ms]">{home.heroLine2}</span>}
+                <span className="hero-gradient-day rise block [animation-delay:80ms]">{home.heroLine1}</span>
+                {home.heroLine2 && <span className="hero-gradient-day rise block [animation-delay:160ms]">{home.heroLine2}</span>}
               </h1>
-              <p className="body-7 rise mt-6 max-w-[680px] text-white/60 [animation-delay:240ms]">
+              <p className="body-7 rise mt-6 max-w-[440px] text-ink/75 [animation-delay:240ms]">
                 {home.heroText}
               </p>
               <div className="rise mt-8 hidden [animation-delay:320ms] sm:block">
@@ -58,7 +62,7 @@ export default async function HomePage() {
               </div>
               <Link
                 href="/rooms"
-                className="press rise mt-8 flex h-14 items-center gap-3 rounded-full bg-white pl-4 pr-2 text-ink [animation-delay:320ms] sm:hidden"
+                className="press rise mt-8 flex h-14 items-center gap-3 rounded-full bg-paper pl-4 pr-2 text-ink shadow-[0_12px_40px_-12px_rgb(23_33_28/.3)] ring-1 ring-line [animation-delay:320ms] sm:hidden"
               >
                 <Search size={18} />
                 <span className="flex-1">
@@ -75,7 +79,7 @@ export default async function HomePage() {
 
         {/* ───────── Statement: reads itself as you scroll ───────── */}
         <section className="mx-auto grid max-w-[1280px] gap-8 px-4 py-28 sm:px-6 md:grid-cols-12 md:py-44">
-          <p className="eyebrow md:col-span-3 md:pt-4">The house</p>
+          <p className="eyebrow md:col-span-3 md:pt-4">{several ? "The houses" : "The house"}</p>
           <ScrollWords
             className="display-2 text-[clamp(1.9rem,4.3vw,3.9rem)] font-medium md:col-span-9"
             text={home.statement}
@@ -85,8 +89,8 @@ export default async function HomePage() {
         <ExpandImage src={photo.kitchen.src} alt={photo.kitchen.alt} caption={photo.kitchen.caption} />
 
         {/* ───────── Tonight: every bed, live ───────── */}
-        <section className="mx-auto max-w-[1280px] px-4 py-28 sm:px-6 md:py-40">
-          <Reveal className="mb-10 flex flex-wrap items-end justify-between gap-6">
+        <section className="mx-auto max-w-[1280px] px-4 py-20 sm:px-6 md:py-32">
+          <Reveal className="mb-8 flex flex-wrap items-end justify-between gap-6">
             <h2 className="display-2 text-[clamp(2.2rem,4.6vw,4rem)]">
               Tonight, <span className="text-moss">bed by bed.</span>
             </h2>
@@ -98,11 +102,11 @@ export default async function HomePage() {
             <ul className="hairline grid-cols-2 overflow-hidden rounded-2xl md:grid-cols-3 lg:grid-cols-6">
               {beds.map((b) => (
                 <li key={b.id}>
-                  <Link href={`/rooms/${b.roomSlug}`} className="group flex h-full min-h-[200px] flex-col justify-between p-5 transition-colors hover:bg-oat">
+                  <Link href={`/rooms/${b.roomSlug}`} className="group flex h-full flex-col justify-between gap-5 p-4 transition-colors hover:bg-oat sm:p-5 md:min-h-[168px]">
                     <span className="flex items-start justify-between">
                       <span className="mono text-[0.78rem] text-moss">{b.label}</span>
                       <span
-                        className="h-7 w-5 rounded-[3px]"
+                        className="h-6 w-4 rounded-[3px] sm:h-7 sm:w-5"
                         style={{
                           background: b.state === "open" ? "linear-gradient(var(--porch-glow), var(--porch))" : b.state === "soon" ? "rgb(240 165 58 / .3)" : "var(--ink)",
                           boxShadow: b.state === "open" ? "0 0 18px 2px rgb(240 165 58 / .55)" : "none",
@@ -111,7 +115,7 @@ export default async function HomePage() {
                       />
                     </span>
                     <span>
-                      <span className="block text-[1.05rem] font-medium tracking-[-0.02em]">{b.roomName}</span>
+                      <span className="block text-[0.98rem] font-medium leading-tight tracking-[-0.02em] sm:text-[1.05rem]">{b.roomName}</span>
                       <span className={`mono mt-1 block text-[0.78rem] ${b.state === "open" ? "text-ink" : "text-moss"}`}>
                         {b.state === "open" ? "Open now" : b.state === "soon" ? `Opens ${shortDate(b.availableFrom!)}` : "Taken"}
                       </span>
@@ -126,7 +130,7 @@ export default async function HomePage() {
         <WhoScroll chapters={who.chapters} />
 
         {/* ───────── What's included ───────── */}
-        <section id="included" className="mx-auto max-w-[1280px] px-4 py-28 sm:px-6 md:py-40">
+        <section id="included" className="mx-auto max-w-[1280px] px-4 py-20 sm:px-6 md:py-32">
           <Reveal className="grid gap-8 md:grid-cols-12">
             <p className="eyebrow md:col-span-3 md:pt-3">Included with rent</p>
             <div className="md:col-span-9">
@@ -135,7 +139,7 @@ export default async function HomePage() {
             </div>
           </Reveal>
           {/* two pictures of the everyday: the drive in, the porch at the end of the day */}
-          <div className="mt-16 grid gap-4 md:grid-cols-12">
+          <div className="mt-12 grid gap-4 md:grid-cols-12">
             <Reveal className="md:col-span-8">
               <figure>
                 <div className="aspect-[16/10] overflow-hidden rounded-2xl bg-oat">
@@ -157,15 +161,15 @@ export default async function HomePage() {
               </figure>
             </Reveal>
           </div>
-          <div className="hairline mt-16 overflow-hidden rounded-2xl sm:grid-cols-2 lg:grid-cols-3">
+          <div className="hairline mt-12 overflow-hidden rounded-2xl sm:grid-cols-2 lg:grid-cols-3">
             {home.included.map(({ label: k, title: t, body: b }, i) => (
               <Reveal key={`${i}-${t}`} delay={(i % 3) * 80} className="h-full">
-                <article className="group relative flex h-full min-h-[260px] flex-col justify-between p-7 sm:p-8">
+                <article className="group relative flex h-full flex-col justify-between gap-4 p-5 sm:p-6 lg:min-h-[210px]">
                   <span className="absolute inset-x-0 top-0 h-px origin-left scale-x-0 bg-porch transition-transform duration-500 ease-[var(--ease-out)] group-hover:scale-x-100" />
                   <p className="mono text-[0.78rem] text-moss">{k}</p>
                   <div>
-                    <h3 className="text-[1.45rem] font-medium tracking-[-0.035em]">{t}</h3>
-                    <p className="mt-2 text-moss">{b}</p>
+                    <h3 className="text-[1.2rem] font-medium tracking-[-0.03em] sm:text-[1.35rem]">{t}</h3>
+                    <p className="mt-1.5 text-[0.95rem] leading-relaxed text-moss">{b}</p>
                   </div>
                 </article>
               </Reveal>

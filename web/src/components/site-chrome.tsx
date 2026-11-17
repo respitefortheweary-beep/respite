@@ -62,7 +62,7 @@ export async function SiteFooter() {
   return (
     <footer className="overflow-hidden bg-night text-white">
       <div className="mx-auto max-w-[1280px] px-4 pt-20 sm:px-6">
-        <p className="eyebrow !text-white/55">Call the house</p>
+        <p className="eyebrow !text-white/55">Call us</p>
         <a
           href={phoneHref}
           className="group mt-4 flex items-baseline gap-4 text-[clamp(3.2rem,13.5vw,12.5rem)] font-semibold leading-[0.85] tracking-[-0.06em] tabular"

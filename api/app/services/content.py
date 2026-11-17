@@ -118,14 +118,14 @@ DEFAULTS: dict[str, dict] = {
         "address": "Chester, Virginia 23831",
         "town": "Chester, Virginia",
         "tourNote": "Tours by appointment.",
-        "footerBlurb": "A home with six beds in Chester, Virginia, for veterans, people in recovery and independent seniors.",
+        "footerBlurb": "Sober, shared homes in and around Chester, Virginia, for veterans, people in recovery and independent seniors.",
         "footerTagline": "Real support. Lasting hope.",
     },
     "home": {
         "heroLine1": "The porch light",
         "heroLine2": "is on.",
-        "heroText": "A sober, shared home in Chester, Virginia for veterans, people in recovery and independent seniors. Rent includes rides to appointments and help with the paperwork.",
-        "statement": "Six beds in a quiet house in Chester, Virginia. Rides to the VA, help with the paperwork, a house that stays sober, and people around the kitchen table when you want them.",
+        "heroText": "Sober, shared homes in and around Chester, Virginia for veterans, people in recovery and independent seniors. Rent includes rides to appointments and help with the paperwork.",
+        "statement": "Quiet houses with a room waiting. Rides to the VA, help with the paperwork, homes that stay sober, and people around the kitchen table when you want them.",
         "includedTitle": "More than a room.",
         "includedText": "Rent covers a furnished room and the help that makes a fresh start stick. We don't provide medical care. We make sure residents get to the people who do.",
         "included": [
@@ -139,13 +139,13 @@ DEFAULTS: dict[str, dict] = {
         "referralsLine1": "Placing a client?",
         "referralsLine2": "See open beds before you call.",
         "referralsText": "Availability on this site is live. Send a referral in two minutes and we'll call you back within one business day.",
-        "closingLine1": "Come see the house",
+        "closingLine1": "Come see where you'd live",
         "closingLine2": "before you decide.",
-        "closingText": "Request a room and we'll set up a tour at a time that suits you. Rather talk first? Call the house.",
+        "closingText": "Request a room and we'll set up a tour at a time that suits you. Rather talk first? Give us a call.",
         "photos": {
             "kitchen": {"src": "/images/kitchen.webp", "alt": "Morning coffee on the kitchen table", "caption": "The kitchen table, 7:40 a.m."},
-            "road": {"src": "/images/road.webp", "alt": "A quiet road through the pines in the morning", "caption": "The drive to the VA, about 15 minutes"},
-            "porch": {"src": "/images/porch.webp", "alt": "Rocking chairs on the porch at dusk", "caption": "The porch, after supper"},
+            "road": {"src": "/images/road.webp", "alt": "A quiet country road between oak trees and white fences on a clear morning", "caption": "The drive to the VA, about 15 minutes"},
+            "porch": {"src": "/images/porch.webp", "alt": "Two rocking chairs on a white porch on a sunny morning", "caption": "The porch, first coffee"},
             "referral": {"src": "/images/referral.webp", "alt": "A referral folder on a desk", "caption": ""},
         },
     },
@@ -160,7 +160,7 @@ DEFAULTS: dict[str, dict] = {
             },
             {
                 "key": "RECOVERY", "word": "People in recovery", "line": "who are ready for the next chapter.",
-                "body": "A drug- and alcohol-free house with house meetings, clear rules and neighbors who understand. We connect residents to outpatient programs, meetings and work.",
+                "body": "Drug- and alcohol-free houses with house meetings, clear rules and neighbors who understand. We connect residents to outpatient programs, meetings and work.",
                 "referred": "Treatment centers, recovery courts, probation officers, peer recovery specialists",
                 "good": ["Committed to staying sober", "Finished or finishing treatment", "Ready to follow house rules"],
                 "photo": {"src": "/images/recovery.webp", "alt": "", "caption": ""},
@@ -177,7 +177,7 @@ DEFAULTS: dict[str, dict] = {
     "faq": {
         "items": [
             {"q": "Is this assisted living?", "a": "No. Respite for the Weary is independent living with support. There's no nursing staff on site, so residents need to manage their own daily care. We help arrange home care and appointments when they're needed."},
-            {"q": "Is the whole house sober?", "a": "Yes. Alcohol and drugs aren't allowed anywhere on the property, for every resident. That keeps the house safe for people in recovery and calm for everyone else."},
+            {"q": "Are the houses sober?", "a": "Yes, every one. Alcohol and drugs aren't allowed anywhere on our properties, for every resident. That keeps each house safe for people in recovery and calm for everyone else."},
             {"q": "What does rent include?", "a": "A furnished room, utilities, Wi‑Fi, laundry and use of the kitchen and living areas, plus rides and help connecting to services."},
             {"q": "Can rent be paid with VA benefits or SSI?", "a": "Yes. Many residents pay with VA benefits, SSI or SSDI. You can pay online by card or bank transfer, or by check."},
             {"q": "How quickly can someone move in?", "a": "If a bed is open, often within a week of the tour. Beds marked “opening soon” can be reserved ahead of time."},
@@ -232,3 +232,68 @@ def phone_href(phone: str) -> str:
 
 def house_phone(db: Session) -> str:
     return get_section(db, "house")["phone"]
+
+
+# Words the site launched with that described one six-bed house. Now that the owners can run several,
+# a saved section still holding one of these exact strings is moved to the new default on startup.
+# Anything the owners wrote themselves is left alone.
+OLD_WORDING: dict[str, dict[str, tuple[str, str]]] = {
+    "house": {
+        "footerBlurb": (
+            "A home with six beds in Chester, Virginia, for veterans, people in recovery and independent seniors.",
+            DEFAULTS["house"]["footerBlurb"],
+        ),
+    },
+    "home": {
+        "heroText": (
+            "A sober, shared home in Chester, Virginia for veterans, people in recovery and independent seniors. Rent includes rides to appointments and help with the paperwork.",
+            DEFAULTS["home"]["heroText"],
+        ),
+        "statement": (
+            "Six beds in a quiet house in Chester, Virginia. Rides to the VA, help with the paperwork, a house that stays sober, and people around the kitchen table when you want them.",
+            DEFAULTS["home"]["statement"],
+        ),
+        "closingLine1": ("Come see the house", DEFAULTS["home"]["closingLine1"]),
+        "closingText": (
+            "Request a room and we'll set up a tour at a time that suits you. Rather talk first? Call the house.",
+            DEFAULTS["home"]["closingText"],
+        ),
+    },
+}
+
+
+OLD_PORCH_WORDS = {
+    "alt": ("Rocking chairs on the porch at dusk", DEFAULTS["home"]["photos"]["porch"]["alt"]),
+    "caption": ("The porch, after supper", DEFAULTS["home"]["photos"]["porch"]["caption"]),
+}
+
+
+def refresh_old_wording(db: Session) -> None:
+    """Moves saved one-house launch wording to the multi-house defaults. Safe to run on every start."""
+    changed = False
+    for key, fields in OLD_WORDING.items():
+        found = db.get(SiteContent, key)
+        if not found:
+            continue
+        try:
+            data = json.loads(found.value)
+        except ValueError:
+            continue
+        hit = False
+        for field, (old, new) in fields.items():
+            if isinstance(data, dict) and data.get(field) == old:
+                data[field] = new
+                hit = True
+        # the porch photo is now a morning shot, so its old dusk words would be wrong
+        photos = data.get("photos") if isinstance(data, dict) else None
+        porch = photos.get("porch") if isinstance(photos, dict) else None
+        if isinstance(porch, dict):
+            for field, (old, new) in OLD_PORCH_WORDS.items():
+                if porch.get(field) == old:
+                    porch[field] = new
+                    hit = True
+        if hit:
+            found.value = json.dumps(data)
+            changed = True
+    if changed:
+        db.commit()

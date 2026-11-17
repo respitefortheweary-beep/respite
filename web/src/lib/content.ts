@@ -14,7 +14,7 @@ const FALLBACK_HOUSE: House = {
   address: "Chester, Virginia 23831",
   town: "Chester, Virginia",
   tourNote: "Tours by appointment.",
-  footerBlurb: "A home in Chester, Virginia, for veterans, people in recovery and independent seniors.",
+  footerBlurb: "Sober, shared homes in and around Chester, Virginia, for veterans, people in recovery and independent seniors.",
   footerTagline: "",
 };
 

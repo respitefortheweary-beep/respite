@@ -1029,3 +1029,26 @@ def test_houses_rooms_move_hide_and_delete(client):
     assert client.delete(f"/admin/houses/{second['id']}", headers=auth).status_code == 204
     assert client.delete(f"/admin/houses/{first['id']}", headers=auth).status_code == 400  # keep at least one
     assert client.delete(f"/admin/rooms/{room['id']}", headers=auth).status_code == 204
+
+
+def test_one_house_launch_wording_moves_to_the_new_defaults(client):
+    import json
+
+    from app.models import SiteContent
+    from app.services.content import DEFAULTS, OLD_WORDING, refresh_old_wording
+
+    old = OLD_WORDING["home"]["statement"][0]
+    home = {**DEFAULTS["home"], "statement": old, "heroText": "The owners' own words."}
+    with SessionLocal() as db:
+        row = db.get(SiteContent, "home") or SiteContent(key="home", value="")
+        row.value = json.dumps(home)
+        db.add(row)
+        db.commit()
+        refresh_old_wording(db)
+        refresh_old_wording(db)  # running it again changes nothing
+        saved = json.loads(db.get(SiteContent, "home").value)
+        assert saved["statement"] == DEFAULTS["home"]["statement"]
+        assert "six beds" not in saved["statement"].lower()
+        assert saved["heroText"] == "The owners' own words."  # what the owners wrote is kept
+        db.delete(db.get(SiteContent, "home"))
+        db.commit()

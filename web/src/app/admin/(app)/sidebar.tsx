@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { Home, Inbox, BedDouble, Users, CreditCard, ArrowUpRight, LogOut, Bell, Globe, UserCog, Wrench } from "lucide-react";
 import type { BedState } from "@/lib/availability";
 import { logout } from "../actions";
+import { LogoMark } from "@/components/brand";
 
 const ITEMS = [
   { href: "/admin", label: "Overview", short: "Home", icon: Home, exact: true },
@@ -20,12 +21,7 @@ const ITEMS = [
 const TABS = ITEMS.filter((it) => !("rail" in it));
 
 function Mark() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-[22px] w-[22px] shrink-0" aria-hidden>
-      <path d="M2.5 11 L12 3 L21.5 11 V21.5 H2.5 Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-      <rect x="9.5" y="12.5" width="5" height="5" fill="var(--porch)" />
-    </svg>
-  );
+  return <LogoMark onDark className="h-[24px] w-[27px] text-white" />;
 }
 
 /** Six small windows, one per bed. Lit means open. */

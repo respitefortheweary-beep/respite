@@ -205,7 +205,7 @@ export function HomeEditor({ initial, defaults }: { initial: HomeCopy; defaults:
         <Text label="Under the headline" value={d.heroText} onChange={(v) => s.set({ heroText: v })} max={400} rows={3} />
       </Section>
 
-      <Section title="The house" hint="The sentence that lights up word by word as people scroll, then the wide photo under it.">
+      <Section title="The houses" hint="The sentence that lights up word by word as people scroll, then the wide photo under it. Keep it true for every house you run.">
         <Text label="Statement" value={d.statement} onChange={(v) => s.set({ statement: v })} max={600} rows={4} />
         <PhotoSlot label="Wide photo" value={d.photos.kitchen} onChange={photo("kitchen")} />
       </Section>
