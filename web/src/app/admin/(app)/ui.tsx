@@ -77,6 +77,7 @@ export function ChargePill({ status, dueDate }: { status: string; dueDate: Date 
         <Check size={11} strokeWidth={3} /> Paid
       </span>
     );
+  if (status === "REFUNDED") return <span className={`${base} bg-ink/[.06] text-moss`}>Refunded</span>;
   if (status === "VOID") return <span className={`${base} bg-ink/[.06] text-moss line-through`}>Void</span>;
   if (overdue) return <span className={`${base} bg-ember text-white`}>Overdue</span>;
   return <span className={`${base} bg-porch-glow text-ink`}>Due</span>;

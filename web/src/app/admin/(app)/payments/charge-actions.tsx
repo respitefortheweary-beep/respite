@@ -13,8 +13,9 @@ const OFFLINE = [
 const item = "flex h-11 w-full items-center rounded-lg px-3 text-left text-[0.93rem] transition-colors hover:bg-ink/[.05] sm:h-9 sm:text-[0.9rem]";
 
 /** Menu on an unpaid charge: mark it paid in person, send a reminder, or void it. */
-export function ChargeActions({ record, voidIt, remind }: { record: (f: FormData) => Promise<void>; voidIt: () => Promise<void>; remind?: () => Promise<FormState> }) {
+export function ChargeActions({ record, voidIt, remind, planned, amountCents }: { record: (f: FormData) => Promise<void>; voidIt: () => Promise<void>; remind?: () => Promise<FormState>; planned?: string | null; amountCents: number }) {
   const [open, setOpen] = useState(false);
+  const [amount, setAmount] = useState("");
   const [sure, setSure] = useState(false);
   const [note, setNote] = useState<FormState>(null);
   const [pending, start] = useTransition();
@@ -32,7 +33,10 @@ export function ChargeActions({ record, voidIt, remind }: { record: (f: FormData
     };
   }, [open]);
   useEffect(() => {
-    if (!open) setSure(false);
+    if (!open) {
+      setSure(false);
+      setAmount("");
+    }
   }, [open]);
   useEffect(() => {
     if (!note) return;
@@ -76,7 +80,20 @@ export function ChargeActions({ record, voidIt, remind }: { record: (f: FormData
           role="menu"
           className="absolute right-0 top-full z-30 mt-1 w-60 origin-top-right rounded-2xl bg-paper p-1.5 text-left shadow-[0_18px_44px_-14px_rgb(15_17_16/.45)] ring-1 ring-line-strong [animation:menu-pop_150ms_var(--ease-out)]"
         >
-          <p className="mono px-3 pb-1 pt-2 text-[0.68rem] uppercase tracking-[0.02em] text-moss">Paid in person with</p>
+          <label className="block px-3 pb-2 pt-2">
+            <span className="mono text-[0.68rem] uppercase tracking-[0.02em] text-moss">Amount received</span>
+            <span className="mt-1 flex h-10 items-center rounded-lg bg-ink/[.04] px-3 ring-1 ring-line focus-within:ring-ink">
+              <span className="mono text-moss">$</span>
+              <input
+                inputMode="decimal"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder={`${(amountCents / 100).toFixed(amountCents % 100 ? 2 : 0)} (all of it)`}
+                className="mono tabular ml-1 min-w-0 flex-1 bg-transparent text-[0.93rem] outline-none placeholder:text-moss/70"
+              />
+            </span>
+          </label>
+          <p className="mono px-3 pb-1 pt-1 text-[0.68rem] uppercase tracking-[0.02em] text-moss">Paid in person with</p>
           {OFFLINE.map(([v, label]) => (
             <button
               key={v}
@@ -87,11 +104,13 @@ export function ChargeActions({ record, voidIt, remind }: { record: (f: FormData
                 run(() => {
                   const f = new FormData();
                   f.set("method", v);
+                  f.set("amount", amount);
                   return record(f);
                 })
               }
             >
-              {label}
+              <span className="flex-1">{label}</span>
+              {v === planned && <span className="mono rounded-full bg-porch-glow px-2 py-0.5 text-[0.64rem] uppercase text-ink">They said</span>}
             </button>
           ))}
           <div className="my-1.5 h-px bg-line" />

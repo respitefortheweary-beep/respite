@@ -11,9 +11,9 @@ from ..config import get_settings
 from ..db import get_db, now
 from ..models import Charge
 from ..services.billing import bill_rent
-from ..services import notify
+from ..services import autopay, notify
 from ..services.fmt import money, next_month_start, period
-from ..services.payments import settle_session
+from ..services.payments import refund_failed, refunded_in_stripe, settle_session
 from ..services.chores import run_chores
 
 router = APIRouter(tags=["hooks"])
@@ -67,6 +67,16 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
         )
     except (ValueError, stripe.SignatureVerificationError):
         raise HTTPException(400, "Bad signature") from None
-    if event["type"] in ("checkout.session.completed", "checkout.session.async_payment_succeeded"):
-        settle_session(db, event["data"]["object"].to_dict())
+    kind, obj = event["type"], event["data"]["object"].to_dict()
+    if kind in ("checkout.session.completed", "checkout.session.async_payment_succeeded"):
+        if obj.get("mode") == "setup":
+            autopay.finish(db, obj)
+        else:
+            settle_session(db, obj)
+    elif kind in ("payment_intent.succeeded", "payment_intent.processing", "payment_intent.payment_failed"):
+        autopay.settle(db, obj)  # only acts on autopay payments
+    elif kind == "charge.refunded":
+        refunded_in_stripe(db, obj)
+    elif kind in ("refund.failed", "refund.updated", "charge.refund.updated"):
+        refund_failed(db, obj)
     return {"received": True}

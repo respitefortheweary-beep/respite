@@ -16,13 +16,18 @@ export type Request = {
 };
 export type Resident = {
   id: string; name: string; email: string | null; phone: string | null; bedId: string | null; requestId: string | null;
-  moveInDate: Date; moveOutDate: Date | null; rentCents: number; autopay: boolean; portalToken: string; active: boolean; createdAt: Date;
+  moveInDate: Date; moveOutDate: Date | null; rentCents: number; autopay: boolean; autopayLabel: string | null; portalToken: string; active: boolean; createdAt: Date;
   depositReturnedCents: number | null; depositNote: string | null; depositSettledAt: Date | null;
 };
 export type Charge = {
   id: string; residentId: string; label: string; period: string | null; amountCents: number; dueDate: Date;
   status: string; paidAt: Date | null; method: string | null; stripeSessionId: string | null; createdAt: Date;
+  inPersonMethod: string | null; inPersonAt: Date | null; refundedAt: Date | null; refundNote: string | null; stripeRefundId: string | null;
+  stripePaymentIntentId: string | null; lateFeeForId: string | null; autopayAt: Date | null; autopayStatus: "PROCESSING" | "FAILED" | null;
 };
+
+/** The house's billing rules, set by the owners on the Payments page. */
+export type BillingPolicy = { lateFeeCents: number; lateFeeAfterDays: number; partialPayments: boolean; minPartCents: number };
 
 export type BedView = {
   id: string; label: string; roomSlug: string; roomName: string; state: BedState;
@@ -87,7 +92,7 @@ export type RepairWithResident = Repair & { resident: { id: string; name: string
 export type Statement = {
   resident: { name: string; moveInDate: Date; moveOutDate: Date | null; rentCents: number; active: boolean; bed: string | null; room: string | null };
   house: { name: string; address: string; phone: string };
-  charges: { id: string; label: string; period: string | null; amountCents: number; dueDate: Date; status: string; paidAt: Date | null; method: string | null }[];
+  charges: { id: string; label: string; period: string | null; amountCents: number; dueDate: Date; status: string; paidAt: Date | null; method: string | null; refundedAt?: Date | null }[];
   totals: { billedCents: number; paidCents: number; owedCents: number };
   deposit: { paidCents: number; returnedCents: number | null; note: string | null; settledAt: Date | null };
   generatedAt: Date;

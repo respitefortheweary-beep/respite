@@ -9,4 +9,5 @@ PAYMENT = {"VA": "VA benefits", "SSI": "SSI / SSDI", "PRIVATE": "Personal or fam
 STATUSES = ["NEW", "CONTACTED", "TOUR", "APPROVED", "MOVED_IN", "DECLINED"]
 ACTIVE_STATUSES = ["NEW", "CONTACTED", "TOUR", "APPROVED"]
 PAY_METHODS = ["CASH", "CHECK", "MONEY_ORDER", "VOUCHER", "CARD", "ACH"]
+IN_PERSON_METHODS = {"CASH": "cash", "CHECK": "a check", "MONEY_ORDER": "a money order", "VOUCHER": "a program voucher"}
 PHONE = "804-803-6248"

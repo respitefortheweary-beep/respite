@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { admin } from "@/lib/api";
 import { money } from "@/lib/format";
-import type { Charge } from "@/lib/types";
-import { billMonth } from "../../actions";
+import type { AdminUser, BillingPolicy, Charge } from "@/lib/types";
+import { billMonth, saveBillingRules } from "../../actions";
+import { BillingRules } from "./billing-rules";
 import { Download } from "lucide-react";
 import { Page, Card, CardHead, Notice, Label, btnPrimary, btnQuiet, input, select } from "../ui";
 import { SubmitButton } from "../submit";
@@ -25,7 +26,7 @@ export default async function Payments({ searchParams }: { searchParams: Promise
   const billed = sp.billed;
   const now = new Date();
   type Totals = { totalCents: number; count: number };
-  const [{ charges, due, late, collectedThisMonthCents, activeResidents: residents }, { stripeEnabled }] = await Promise.all([
+  const [{ charges, due, late, collectedThisMonthCents, activeResidents: residents }, { stripeEnabled }, policy, me] = await Promise.all([
     admin.get<{
       charges: (Charge & { resident: { id: string; name: string; email: string | null } })[];
       due: Totals;
@@ -34,6 +35,8 @@ export default async function Payments({ searchParams }: { searchParams: Promise
       activeResidents: number;
     }>(`/admin/charges?tab=${tab}`),
     admin.get<{ stripeEnabled: boolean }>("/admin/config"),
+    admin.get<BillingPolicy>("/admin/billing/settings"),
+    admin.get<AdminUser>("/auth/me"),
   ]);
   const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
   const nextValue = `${next.getUTCFullYear()}-${String(next.getUTCMonth() + 1).padStart(2, "0")}`;
@@ -95,6 +98,11 @@ export default async function Payments({ searchParams }: { searchParams: Promise
             </label>
             <SubmitButton className={`${btnPrimary} w-full disabled:opacity-60`}>Bill rent</SubmitButton>
           </form>
+        </Card>
+
+        <Card className="xl:col-start-2">
+          <CardHead title="Billing rules" hint="Late fees and part payments. Residents with autopay are paid on the due date, so they're never late." />
+          <BillingRules policy={policy} canEdit={me.role === "OWNER"} save={saveBillingRules} />
         </Card>
 
         <Card className="xl:col-start-2">

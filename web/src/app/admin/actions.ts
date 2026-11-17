@@ -200,14 +200,40 @@ export async function removePhoto(roomId: string, src: string) {
 }
 
 /* ───── Residents & payments ───── */
+/** Marks a charge paid by hand. An amount under the charge records part of it; the rest stays owed. */
 export async function recordPayment(chargeId: string, form: FormData) {
-  await admin.post(`/admin/charges/${chargeId}/pay`, { method: str(form, "method") || "CASH" });
+  const amount = str(form, "amount").replace(/[$,\s]/g, "");
+  await admin.post(`/admin/charges/${chargeId}/pay`, { method: str(form, "method") || "CASH", amountCents: amount ? cents(amount) : null });
   refresh();
+}
+
+/** Late fees and part payments. Owners only. */
+export async function saveBillingRules(_: FormState, form: FormData): Promise<FormState> {
+  const fee = str(form, "lateFee").replace(/[$,\s]/g, "");
+  const min = str(form, "minPart").replace(/[$,\s]/g, "");
+  const res = await attempt(async () => {
+    await admin.put("/admin/billing/settings", {
+      lateFeeCents: form.get("lateFeeOn") === "on" ? cents(fee || "0") : 0,
+      lateFeeAfterDays: Number(str(form, "lateFeeAfterDays")) || 5,
+      partialPayments: form.get("partialPayments") === "on",
+      minPartCents: cents(min || "20"),
+    });
+    return { ok: "Saved." };
+  });
+  refresh();
+  return res;
 }
 
 export async function voidCharge(chargeId: string) {
   await admin.post(`/admin/charges/${chargeId}/void`);
   refresh();
+}
+
+/** Gives a paid charge back in full: through Stripe if it was paid online, otherwise it records cash handed back. Owners only. */
+export async function refundCharge(chargeId: string, note: string): Promise<FormState> {
+  const res = await attempt(() => admin.post<{ ok: string }>(`/admin/charges/${chargeId}/refund`, { note: note.trim() }));
+  refresh();
+  return res;
 }
 
 export async function addCharge(residentId: string, form: FormData) {

@@ -658,3 +658,241 @@ def test_tour_calendar_files_and_owner_feed(client):
     month = client.get(f"/admin/tours?when=month&month={day[:7]}", headers=auth).json()
     assert "Cal Endar" in [x["name"] for x in month]
     assert client.get("/admin/tours?when=month&month=2026-13", headers=auth).status_code == 422
+
+
+def test_pay_in_person_then_receipt(client):
+    auth = _login(client)
+    res = _new_resident(client, auth, "Iris Inperson", "iris@example.com")
+    token = res["portalToken"]
+    ids = [c["id"] for c in res["charges"]]
+
+    assert client.post(f"/portal/{token}/in-person", json={"chargeIds": ids, "method": "BITCOIN"}).status_code == 400
+    assert client.post(f"/portal/{token}/in-person", json={"chargeIds": ids, "method": "CASH"}).json() == {"planned": 2}
+    charges = client.get(f"/portal/{token}").json()["charges"]
+    assert all(c["inPersonMethod"] == "CASH" and c["status"] == "DUE" for c in charges)
+    with SessionLocal() as db:
+        alert = db.query(Notification).filter_by(channel="INBOX", kind="payment.in_person").order_by(Notification.createdAt.desc()).first()
+        assert "Iris Inperson will pay $1,050 in person, with cash" in alert.subject
+
+    assert client.post(f"/admin/charges/{ids[0]}/pay", headers=auth, json={"method": "CASH"}).status_code == 200
+    assert client.post(f"/admin/charges/{ids[0]}/pay", headers=auth, json={"method": "CASH"}).status_code == 409  # already paid
+    assert ("payment.receipt", "iris@example.com", "PENDING") in _emails(recipient="iris@example.com")
+
+    # once it's all paid there's nothing left to bring in
+    client.post(f"/admin/charges/{ids[1]}/pay", headers=auth, json={"method": "CHECK"})
+    assert client.post(f"/portal/{token}/in-person", json={"chargeIds": [], "method": "CASH"}).status_code == 409
+
+
+def test_refunds_in_person_and_through_stripe(client, monkeypatch):
+    import stripe
+    from app.config import get_settings
+    from app.models import Charge
+
+    auth = _login(client)
+    res = _new_resident(client, auth, "Rhea Refund", "rhea@example.com")
+    cash, card = sorted(res["charges"], key=lambda c: c["amountCents"])
+    client.post(f"/admin/charges/{cash['id']}/pay", headers=auth, json={"method": "CASH"})
+
+    assert client.post(f"/admin/charges/{card['id']}/refund", headers=auth, json={}).status_code == 409  # not paid yet
+    assert client.post(f"/admin/charges/{cash['id']}/void", headers=auth).status_code == 409  # paid: refund, don't void
+
+    # a cash payment is given back by hand: no Stripe call
+    r = client.post(f"/admin/charges/{cash['id']}/refund", headers=auth, json={"note": "Moved in elsewhere"})
+    assert r.status_code == 200 and r.json()["ok"] == "Refunded $250."
+    assert client.post(f"/admin/charges/{cash['id']}/refund", headers=auth, json={}).status_code == 409  # only once
+
+    # the card charge was paid through Stripe Checkout
+    with SessionLocal() as db:
+        c = db.get(Charge, card["id"])
+        c.status, c.paidAt, c.method, c.stripeSessionId = "PAID", now(), "STRIPE", "cs_test_1"
+        db.commit()
+    assert client.post(f"/admin/charges/{card['id']}/refund", headers=auth, json={}).status_code == 409  # Stripe not connected
+
+    calls = []
+    monkeypatch.setattr(get_settings(), "stripe_secret_key", "sk_test_x")
+    monkeypatch.setattr(stripe.checkout.Session, "retrieve", lambda sid, **_: {"id": sid, "payment_intent": "pi_1"})
+
+    def fake_refund(**kw):
+        calls.append(kw)
+        return stripe.Refund.construct_from({"id": "re_1", "status": "pending"}, "sk_test_x")
+
+    monkeypatch.setattr(stripe.Refund, "create", fake_refund)
+    r = client.post(f"/admin/charges/{card['id']}/refund", headers=auth, json={})
+    assert r.status_code == 200 and r.json()["ok"] == "Refunded $800 through Stripe."
+    assert calls[0]["payment_intent"] == "pi_1" and calls[0]["amount"] == 80000 and calls[0]["idempotency_key"] == f"respite-refund-{card['id']}"
+    assert [k for k, *_ in _emails(recipient="rhea@example.com")].count("payment.refunded") == 2
+
+    st = client.get(f"/portal/{res['portalToken']}/statement").json()
+    assert st["totals"] == {"billedCents": 0, "paidCents": 0, "owedCents": 0}
+
+    csv = client.get("/admin/export.csv?kind=payments", headers=auth).text
+    assert "-800.00,Stripe refund" in csv
+
+    from app.services.payments import refund_failed, refunded_in_stripe
+
+    # a refund that bounces puts the charge back to paid and tells the owners
+    with SessionLocal() as db:
+        refund_failed(db, {"id": "re_1", "status": "failed", "failure_reason": "account_closed"})
+        assert db.get(Charge, card["id"]).status == "PAID"
+        # Stripe telling us about the refund we made ourselves is not news...
+        db.get(Charge, card["id"]).status = "REFUNDED"
+        db.commit()
+        refunded_in_stripe(db, {"payment_intent": "pi_1", "refunded": True, "amount": 80000, "amount_refunded": 80000})
+        assert db.get(Charge, card["id"]).status == "REFUNDED"
+        # ...but a refund made in the Stripe dashboard is recorded here
+        c = db.get(Charge, card["id"])
+        c.status, c.stripePaymentIntentId = "PAID", "pi_2"
+        db.commit()
+        refunded_in_stripe(db, {"payment_intent": "pi_2", "refunded": True, "amount": 80000, "amount_refunded": 80000})
+        db.refresh(c)
+        assert c.status == "REFUNDED" and c.refundNote == "Refunded from the Stripe dashboard."
+
+
+def test_staff_cannot_refund(client):
+    auth = _login(client)
+    res = _new_resident(client, auth, "Sid Staffcheck", None)
+    cid = res["charges"][0]["id"]
+    client.post(f"/admin/charges/{cid}/pay", headers=auth, json={"method": "CASH"})
+    client.post("/admin/users", headers=auth, json={"email": "helper2@example.com", "name": "Helper", "role": "STAFF", "password": "another-long-password"})
+    from app.security import login_limiter
+
+    login_limiter._fails.clear()
+    tok = client.post("/auth/login", json={"email": "helper2@example.com", "password": "another-long-password"}).json().get("accessToken")
+    assert tok
+    r = client.post(f"/admin/charges/{cid}/refund", headers={"Authorization": f"Bearer {tok}"}, json={})
+    assert r.status_code == 403
+
+
+def _due_cents(client, token: str) -> int:
+    return sum(c["amountCents"] for c in client.get(f"/portal/{token}").json()["charges"] if c["status"] == "DUE")
+
+
+def test_part_payments_from_the_portal_and_by_hand(client):
+    auth = _login(client)
+    res = _new_resident(client, auth, "Paula Part", "paula@example.com")
+    t = res["portalToken"]
+    assert _due_cents(client, t) == 105000  # $250 deposit + $800 rent
+
+    # too small, then a fine part payment through the test-mode checkout
+    assert client.post(f"/portal/{t}/checkout", json={"amountCents": 500}).status_code == 400
+    url = client.post(f"/portal/{t}/checkout", json={"amountCents": 30000}).json()["url"]
+    assert "&a=30000" in url
+    assert client.post(f"/portal/{t}/demo-pay", json={"amountCents": 30000}).json()["paid"] == 2
+    view = client.get(f"/portal/{t}").json()
+    assert _due_cents(client, t) == 75000
+    paid = sorted((c["label"], c["amountCents"]) for c in view["charges"] if c["status"] == "PAID")
+    assert paid == [("November rent (part)", 5000), ("Security deposit", 25000)]
+    assert view["policy"]["partialPayments"] is True and "stripeCustomerId" not in view
+
+    # the house takes $100 cash against what's left
+    rent = next(c for c in view["charges"] if c["status"] == "DUE")
+    assert client.post(f"/admin/charges/{rent['id']}/pay", headers=auth, json={"method": "CASH", "amountCents": 90000}).status_code == 400
+    piece = client.post(f"/admin/charges/{rent['id']}/pay", headers=auth, json={"method": "CASH", "amountCents": 10000}).json()
+    assert piece["amountCents"] == 10000 and piece["status"] == "PAID" and piece["id"] != rent["id"]
+    assert _due_cents(client, t) == 65000
+    assert ("payment.receipt", "paula@example.com", "PENDING") in _emails(recipient="paula@example.com")
+
+    st = client.get(f"/portal/{t}/statement").json()["totals"]
+    assert st == {"billedCents": 105000, "paidCents": 40000, "owedCents": 65000}
+
+    # the owners can turn part payments off
+    rules = client.get("/admin/billing/settings", headers=auth).json()
+    client.put("/admin/billing/settings", headers=auth, json={**rules, "partialPayments": False})
+    assert client.post(f"/portal/{t}/checkout", json={"amountCents": 30000}).status_code == 400
+    assert client.post(f"/portal/{t}/checkout", json={}).status_code == 200  # paying it all still works
+    client.put("/admin/billing/settings", headers=auth, json=rules)
+
+
+def test_late_fees_capped_once_and_owner_set(client):
+    from app.models import Charge
+    from app.services.billing import Policy, add_late_fees, late_fee_for
+
+    assert late_fee_for(Policy(lateFeeCents=10000), 80000) == 8000  # never more than 10%
+    auth = _login(client)
+    res = _new_resident(client, auth, "Lenny Late", "lenny@example.com")
+    rent = next(c for c in res["charges"] if c["label"].endswith("rent"))
+
+    with SessionLocal() as db:
+        assert add_late_fees(db) == 0  # off by default
+    rules = client.get("/admin/billing/settings", headers=auth).json()
+    assert client.put("/admin/billing/settings", headers=auth, json={**rules, "lateFeeCents": 5000, "lateFeeAfterDays": 31}).status_code == 422
+    client.put("/admin/billing/settings", headers=auth, json={**rules, "lateFeeCents": 5000, "lateFeeAfterDays": 5})
+    try:
+        with SessionLocal() as db:
+            add_late_fees(db)
+            fees = db.query(Charge).filter_by(lateFeeForId=rent["id"]).all()
+            assert [(f.label, f.amountCents) for f in fees] == [("Late fee, November rent", 5000)]
+            assert not db.query(Charge).filter_by(lateFeeForId=next(c["id"] for c in res["charges"] if c["label"] == "Security deposit")).count()
+            add_late_fees(db)  # a second run adds nothing more
+            assert db.query(Charge).filter_by(lateFeeForId=rent["id"]).count() == 1
+        assert "rent.late_fee" in [k for k, *_ in _emails(recipient="lenny@example.com")]
+    finally:
+        client.put("/admin/billing/settings", headers=auth, json=rules)
+
+
+def test_autopay_in_test_mode(client):
+    from app.models import Charge, Resident
+    from app.services import autopay
+
+    auth = _login(client)
+    res = _new_resident(client, auth, "Abe Autopay", "abe@example.com")
+    t = res["portalToken"]
+    assert client.post(f"/portal/{t}/autopay").json()["url"] == f"/portal/{t}?autopay=on"
+    view = client.get(f"/portal/{t}").json()
+    assert view["autopay"] is True and view["autopayLabel"] == "Test card"
+
+    with SessionLocal() as db:
+        autopay.run(db)
+        cs = db.query(Charge).filter_by(residentId=res["id"]).all()
+        assert {(c.status, c.method) for c in cs} == {("PAID", "DEMO")}
+        assert autopay.run(db) == 0  # nothing left to pay
+
+    client.delete(f"/portal/{t}/autopay")
+    with SessionLocal() as db:
+        r = db.get(Resident, res["id"])
+        assert not r.autopay and r.autopayLabel is None
+
+
+def test_autopay_through_stripe(client, monkeypatch):
+    import stripe
+    from app.config import get_settings
+    from app.models import Charge, Resident
+    from app.services import autopay
+
+    auth = _login(client)
+    res = _new_resident(client, auth, "Sal Stripe", "sal@example.com")
+    with SessionLocal() as db:
+        r = db.get(Resident, res["id"])
+        r.autopay, r.stripeCustomerId, r.stripePaymentMethodId, r.autopayLabel = True, "cus_1", "pm_1", "Bank account ending 6789"
+        db.commit()
+    monkeypatch.setattr(get_settings(), "stripe_secret_key", "sk_test_x")
+
+    calls = []
+
+    def processing(**kw):
+        calls.append(kw)
+        return stripe.PaymentIntent.construct_from({"id": "pi_auto", "status": "processing", "metadata": kw["metadata"]}, "sk_test_x")
+
+    monkeypatch.setattr(stripe.PaymentIntent, "create", processing)
+    with SessionLocal() as db:
+        assert autopay.run(db) == 1
+        assert calls[0]["amount"] == 105000 and calls[0]["off_session"] and calls[0]["customer"] == "cus_1"
+        assert {c.autopayStatus for c in db.query(Charge).filter_by(residentId=res["id"])} == {"PROCESSING"}
+        assert autopay.run(db) == 0  # never charged twice
+        # the bank payment clears days later (the webhook lands here)
+        autopay.settle(db, {"id": "pi_auto", "status": "succeeded", "metadata": calls[0]["metadata"]})
+        cs = db.query(Charge).filter_by(residentId=res["id"]).all()
+        assert {(c.status, c.method, c.stripePaymentIntentId, c.autopayStatus) for c in cs} == {("PAID", "ACH", "pi_auto", None)}
+
+    # a declined card: the resident and owners are told, and the charge waits
+    client.post(f"/admin/residents/{res['id']}/charges", headers=auth, json={"label": "Laundry card", "amountCents": 2000, "dueDate": "2026-11-02"})
+
+    def declined(**kw):
+        raise stripe.CardError("Your card was declined.", None, "card_declined")
+
+    monkeypatch.setattr(stripe.PaymentIntent, "create", declined)
+    with SessionLocal() as db:
+        autopay.run(db)
+        extra = db.query(Charge).filter_by(residentId=res["id"], status="DUE").one()
+        assert extra.autopayStatus == "FAILED"
+    assert "autopay.failed" in [k for k, *_ in _emails(recipient="sal@example.com")]

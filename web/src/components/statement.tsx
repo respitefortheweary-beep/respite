@@ -5,7 +5,7 @@ import { PrintButton } from "./print-button";
 const METHOD: Record<string, string> = {
   CARD: "Card", ACH: "Bank transfer", STRIPE: "Online", DEMO: "Test payment", CASH: "Cash", CHECK: "Check", MONEY_ORDER: "Money order", VOUCHER: "Voucher",
 };
-const STATUS: Record<string, string> = { PAID: "Paid", DUE: "Due" };
+const STATUS: Record<string, string> = { PAID: "Paid", DUE: "Due", REFUNDED: "Refunded" };
 
 /** A rent statement on one sheet of paper: for the resident's records, a benefits office, or the house's books. */
 export function StatementSheet({ s, back }: { s: Statement; back: React.ReactNode }) {
@@ -63,7 +63,10 @@ export function StatementSheet({ s, back }: { s: Statement; back: React.ReactNod
                   <td className="hidden py-2.5 pr-3 text-moss sm:table-cell print:table-cell">
                     {c.paidAt ? `${longDate(c.paidAt)}${c.method ? `, ${METHOD[c.method] ?? c.method}` : ""}` : ""}
                   </td>
-                  <td className="py-2.5 pr-3">{STATUS[c.status] ?? c.status}</td>
+                  <td className="py-2.5 pr-3">
+                    {STATUS[c.status] ?? c.status}
+                    {c.refundedAt && <span className="block text-[0.8rem] text-moss">{longDate(c.refundedAt)}</span>}
+                  </td>
                   <td className="mono tabular whitespace-nowrap py-2.5 text-right">{money(c.amountCents)}</td>
                 </tr>
               ))}

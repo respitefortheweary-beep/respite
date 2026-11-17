@@ -99,6 +99,10 @@ class Resident(Base):
     moveOutDate: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
     rentCents: Mapped[int] = mapped_column(Integer)
     autopay: Mapped[bool] = mapped_column(Boolean, default=False)
+    # autopay: the card or bank account saved through Stripe, and how to describe it ("Visa ending 4242")
+    stripeCustomerId: Mapped[str | None] = mapped_column(String, nullable=True)
+    stripePaymentMethodId: Mapped[str | None] = mapped_column(String, nullable=True)
+    autopayLabel: Mapped[str | None] = mapped_column(String, nullable=True)
     portalToken: Mapped[str] = mapped_column(String, unique=True)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
     createdAt: Mapped[datetime] = mapped_column(UtcDateTime, default=now)
@@ -121,10 +125,23 @@ class Charge(Base):
     period: Mapped[str | None] = mapped_column(String, nullable=True)  # "2026-12" for rent
     amountCents: Mapped[int] = mapped_column(Integer)
     dueDate: Mapped[datetime] = mapped_column(UtcDateTime)
-    status: Mapped[str] = mapped_column(String, default="DUE")  # DUE | PAID | VOID
+    status: Mapped[str] = mapped_column(String, default="DUE")  # DUE | PAID | REFUNDED | VOID
     paidAt: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
     method: Mapped[str | None] = mapped_column(String, nullable=True)
     stripeSessionId: Mapped[str | None] = mapped_column(String, nullable=True)
+    stripePaymentIntentId: Mapped[str | None] = mapped_column(String, nullable=True)
+    # the resident said they'll bring it to the house (CASH | CHECK | MONEY_ORDER | VOUCHER), and when
+    inPersonMethod: Mapped[str | None] = mapped_column(String, nullable=True)
+    inPersonAt: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
+    # money given back: through Stripe when it was paid online, otherwise by hand
+    refundedAt: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
+    refundNote: Mapped[str | None] = mapped_column(Text, nullable=True)
+    stripeRefundId: Mapped[str | None] = mapped_column(String, nullable=True)
+    # set on a late fee: the rent charge it was added to (each charge gets at most one)
+    lateFeeForId: Mapped[str | None] = mapped_column(String, nullable=True)
+    # autopay tries a charge once: when, and PROCESSING (bank payments take days) or FAILED
+    autopayAt: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
+    autopayStatus: Mapped[str | None] = mapped_column(String, nullable=True)
     createdAt: Mapped[datetime] = mapped_column(UtcDateTime, default=now)
     reminderSentAt: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)  # the one overdue reminder
 

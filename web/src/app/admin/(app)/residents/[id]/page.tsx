@@ -129,6 +129,7 @@ export default async function ResidentDetail({ params, searchParams }: { params:
               <Prop label="Phone">{r.phone ?? "None"}</Prop>
               <Prop label="Email">{r.email ?? "None"}</Prop>
               <Prop label="Rent">{money(r.rentCents)} a month</Prop>
+              <Prop label="Autopay">{r.autopay ? `On${r.autopayLabel ? ` · ${r.autopayLabel}` : ""}` : "Off"}</Prop>
             </dl>
           )}
           <dl className="divide-y divide-line border-t border-line px-5 pb-2 sm:px-6">

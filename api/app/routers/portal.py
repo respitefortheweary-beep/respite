@@ -14,7 +14,10 @@ from ..models import Bed, Charge, RepairRequest, Resident
 from ..serialize import row, rows
 from ..services import notify
 from ..services.email import site_url
-from ..services.payments import notify_owner, settle_session
+from ..services import autopay
+from ..services.billing import get_policy
+from ..services.fmt import money
+from ..services.payments import Plan, apply_plan, notify_owner, plan_for, plan_in_person, plan_to_meta, settle_session
 
 router = APIRouter(prefix="/portal", tags=["resident portal"])
 
@@ -43,9 +46,15 @@ def portal(token: str, db: Session = Depends(get_db)):
     charges = sorted((c for c in r.charges if c.status != "VOID"), key=lambda c: c.dueDate, reverse=True)
     bed = row(r.bed, room=row(r.bed.room)) if r.bed else None
     out = row(r, bed=bed, charges=rows(charges))
-    out.pop("portalToken")
+    for k in ("portalToken", "stripeCustomerId", "stripePaymentMethodId"):
+        out.pop(k)
     repairs = db.scalars(select(RepairRequest).where(RepairRequest.residentId == r.id).order_by(RepairRequest.createdAt.desc()).limit(20)).all()
-    return out | {"stripeEnabled": get_settings().stripe_enabled, "repairs": rows(repairs)}
+    policy = get_policy(db)
+    return out | {
+        "stripeEnabled": get_settings().stripe_enabled,
+        "repairs": rows(repairs),
+        "policy": {"partialPayments": policy.partialPayments, "minPartCents": policy.minPartCents, "lateFeeCents": policy.lateFeeCents, "lateFeeAfterDays": policy.lateFeeAfterDays},
+    }
 
 
 @router.get("/{token}/statement")
@@ -95,6 +104,19 @@ def due(token: str, ids: str = Query(""), db: Session = Depends(get_db)):
 
 class ChargesIn(BaseModel):
     chargeIds: list[str] = []
+    amountCents: int | None = None  # pay only part; None pays it all
+
+
+def _plan(db: Session, charges: list[Charge], amount: int | None) -> Plan:
+    total = sum(c.amountCents for c in charges)
+    if amount is None or amount >= total:
+        return plan_for(charges, None)
+    policy = get_policy(db)
+    if not policy.partialPayments:
+        raise HTTPException(400, "Part payments are turned off. Call the house to talk it through.")
+    if amount < policy.minPartCents:
+        raise HTTPException(400, f"The smallest payment is {money(policy.minPartCents)}.")
+    return plan_for(charges, amount)
 
 
 @router.post("/{token}/checkout")
@@ -104,9 +126,12 @@ def checkout(token: str, body: ChargesIn, db: Session = Depends(get_db)):
     charges = _due(r, body.chargeIds)
     if not charges:
         return {"url": f"/portal/{token}"}
+    plan = _plan(db, charges, body.amountCents)
     s = get_settings()
     if not s.stripe_enabled:
-        return {"url": f"/portal/{token}/pay?c={','.join(c.id for c in charges)}"}
+        part = f"&a={body.amountCents}" if any(n is not None for _, n in plan) else ""
+        return {"url": f"/portal/{token}/pay?c={','.join(i for i, _ in plan)}{part}"}
+    by_id = {c.id: c for c in charges}
     base = site_url()
     session = stripe.checkout.Session.create(
         api_key=s.stripe_secret_key,
@@ -114,10 +139,17 @@ def checkout(token: str, body: ChargesIn, db: Session = Depends(get_db)):
         payment_method_types=["card", "us_bank_account"],
         customer_email=r.email or None,
         line_items=[
-            {"quantity": 1, "price_data": {"currency": "usd", "unit_amount": c.amountCents, "product_data": {"name": c.label}}}
-            for c in charges
+            {
+                "quantity": 1,
+                "price_data": {
+                    "currency": "usd",
+                    "unit_amount": by_id[i].amountCents if n is None else n,
+                    "product_data": {"name": by_id[i].label if n is None else f"{by_id[i].label} (part)"},
+                },
+            }
+            for i, n in plan
         ],
-        metadata={"chargeIds": ",".join(c.id for c in charges), "residentId": r.id},
+        metadata={**plan_to_meta(plan), "residentId": r.id},
         payment_intent_data={"description": f"Respite for the Weary — {r.name}"},
         success_url=f"{base}/portal/{token}?session_id={{CHECKOUT_SESSION_ID}}",
         cancel_url=f"{base}/portal/{token}",
@@ -131,16 +163,57 @@ def demo_pay(token: str, body: ChargesIn, db: Session = Depends(get_db)):
     if get_settings().stripe_enabled:
         raise HTTPException(403, "Test payments are off.")
     r = _resident(db, token)
-    ids = [c.id for c in _due(r, body.chargeIds)]
-    if ids:
-        db.execute(update(Charge).where(Charge.id.in_(ids)).values(status="PAID", paidAt=now(), method="DEMO"))
-        db.commit()
-        notify_owner(db, ids)
+    charges = _due(r, body.chargeIds)
+    ids = apply_plan(db, _plan(db, charges, body.amountCents), "DEMO", r.id) if charges else []
+    notify_owner(db, ids)
     return {"paid": len(ids)}
 
 
 class SettleIn(BaseModel):
     sessionId: str
+
+
+# ───── Autopay ─────
+
+@router.post("/{token}/autopay")
+def autopay_on(token: str, db: Session = Depends(get_db)):
+    """Returns where to send the resident to save a card or bank account for autopay."""
+    return {"url": autopay.start(db, _resident(db, token), token)}
+
+
+@router.post("/{token}/autopay/confirm")
+def autopay_confirm(token: str, body: SettleIn, db: Session = Depends(get_db)):
+    """Called when Stripe sends the resident back, so autopay shows as on before the webhook lands."""
+    s = get_settings()
+    if not s.stripe_enabled:
+        return {"on": False}
+    r = _resident(db, token)
+    try:
+        session = stripe.checkout.Session.retrieve(body.sessionId, api_key=s.stripe_secret_key)
+        return {"on": autopay.finish(db, session.to_dict(), resident_id=r.id)}
+    except stripe.StripeError:
+        return {"on": False}
+
+
+@router.delete("/{token}/autopay")
+def autopay_off(token: str, db: Session = Depends(get_db)):
+    autopay.stop(db, _resident(db, token))
+    return {"on": False}
+
+
+class InPersonIn(ChargesIn):
+    method: str
+
+
+@router.post("/{token}/in-person")
+def pay_in_person(token: str, body: InPersonIn, db: Session = Depends(get_db)):
+    """The resident tells the house they'll bring cash, a check, a money order or a voucher."""
+    r = _resident(db, token)
+    charges = _due(r, body.chargeIds)
+    if not charges:
+        raise HTTPException(409, "There's nothing to pay right now.")
+    plan_in_person(db, charges, body.method)
+    return {"planned": len(charges)}
 
 
 @router.post("/{token}/settle")

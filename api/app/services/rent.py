@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from ..config import get_settings
@@ -27,6 +27,7 @@ def send_overdue_reminders(db: Session) -> int:
         .where(
             Charge.status == "DUE",
             Charge.reminderSentAt.is_(None),
+            or_(Charge.autopayStatus.is_(None), Charge.autopayStatus != "PROCESSING"),  # a bank payment is on its way
             Charge.dueDate <= late,
             Charge.dueDate >= current - STALE_AFTER,
             Resident.active.is_(True),

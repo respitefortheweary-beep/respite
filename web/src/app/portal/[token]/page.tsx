@@ -3,21 +3,23 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Check, FileText, Phone } from "lucide-react";
 import { api, orNull } from "@/lib/api";
-import type { Charge, Resident, Bed, Room, Repair } from "@/lib/types";
+import type { BillingPolicy, Charge, Resident, Bed, Room, Repair } from "@/lib/types";
 import { longDate, money, shortDate } from "@/lib/format";
 import { getHouse } from "@/lib/content";
 import { Logo } from "@/components/site-chrome";
-import { startCheckout } from "./actions";
-import { PayButton } from "./pay-button";
+import { payInPerson, startAutopay, startCheckout, stopAutopay } from "./actions";
+import { Autopay } from "./autopay";
+import { InPerson } from "./in-person";
+import { PayForm } from "./pay-form";
 import { Repairs } from "./repairs";
 
 const METHOD: Record<string, string> = { CARD: "Card", ACH: "Bank", STRIPE: "Online", DEMO: "Online (test)", CASH: "Cash", CHECK: "Check", MONEY_ORDER: "Money order", VOUCHER: "Voucher" };
 
 export const metadata: Metadata = { title: "Your rent", robots: { index: false } };
 
-export default async function Portal({ params, searchParams }: { params: Promise<{ token: string }>; searchParams: Promise<{ session_id?: string; paid?: string }> }) {
+export default async function Portal({ params, searchParams }: { params: Promise<{ token: string }>; searchParams: Promise<{ session_id?: string; paid?: string; inperson?: string; autopay?: string; autopay_session?: string }> }) {
   const { token } = await params;
-  const { session_id, paid } = await searchParams;
+  const { session_id, paid, inperson, autopay, autopay_session } = await searchParams;
   const house = await getHouse();
 
   const path = `/portal/${encodeURIComponent(token)}`;
@@ -27,12 +29,19 @@ export default async function Portal({ params, searchParams }: { params: Promise
       justPaid = (await api.post<{ paid: boolean }>(`${path}/settle`, { sessionId: session_id })).paid || justPaid;
     } catch {}
   }
+  let autopayOn = autopay === "on";
+  if (autopay_session) {
+    try {
+      autopayOn = (await api.post<{ on: boolean }>(`${path}/autopay/confirm`, { sessionId: autopay_session })).on;
+    } catch {}
+  }
 
-  type PortalView = Omit<Resident, "portalToken"> & { bed: (Bed & { room: Room }) | null; charges: Charge[]; stripeEnabled: boolean; repairs?: Repair[] };
+  type PortalView = Omit<Resident, "portalToken"> & { bed: (Bed & { room: Room }) | null; charges: Charge[]; stripeEnabled: boolean; repairs?: Repair[]; policy: BillingPolicy };
   const r = await orNull(api.get<PortalView>(path));
   if (!r) notFound();
   const due = r.charges.filter((c) => c.status === "DUE").sort((a, b) => +a.dueDate - +b.dueDate);
-  const history = r.charges.filter((c) => c.status === "PAID");
+  const history = r.charges.filter((c) => c.status === "PAID" || c.status === "REFUNDED");
+  const planned = due.find((c) => c.inPersonMethod)?.inPersonMethod ?? null;
   const total = due.reduce((s, c) => s + c.amountCents, 0);
   const pay = startCheckout.bind(null, token);
   const first = r.name.split(" ")[0];
@@ -60,6 +69,24 @@ export default async function Portal({ params, searchParams }: { params: Promise
             <p className="text-[0.95rem] leading-snug">Payment received. Thank you. The house has been told.</p>
           </div>
         )}
+        {(autopayOn || autopay === "off") && (
+          <div role="status" className="mt-6 flex items-center gap-3 rounded-2xl bg-ink p-4 text-white [animation:portal-in_500ms_var(--ease-out)]">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-porch text-ink">
+              <Check size={16} strokeWidth={3} />
+            </span>
+            <p className="text-[0.95rem] leading-snug">
+              {autopayOn ? `Autopay is on${r.autopayLabel ? ` with your ${r.autopayLabel}` : ""}. Rent is paid on the day it's due.` : "Autopay is off. Pay each month from this page."}
+            </p>
+          </div>
+        )}
+        {inperson && planned && (
+          <div role="status" className="mt-6 flex items-center gap-3 rounded-2xl bg-ink p-4 text-white [animation:portal-in_500ms_var(--ease-out)]">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-porch text-ink">
+              <Check size={16} strokeWidth={3} />
+            </span>
+            <p className="text-[0.95rem] leading-snug">Got it. The house knows to expect your payment.</p>
+          </div>
+        )}
 
         <section className="relative mt-7 overflow-hidden rounded-3xl bg-night text-white">
           {total > 0 && <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(60%_100%_at_85%_0%,rgb(240_165_58/0.18),transparent_70%)]" />}
@@ -82,17 +109,23 @@ export default async function Portal({ params, searchParams }: { params: Promise
                   </li>
                 ))}
               </ul>
-              <form action={pay} className="p-6 sm:p-8">
-                <input type="hidden" name="charges" value={due.map((c) => c.id).join(",")} />
-                <PayButton>Pay {money(total)}</PayButton>
-                <p className="mt-3 text-center text-[0.8rem] text-white/50">{r.stripeEnabled ? "Card or bank account. Secured by Stripe." : "Test mode. No real money moves."}</p>
-              </form>
+              <PayForm
+                action={pay}
+                chargeIds={due.map((c) => c.id)}
+                total={total}
+                allowPart={r.policy.partialPayments}
+                minPart={r.policy.minPartCents}
+                note={r.stripeEnabled ? "Card or bank account. Secured by Stripe." : "Test mode. No real money moves."}
+              />
+              <div className="px-6 pb-6 sm:px-8 sm:pb-8">
+                <InPerson key={planned ?? "none"} action={payInPerson.bind(null, token)} chargeIds={due.map((c) => c.id)} planned={planned} address={house.address} />
+              </div>
             </div>
           )}
         </section>
 
         <p className="mt-5 px-1 text-[0.9rem] leading-relaxed text-moss">
-          Paying with cash, a money order or a program voucher? Hand it to the house manager and it will be marked paid here. Questions? Call{" "}
+          Paid in person? It shows here once the house manager marks it, and you get a receipt by email. Questions? Call{" "}
           <a href={house.phoneHref} className="whitespace-nowrap font-medium text-ink underline decoration-line-strong underline-offset-4">
             {house.phone}
           </a>
@@ -110,15 +143,27 @@ export default async function Portal({ params, searchParams }: { params: Promise
                     <span className="block text-[0.82rem] text-moss">
                       {c.paidAt ? shortDate(c.paidAt) : ""}
                       {c.method ? ` · ${METHOD[c.method] ?? c.method}` : ""}
+                      {c.status === "REFUNDED" && ` · Refunded${c.refundedAt ? ` ${shortDate(c.refundedAt)}` : ""}`}
                     </span>
                   </span>
-                  <span className="mono tabular flex shrink-0 items-center gap-1.5 text-[0.95rem]">
-                    <Check size={13} strokeWidth={3} className="text-moss" /> {money(c.amountCents)}
+                  <span className={`mono tabular flex shrink-0 items-center gap-1.5 text-[0.95rem] ${c.status === "REFUNDED" ? "text-moss line-through" : ""}`}>
+                    {c.status !== "REFUNDED" && <Check size={13} strokeWidth={3} className="text-moss" />} {money(c.amountCents)}
                   </span>
                 </li>
               ))}
             </ul>
           </section>
+        )}
+        {r.active && (
+          <Autopay
+            on={r.autopay}
+            label={r.autopayLabel}
+            stripe={r.stripeEnabled}
+            failed={due.some((c) => c.autopayStatus === "FAILED")}
+            clearing={due.some((c) => c.autopayStatus === "PROCESSING")}
+            start={startAutopay.bind(null, token)}
+            stop={stopAutopay.bind(null, token)}
+          />
         )}
         {r.active && <Repairs token={token} repairs={r.repairs ?? []} phone={{ label: house.phone, href: house.phoneHref }} />}
 

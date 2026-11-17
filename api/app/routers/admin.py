@@ -16,10 +16,11 @@ from sqlalchemy.orm import Session, selectinload
 from ..config import get_settings
 from ..db import get_db, now
 from ..models import Bed, Charge, RepairRequest, Request, Resident, Room, Tour, WaitlistEntry
-from ..security import current_admin
+from ..security import current_admin, owner_only
+from ..services.payments import apply_plan, refund, send_receipt
 from ..serialize import row, rows
 from ..services.availability import get_beds, get_rooms_with_beds, sorted_beds
-from ..services.billing import bill_rent
+from ..services.billing import Policy, bill_rent, get_policy, save_policy
 from ..services import content, notify, tours, waitlist
 from ..services.email import site_url
 from .notifications import failed_count, unread_count
@@ -518,7 +519,7 @@ def send_pay_link(resident_id: str, db: Session = Depends(get_db)):
 def list_charges(tab: Literal["due", "paid", "all"] = Query("due"), db: Session = Depends(get_db)):
     q = select(Charge).options(selectinload(Charge.resident)).limit(200)
     if tab == "paid":
-        q = q.where(Charge.status == "PAID").order_by(Charge.paidAt.desc())
+        q = q.where(Charge.status.in_(("PAID", "REFUNDED"))).order_by(Charge.paidAt.desc())
     elif tab == "all":
         q = q.order_by(Charge.dueDate.desc())
     else:
@@ -537,6 +538,7 @@ def list_charges(tab: Literal["due", "paid", "all"] = Query("due"), db: Session 
 
 class PaymentIn(BaseModel):
     method: str = "CASH"
+    amountCents: int | None = Field(default=None, ge=1)  # less than the charge records part of it
 
 
 @router.post("/charges/{charge_id}/pay")
@@ -544,17 +546,51 @@ def record_payment(charge_id: str, body: PaymentIn, db: Session = Depends(get_db
     c = _get(db, Charge, charge_id, "charge")
     if body.method not in PAY_METHODS:
         raise HTTPException(400, "Unknown payment method.")
-    c.status, c.paidAt, c.method = "PAID", now(), body.method
+    if c.status != "DUE":
+        raise HTTPException(409, "This charge isn't waiting to be paid.")
+    if body.amountCents and body.amountCents > c.amountCents:
+        raise HTTPException(400, f"That's more than the {money(c.amountCents)} owed.")
+    part = body.amountCents if body.amountCents and body.amountCents < c.amountCents else None
+    ids = apply_plan(db, [(c.id, part)], body.method)
+    paid = db.get(Charge, ids[0]) if ids else c
+    send_receipt(db, paid)
     db.commit()
-    return row(c)
+    return row(paid)
+
+
+# ───── Billing rules ─────
+
+@router.get("/billing/settings")
+def billing_settings(db: Session = Depends(get_db)):
+    return get_policy(db).model_dump()
+
+
+@router.put("/billing/settings", dependencies=[Depends(owner_only)])
+def save_billing_settings(body: Policy, db: Session = Depends(get_db)):
+    return save_policy(db, body).model_dump()
 
 
 @router.post("/charges/{charge_id}/void")
 def void_charge(charge_id: str, db: Session = Depends(get_db)):
     c = _get(db, Charge, charge_id, "charge")
+    if c.status != "DUE":
+        raise HTTPException(409, "Only an unpaid charge can be voided. Refund a paid one instead.")
     c.status = "VOID"
     db.commit()
     return row(c)
+
+
+class RefundIn(BaseModel):
+    note: str = Field(default="", max_length=500)
+
+
+@router.post("/charges/{charge_id}/refund", dependencies=[Depends(owner_only)])
+def refund_charge(charge_id: str, body: RefundIn, db: Session = Depends(get_db)):
+    """Gives a paid charge back in full. Online payments go back through Stripe. Owners only: this moves money."""
+    c = db.scalar(select(Charge).where(Charge.id == charge_id).options(selectinload(Charge.resident)))
+    if not c:
+        raise HTTPException(404, "We couldn't find that charge.")
+    return refund(db, c, body.note.strip())
 
 
 class BillIn(BaseModel):

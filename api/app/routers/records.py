@@ -173,7 +173,8 @@ def settle_deposit(resident_id: str, body: DepositIn, db: Session = Depends(get_
 def statement(db: Session, r: Resident) -> dict:
     """A resident's full rent history, for their own records or a benefits office."""
     charges = sorted((c for c in r.charges if c.status != "VOID"), key=lambda c: c.dueDate)
-    billed = sum(c.amountCents for c in charges)
+    # a refunded charge stays on the statement but no longer counts as billed or paid
+    billed = sum(c.amountCents for c in charges if c.status != "REFUNDED")
     paid = sum(c.amountCents for c in charges if c.status == "PAID")
     house = get_section(db, "house")
     bed = r.bed
@@ -184,7 +185,7 @@ def statement(db: Session, r: Resident) -> dict:
         },
         "house": {"name": "Respite for the Weary", "address": house.get("address", ""), "phone": house_phone(db)},
         "charges": [
-            {k: v for k, v in (row(c) or {}).items() if k in ("id", "label", "period", "amountCents", "dueDate", "status", "paidAt", "method")}
+            {k: v for k, v in (row(c) or {}).items() if k in ("id", "label", "period", "amountCents", "dueDate", "status", "paidAt", "method", "refundedAt")}
             for c in charges
         ],
         "totals": {"billedCents": billed, "paidCents": paid, "owedCents": billed - paid},
@@ -224,11 +225,19 @@ def export_csv(
         raise HTTPException(400, "Dates look like 2026-01-31.")
     col = Charge.paidAt if kind == "payments" else Charge.dueDate
     q = select(Charge).options(selectinload(Charge.resident)).order_by(col)
-    q = q.where(Charge.status == "PAID") if kind == "payments" else q.where(Charge.status != "VOID")
+    q = q.where(Charge.status.in_(("PAID", "REFUNDED"))) if kind == "payments" else q.where(Charge.status != "VOID")
     if lo:
         q = q.where(col >= lo)
     if hi:
         q = q.where(col < hi + timedelta(days=1))
+    refunds = []
+    if kind == "payments":  # money given back is its own row, negative, on the day it went back
+        rq = select(Charge).options(selectinload(Charge.resident)).where(Charge.status == "REFUNDED").order_by(Charge.refundedAt)
+        if lo:
+            rq = rq.where(Charge.refundedAt >= lo)
+        if hi:
+            rq = rq.where(Charge.refundedAt < hi + timedelta(days=1))
+        refunds = db.scalars(rq).all()
     out = io.StringIO()
     w = csv.writer(out)
     w.writerow(["Date paid", "Resident", "For", "Amount", "Method", "Due date"] if kind == "payments" else ["Due date", "Resident", "For", "Amount", "Status", "Date paid", "Method"])
@@ -240,6 +249,9 @@ def export_csv(
             w.writerow([day(c.paidAt), c.resident.name, c.label, amount, method, day(c.dueDate)])
         else:
             w.writerow([day(c.dueDate), c.resident.name, c.label, amount, c.status.title(), day(c.paidAt), method])
+    for c in refunds:
+        back = "Stripe refund" if c.stripeRefundId else "Refund"
+        w.writerow([day(c.refundedAt), c.resident.name, f"Refund: {c.label}", f"-{c.amountCents / 100:.2f}", back, day(c.dueDate)])
     name = f"respite-{kind}{'-' + start if start else ''}{'-to-' + end if end else ''}.csv"
     return Response(
         content="﻿" + out.getvalue(),  # the mark makes Excel read it as UTF-8

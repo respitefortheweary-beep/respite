@@ -1,9 +1,13 @@
 import Link from "next/link";
 import type { Charge } from "@/lib/types";
 import { money, shortDate } from "@/lib/format";
-import { recordPayment, sendPayLink, voidCharge } from "../../actions";
+import { recordPayment, refundCharge, sendPayLink, voidCharge } from "../../actions";
 import { ChargePill, Empty } from "../ui";
 import { ChargeActions } from "./charge-actions";
+import { RefundAction } from "./refund-action";
+
+const AUTOPAY: Record<string, string> = { PROCESSING: " · Autopay clearing", FAILED: " · Autopay failed" };
+const BRINGING: Record<string, string> = { CASH: "cash", CHECK: "a check", MONEY_ORDER: "a money order", VOUCHER: "a voucher" };
 
 export const METHOD: Record<string, string> = { CARD: "Card", ACH: "Bank", STRIPE: "Online", DEMO: "Online (test)", CASH: "Cash", CHECK: "Check", MONEY_ORDER: "Money order", VOUCHER: "Voucher / program" };
 
@@ -15,8 +19,14 @@ export function ChargeList({ charges, showResident = false, canRemind = false, e
   return (
     <ul className="divide-y divide-line">
       {charges.map((c) => {
-        const paid = c.status === "PAID";
-        const meta = paid ? `Paid ${c.paidAt ? shortDate(c.paidAt) : ""}${c.method ? ` · ${METHOD[c.method] ?? c.method}` : ""}` : `Due ${shortDate(c.dueDate)}`;
+        const paid = c.status === "PAID" || c.status === "REFUNDED";
+        const how = c.method ? ` · ${METHOD[c.method] ?? c.method}` : "";
+        const meta =
+          c.status === "REFUNDED"
+            ? `Refunded ${c.refundedAt ? shortDate(c.refundedAt) : ""}${how}${c.refundNote ? ` · ${c.refundNote}` : ""}`
+            : paid
+              ? `Paid ${c.paidAt ? shortDate(c.paidAt) : ""}${how}`
+              : `Due ${shortDate(c.dueDate)}${c.inPersonMethod ? ` · Bringing ${BRINGING[c.inPersonMethod] ?? "it in person"}` : ""}${AUTOPAY[c.autopayStatus ?? ""] ?? ""}`;
         const remind = canRemind || c.resident?.email;
         return (
           <li key={c.id} className="flex items-center gap-2 py-3 pl-5 pr-2 sm:gap-4 sm:pl-6 sm:pr-3">
@@ -42,7 +52,9 @@ export function ChargeList({ charges, showResident = false, canRemind = false, e
               <ChargePill status={c.status} dueDate={c.dueDate} />
             </div>
             {c.status === "DUE" ? (
-              <ChargeActions record={recordPayment.bind(null, c.id)} voidIt={voidCharge.bind(null, c.id)} remind={remind ? sendPayLink.bind(null, c.residentId) : undefined} />
+              <ChargeActions amountCents={c.amountCents} planned={c.inPersonMethod} record={recordPayment.bind(null, c.id)} voidIt={voidCharge.bind(null, c.id)} remind={remind ? sendPayLink.bind(null, c.residentId) : undefined} />
+            ) : c.status === "PAID" ? (
+              <RefundAction amount={money(c.amountCents)} online={!!(c.stripeSessionId || c.stripePaymentIntentId)} refund={refundCharge.bind(null, c.id)} />
             ) : (
               <span className="w-10 shrink-0" aria-hidden />
             )}
