@@ -14,7 +14,8 @@ class Settings(BaseSettings):
 
     # Signs owner login tokens. Must be long and random in production.
     jwt_secret: str = "dev-only-change-me"
-    jwt_minutes: int = 60 * 24 * 7
+    # How long an owner stays signed in. The website also signs them out when the browser closes.
+    jwt_minutes: int = 60 * 8
 
     # The public website. Used to build pay links and Stripe return URLs.
     site_url: str = "http://localhost:3000"
