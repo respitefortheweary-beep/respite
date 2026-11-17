@@ -49,7 +49,24 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
         {/* Gallery: one large, two stacked. Once the owner has uploaded photos, only those show
             (one fills the frame, two sit side by side); stand-ins only appear while there are none. */}
         <Reveal variant="clip" className="mt-8">
-          <div className="grid h-[52vh] min-h-[320px] grid-cols-4 grid-rows-2 gap-2 overflow-hidden rounded-[28px]">
+          {/* Phones: swipe through every photo, one per screen */}
+          <div
+            className="no-scrollbar flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain rounded-[28px] md:hidden"
+            aria-label={`${room.name} photos`}
+            tabIndex={0}
+          >
+            {Array.from({ length: photos.length || 3 }, (_, i) => (
+              <div key={i} className="relative h-[52vh] min-h-[320px] w-full shrink-0 snap-center overflow-hidden rounded-[28px] bg-paper">
+                <RoomImage photos={photos} tone={room.tone} index={i} alt={`${room.name}, photo ${i + 1}`} />
+                {(photos.length || 3) > 1 && (
+                  <span className="mono absolute bottom-3 right-3 rounded-full bg-ink/70 px-2.5 py-1 text-[0.75rem] text-white tabular">
+                    {i + 1} / {photos.length || 3}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="hidden h-[52vh] min-h-[320px] grid-cols-4 grid-rows-2 md:grid gap-2 overflow-hidden rounded-[28px]">
             <div className={`col-span-4 row-span-2 bg-paper ${slots === 1 ? "" : "md:col-span-3"}`}>
               <RoomImage photos={photos} tone={room.tone} index={0} alt={`${room.name}, main view`} />
             </div>
