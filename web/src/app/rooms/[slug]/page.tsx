@@ -27,6 +27,7 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
   const [{ room, rooms }, house] = await Promise.all([load((await params).slug), getHouse()]);
   if (!room) notFound();
   const photos = parseList(room.photos);
+  const slots = photos.length ? Math.min(photos.length, 3) : 3;
   const features = parseList(room.features);
   const others = rooms.filter((r) => r.id !== room.id).slice(0, 3);
   const canRequest = room.open > 0 || room.soon;
@@ -45,18 +46,23 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
           {room.bathroom} bathroom
         </p>
 
-        {/* Gallery: one large, two stacked */}
+        {/* Gallery: one large, two stacked. Once the owner has uploaded photos, only those show
+            (one fills the frame, two sit side by side); stand-ins only appear while there are none. */}
         <Reveal variant="clip" className="mt-8">
           <div className="grid h-[52vh] min-h-[320px] grid-cols-4 grid-rows-2 gap-2 overflow-hidden rounded-[28px]">
-            <div className="col-span-4 row-span-2 bg-paper md:col-span-3">
+            <div className={`col-span-4 row-span-2 bg-paper ${slots === 1 ? "" : "md:col-span-3"}`}>
               <RoomImage photos={photos} tone={room.tone} index={0} alt={`${room.name}, main view`} />
             </div>
-            <div className="hidden bg-paper md:block">
-              <RoomImage photos={photos} tone={room.tone} index={1} alt={`${room.name}, second view`} />
-            </div>
-            <div className="hidden bg-paper md:block">
-              <RoomImage photos={photos} tone={room.tone} index={2} alt={`${room.name}, third view`} />
-            </div>
+            {slots > 1 && (
+              <div className={`hidden bg-paper md:block ${slots === 2 ? "row-span-2" : ""}`}>
+                <RoomImage photos={photos} tone={room.tone} index={1} alt={`${room.name}, second view`} />
+              </div>
+            )}
+            {slots > 2 && (
+              <div className="hidden bg-paper md:block">
+                <RoomImage photos={photos} tone={room.tone} index={2} alt={`${room.name}, third view`} />
+              </div>
+            )}
           </div>
         </Reveal>
 
