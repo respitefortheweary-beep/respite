@@ -48,7 +48,14 @@ class Settings(BaseSettings):
     notify_worker: bool = True
     notify_poll_seconds: float = 15
 
-    # Room photos: Vercel Blob when a token is set, otherwise a local folder.
+    # Room and homepage photos: Cloudinary when CLOUDINARY_URL is set (survives deploys),
+    # else Vercel Blob when a token is set, otherwise a local folder.
+    cloudinary_url: str = ""  # cloudinary://API_KEY:API_SECRET@CLOUD_NAME
+    # ...or the same three parts as separate settings, copied one by one from Cloudinary's API Keys page
+    cloudinary_cloud_name: str = ""
+    cloudinary_api_key: str = ""
+    cloudinary_api_secret: str = ""
+    cloudinary_folder: str = "respite"
     blob_read_write_token: str = ""
     upload_dir: Path = API_DIR.parent / "web" / "public" / "uploads"
     upload_url_prefix: str = "/uploads"
@@ -75,8 +82,22 @@ class Settings(BaseSettings):
         return bool(self.stripe_secret_key)
 
     @property
+    def cloudinary(self) -> tuple[str, str, str] | None:
+        """(api key, api secret, cloud name) when Cloudinary is set up, from CLOUDINARY_URL or the three separate settings."""
+        from urllib.parse import unquote, urlparse
+
+        if self.cloudinary_url.strip():
+            u = urlparse(self.cloudinary_url.strip().removeprefix("CLOUDINARY_URL="))
+            if u.scheme == "cloudinary" and u.username and u.password and u.hostname:
+                return unquote(u.username), unquote(u.password), u.hostname
+            return None
+        if self.cloudinary_cloud_name and self.cloudinary_api_key and self.cloudinary_api_secret:
+            return self.cloudinary_api_key.strip(), self.cloudinary_api_secret.strip(), self.cloudinary_cloud_name.strip()
+        return None
+
+    @property
     def can_upload_photos(self) -> bool:
-        return bool(self.blob_read_write_token) or not self.read_only_disk
+        return bool(self.cloudinary or self.blob_read_write_token) or not self.read_only_disk
 
 
 @lru_cache

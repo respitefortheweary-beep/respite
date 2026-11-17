@@ -13,6 +13,10 @@ os.environ.update(
     CRON_SECRET="cron-test",
     STRIPE_SECRET_KEY="",
     RESEND_API_KEY="",
+    CLOUDINARY_URL="",  # never upload to the real Cloudinary from tests
+    CLOUDINARY_CLOUD_NAME="",
+    CLOUDINARY_API_KEY="",
+    CLOUDINARY_API_SECRET="",
     NOTIFY_WORKER="false",  # tests send the outbox by hand
 )
 
@@ -929,3 +933,51 @@ def test_replace_pay_link(client):
     view = client.get(f"/portal/{new}").json()
     assert view["name"] == "Lina Link" and len(view["charges"]) == 2  # nothing else changes
     assert [k for k, *_ in _emails(recipient="lina@example.com")].count("resident.pay_link") == 1
+
+
+def test_photos_go_to_cloudinary_when_set(client, monkeypatch):
+    import hashlib
+
+    import httpx
+
+    from app.config import get_settings
+    from app.services import storage
+
+    s = get_settings()
+    monkeypatch.setattr(s, "cloudinary_url", "cloudinary://123:abc%2Fdef@demo-cloud")
+    assert s.cloudinary == ("123", "abc/def", "demo-cloud")
+    monkeypatch.setattr(s, "cloudinary_url", "https://example.com")
+    assert s.cloudinary is None
+    monkeypatch.setattr(s, "cloudinary_url", "")
+    for k, v in {"cloudinary_cloud_name": "demo-cloud", "cloudinary_api_key": "123", "cloudinary_api_secret": " shh "}.items():
+        monkeypatch.setattr(s, k, v)
+    assert s.cloudinary == ("123", "shh", "demo-cloud")  # the three separate settings work too
+
+    auth = _login(client)
+    calls = []
+
+    def fake_post(url, data, files, timeout):
+        calls.append((url, data, files))
+        body = {"secure_url": f"https://res.cloudinary.com/demo-cloud/image/upload/v1/{data['folder']}/{data['public_id']}.png"}
+        return httpx.Response(200, json=body, request=httpx.Request("POST", url))
+
+    monkeypatch.setattr(s, "cloudinary_url", "cloudinary://123:shh@demo-cloud")
+    monkeypatch.setattr(get_settings(), "read_only_disk", True)  # like Render: Cloudinary still lets owners upload
+    monkeypatch.setattr(storage.httpx, "post", fake_post)
+    assert client.get("/admin/config", headers=auth).json()["canUploadPhotos"] is True
+
+    room = client.get("/admin/rooms", headers=auth).json()[0]
+    up = client.post(f"/admin/rooms/{room['id']}/photos", headers=auth, files={"photo": ("p.png", b"\x89PNG fake", "image/png")})
+    assert up.status_code == 201
+    assert up.json()["photos"][-1].startswith("https://res.cloudinary.com/demo-cloud/")
+
+    url, data, files = calls[0]
+    assert url == "https://api.cloudinary.com/v1_1/demo-cloud/image/upload"
+    assert data["api_key"] == "123" and data["folder"] == "respite" and "shh" not in str(data)
+    signed = f"folder=respite&public_id={data['public_id']}&timestamp={data['timestamp']}shh"
+    assert data["signature"] == hashlib.sha1(signed.encode()).hexdigest()
+    assert files["file"][1] == b"\x89PNG fake"
+
+    site = client.post("/admin/content/photo", headers=auth, files={"photo": ("k.png", b"\x89PNG fake", "image/png")})
+    assert site.json()["src"].startswith("https://res.cloudinary.com/")
+
