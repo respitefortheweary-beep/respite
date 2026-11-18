@@ -6,6 +6,7 @@ import { getHouse } from "@/lib/content";
 export const metadata: Metadata = {
   title: "Privacy",
   description: "What Respite for the Weary collects through this website, why, who helps us run it, and how to ask us to change or delete it.",
+  alternates: { canonical: "/privacy" },
 };
 
 export default async function PrivacyPage() {

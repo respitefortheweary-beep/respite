@@ -3,7 +3,11 @@ import { getRoomsWithBeds } from "@/lib/availability";
 import { getHouse } from "@/lib/content";
 import { Flow } from "./flow";
 
-export const metadata: Metadata = { title: "Request a room" };
+export const metadata: Metadata = {
+  title: "Request a room",
+  description: "Ask for a bed in a sober, shared home in Chester, Virginia. A short form for yourself or someone you refer; we call within one business day.",
+  alternates: { canonical: "/apply" },
+};
 export const dynamic = "force-dynamic";
 
 export default async function ApplyPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {

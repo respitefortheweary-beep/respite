@@ -7,10 +7,24 @@ import { SearchBar } from "@/components/search-bar";
 import { RoomCard } from "@/components/room-card";
 import { Reveal } from "@/components/reveal";
 
-export const metadata: Metadata = { title: "Rooms and availability" };
 export const dynamic = "force-dynamic";
 
 type SP = Record<string, string | undefined>;
+
+// One indexable page per house; filtered views (price, stairs, bathroom...) stay out of the index
+export async function generateMetadata({ searchParams }: { searchParams: Promise<SP> }): Promise<Metadata> {
+  const sp = await searchParams;
+  const houses = await getHouses().catch(() => []);
+  const picked = houses.length > 1 ? houses.find((h) => h.slug === sp.house) : undefined;
+  const filtered = ["kind", "when", "stairs", "bath", "max", "program"].some((k) => sp[k]);
+  const town = (picked ?? houses[0])?.town || "Chester, Virginia";
+  return {
+    title: picked ? `${picked.name} rooms` : "Rooms and availability",
+    description: `Private and shared rooms in sober, supportive homes in ${town}. See rent, deposit, open beds tonight and what's included.`,
+    alternates: { canonical: picked ? `/rooms?house=${encodeURIComponent(picked.slug)}` : "/rooms" },
+    ...(filtered ? { robots: { index: false, follow: true } } : {}),
+  };
+}
 
 const CHIPS: { key: string; label: string; value: string }[] = [
   { key: "stairs", label: "No stairs", value: "none" },

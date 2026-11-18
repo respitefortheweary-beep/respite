@@ -15,13 +15,24 @@ export const metadata: Metadata = {
   description: DESCRIPTION,
   openGraph: {
     type: "website",
+    locale: "en_US",
+    url: "/",
     siteName: "Respite for the Weary",
     title: TITLE,
     description: DESCRIPTION,
     images: [{ url: "/images/hero/house-day.webp", alt: "A white clapboard house with a deep front porch on a clear morning" }],
   },
   twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION, images: ["/images/hero/house-day.webp"] },
-  ...(process.env.SHOWCASE ? { robots: { index: false, follow: false } } : {}),
+  alternates: { canonical: "/" },
+  formatDetection: { telephone: false, email: false, address: false },
+  // Paste the codes from Google Search Console and Bing Webmaster Tools into these env vars
+  verification: {
+    ...(process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : {}),
+    ...(process.env.BING_SITE_VERIFICATION ? { other: { "msvalidate.01": process.env.BING_SITE_VERIFICATION } } : {}),
+  },
+  robots: process.env.SHOWCASE
+    ? { index: false, follow: false }
+    : { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 } },
 };
 
 export const viewport: Viewport = { themeColor: "#000000" };

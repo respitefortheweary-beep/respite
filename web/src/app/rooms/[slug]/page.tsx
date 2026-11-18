@@ -10,6 +10,8 @@ import { WindowRow } from "@/components/house";
 import { availabilityText } from "@/components/room-card";
 import { Reveal } from "@/components/reveal";
 import { getHouse } from "@/lib/content";
+import { JsonLd } from "@/components/json-ld";
+import { breadcrumbLd, roomLd } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +22,18 @@ async function load(slug: string) {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { room } = await load((await params).slug);
-  return { title: room?.name ?? "Room" };
+  if (!room) return { title: "Room", robots: { index: false } };
+  const where = room.house?.town || "Chester, Virginia";
+  const kind = room.kind === "PRIVATE" ? "Private room" : "Shared room";
+  const description = (room.summary || `${kind} in a sober, shared home in ${where}.`) + ` ${money(room.rentCents)} a month.`;
+  const image = parseList(room.photos)[0] || "/images/hero/house-day.webp";
+  return {
+    title: `${room.name} · ${kind} in ${where}`,
+    description,
+    alternates: { canonical: `/rooms/${room.slug}` },
+    openGraph: { type: "website", url: `/rooms/${room.slug}`, title: room.name, description, images: [{ url: image, alt: `${room.name}, ${kind.toLowerCase()}` }] },
+    twitter: { card: "summary_large_image", title: room.name, description, images: [image] },
+  };
 }
 
 export default async function RoomPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -37,6 +50,16 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
 
   return (
     <>
+      <JsonLd
+        data={[
+          breadcrumbLd([
+            { name: "Home", path: "/" },
+            { name: "Rooms", path: "/rooms" },
+            { name: room.name, path: `/rooms/${room.slug}` },
+          ]),
+          roomLd({ ...room, photos, features }),
+        ]}
+      />
       <SiteHeader />
       <main id="main" tabIndex={-1} className="mx-auto max-w-[1240px] px-4 pb-24 pt-6 sm:px-6">
         <Link href="/rooms" className="press mb-6 inline-flex items-center gap-2 rounded-full py-2 pr-3 text-[0.92rem] text-ink/65 hover:text-ink">

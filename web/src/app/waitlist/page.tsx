@@ -3,7 +3,7 @@ import { getRoomsWithBeds } from "@/lib/availability";
 import { getHouse } from "@/lib/content";
 import { WaitlistForm } from "./form";
 
-export const metadata: Metadata = { title: "Join the waitlist", description: "Every bed is taken? Leave your email and we'll tell you when one opens." };
+export const metadata: Metadata = { title: "Join the waitlist", description: "Every bed is taken? Leave your email and we'll tell you when one opens.", alternates: { canonical: "/waitlist" } };
 export const dynamic = "force-dynamic";
 
 export default async function WaitlistPage({ searchParams }: { searchParams: Promise<{ room?: string }> }) {

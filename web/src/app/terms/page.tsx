@@ -6,6 +6,7 @@ import { getHouse } from "@/lib/content";
 export const metadata: Metadata = {
   title: "Terms of use",
   description: "The plain rules for using the Respite for the Weary website: requests, tours, the waitlist, resident pay links and payments.",
+  alternates: { canonical: "/terms" },
 };
 
 export default async function TermsPage() {

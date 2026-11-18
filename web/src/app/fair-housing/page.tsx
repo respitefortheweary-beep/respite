@@ -6,6 +6,7 @@ import { getHouse } from "@/lib/content";
 export const metadata: Metadata = {
   title: "Fair housing and accessibility",
   description: "Respite for the Weary follows federal and Virginia fair housing law. How to ask for a reasonable accommodation, and how to reach us if this website is hard to use.",
+  alternates: { canonical: "/fair-housing" },
 };
 
 export default async function FairHousingPage() {

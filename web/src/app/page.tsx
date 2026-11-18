@@ -13,6 +13,8 @@ import { RoomCard } from "@/components/room-card";
 import { SiteHeader, SiteFooter, Roll } from "@/components/site-chrome";
 import { shortDate } from "@/lib/format";
 import { getContent } from "@/lib/content";
+import { JsonLd } from "@/components/json-ld";
+import { faqLd, organizationLd } from "@/lib/seo";
 
 const WORDS = ["No", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve"];
 const count = (n: number, one: string, many: string) => `${WORDS[n] ?? n} ${n === 1 ? one : many}.`;
@@ -34,6 +36,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <JsonLd data={[...organizationLd(house), ...(faq.items.length ? [faqLd(faq.items)] : [])]} />
       <SiteHeader />
       <main id="main" tabIndex={-1} className="outline-none">
         {/* ───────── Hero: one screen, the house in the morning, the live count and the search ───────── */}
