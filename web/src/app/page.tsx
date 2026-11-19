@@ -8,15 +8,13 @@ import { WhoScroll } from "@/components/who-scroll";
 import { MoveInSteps } from "@/components/move-in-steps";
 import { Faq } from "@/components/faq";
 import { Reveal } from "@/components/reveal";
-import { HouseCard } from "@/components/house-card";
+import { HouseCard, houseGrid } from "@/components/house-card";
 import { SiteHeader, SiteFooter, Roll } from "@/components/site-chrome";
 import { shortDate } from "@/lib/format";
 import { getContent } from "@/lib/content";
 import { JsonLd } from "@/components/json-ld";
 import { faqLd, organizationLd } from "@/lib/seo";
 
-const WORDS = ["No", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve"];
-const count = (n: number, one: string, many: string) => `${WORDS[n] ?? n} ${n === 1 ? one : many}.`;
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +25,8 @@ export default async function HomePage() {
   const open = beds.filter((b) => b.state === "open").length;
   const houses = listed.length;
   const several = houses > 1;
+  // the homepage shows the first six; the rest are a click away on /houses
+  const shown = listed.slice(0, 6);
   const live = open
     ? `${open} of ${beds.length} bed spaces open tonight${several ? ` across ${houses} houses` : ""}`
     : beds.length
@@ -70,7 +70,7 @@ export default async function HomePage() {
                 className="press rise mt-8 flex h-14 max-w-[420px] items-center gap-3 rounded-full bg-paper pl-5 pr-2 text-ink shadow-[0_12px_40px_-12px_rgb(23_33_28/.3)] ring-1 ring-line [animation-delay:320ms]"
               >
                 <span className="flex-1">
-                  <span className="title-3 block">{several ? "See the houses" : "See the house"}</span>
+                  <span className="title-3 block">See our houses</span>
                   <span className="caption-5 block text-ink/60">Photos, rooms and the bed spaces open now</span>
                 </span>
                 <span className="grid h-10 w-10 place-items-center rounded-full bg-porch">
@@ -81,9 +81,42 @@ export default async function HomePage() {
           </HouseScene>
         </section>
 
+        {/* ───────── Houses: right under the hero, so people see what's available first ───────── */}
+        <section className="border-t border-line bg-oat">
+          <div className="mx-auto max-w-[1280px] px-4 py-20 sm:px-6 md:py-32">
+            <Reveal className="mb-14 flex flex-wrap items-end justify-between gap-6">
+              <div>
+                <h2 className="display-2 text-[clamp(2.4rem,5.4vw,4.8rem)]">
+                  Our houses.
+                  <br />
+                  <span className="text-moss">Find an open bed.</span>
+                </h2>
+                <p className="mt-5 max-w-lg text-[1.05rem] text-moss">Open a house to see its photos, its rooms and which bed spaces are free now or opening soon.</p>
+              </div>
+              <Link href="/houses" className="btn btn-primary press">
+                <Roll>See all houses</Roll> <ArrowRight size={16} />
+              </Link>
+            </Reveal>
+            <div className={houseGrid(shown.length)}>
+              {shown.map((h, i) => (
+                <Reveal key={h.id} delay={(i % 3) * 70}>
+                  <HouseCard house={h} rooms={rooms.filter((r) => r.houseId === h.id)} wide={shown.length === 1} priority={i < 3} />
+                </Reveal>
+              ))}
+            </div>
+            {houses > shown.length && (
+              <div className="mt-12 flex justify-center">
+                <Link href="/houses" className="btn btn-ghost press">
+                  <Roll>{`See all ${houses} houses`}</Roll> <ArrowRight size={16} />
+                </Link>
+              </div>
+            )}
+          </div>
+        </section>
+
         {/* ───────── Statement: reads itself as you scroll ───────── */}
         <section className="mx-auto grid max-w-[1280px] gap-8 px-4 py-28 sm:px-6 md:grid-cols-12 md:py-44">
-          <p className="eyebrow md:col-span-3 md:pt-4">{several ? "The houses" : "The house"}</p>
+          <p className="eyebrow md:col-span-3 md:pt-4">Our houses</p>
           <ScrollWords
             className="display-2 text-[clamp(1.9rem,4.3vw,3.9rem)] font-medium md:col-span-9"
             text={home.statement}
@@ -99,7 +132,7 @@ export default async function HomePage() {
               Tonight, <span className="text-moss">bed by bed.</span>
             </h2>
             <Link href="/houses" className="btn btn-ghost press">
-              <Roll>{several ? "See every house" : "See the house"}</Roll> <ArrowRight size={16} />
+              <Roll>See all houses</Roll> <ArrowRight size={16} />
             </Link>
           </Reveal>
           <div className="grid gap-10">
@@ -193,29 +226,6 @@ export default async function HomePage() {
                 </article>
               </Reveal>
             ))}
-          </div>
-        </section>
-
-        {/* ───────── Houses ───────── */}
-        <section className="border-t border-line bg-oat">
-          <div className="mx-auto max-w-[1280px] px-4 py-28 sm:px-6 md:py-40">
-            <Reveal className="mb-14 flex flex-wrap items-end justify-between gap-6">
-              <h2 className="display-2 text-[clamp(2.4rem,5.4vw,4.8rem)]">
-                {count(houses, "house", "houses")}
-                <br />
-                <span className="text-moss">{count(beds.length, "bed space", "bed spaces")}</span>
-              </h2>
-              <Link href="/houses" className="btn btn-primary press">
-                <Roll>{several ? "Compare houses" : "See the house"}</Roll> <ArrowRight size={16} />
-              </Link>
-            </Reveal>
-            <div className="grid gap-x-5 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-              {listed.map((h, i) => (
-                <Reveal key={h.id} delay={i * 70}>
-                  <HouseCard house={h} rooms={rooms.filter((r) => r.houseId === h.id)} />
-                </Reveal>
-              ))}
-            </div>
           </div>
         </section>
 

@@ -34,7 +34,7 @@ function useReducedMotion() {
  * The house's photos and videos as one slideshow. It moves on by itself, people can swipe or use the arrows,
  * and after they stop for a few seconds it carries on. Every photo shows whole (never cropped), and a tap opens it full screen.
  */
-export function HouseGallery({ name, photos, videos }: { name: string; photos: string[]; videos: string[] }) {
+export function HouseGallery({ name, photos, videos = [] }: { name: string; photos: string[]; videos?: string[] }) {
   const slides: Slide[] = [
     ...(photos.length ? photos : HOUSE_STAND_INS).map((src) => ({ kind: "photo" as const, src })),
     ...videos.map((src) => ({ kind: "video" as const, src })),

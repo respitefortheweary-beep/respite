@@ -125,12 +125,23 @@ export default async function HousePage({ params }: { params: Promise<{ slug: st
         </p>
 
         <Reveal variant="clip" className="mt-8">
-          <HouseGallery name={home.name} photos={photos} videos={videos} />
+          <HouseGallery name={home.name} photos={photos} />
         </Reveal>
 
         <div className="mt-12 grid gap-14 lg:grid-cols-[1fr_380px]">
           <div className="min-w-0 space-y-12">
             {home.summary && <p className="max-w-2xl text-[1.2rem] leading-relaxed text-ink/80">{home.summary}</p>}
+
+            {videos.length > 0 && (
+              <section className="border-t border-line pt-10">
+                <h2 className="mb-6 text-xl font-semibold tracking-tight">{videos.length === 1 ? "Video tour" : "Video tours"}</h2>
+                <div className="grid gap-4">
+                  {videos.map((v, i) => (
+                    <video key={v} src={v} controls playsInline preload="metadata" aria-label={`${home.name}, video ${i + 1}`} className="aspect-video w-full rounded-[22px] bg-night object-contain" />
+                  ))}
+                </div>
+              </section>
+            )}
 
             <section id="rooms" className="scroll-mt-24 border-t border-line pt-10">
               <div className="mb-6 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">

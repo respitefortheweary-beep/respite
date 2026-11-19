@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { getHouses, getRoomsWithBeds } from "@/lib/availability";
 import { getHouse } from "@/lib/content";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
-import { HouseCard } from "@/components/house-card";
+import { HouseCard, houseGrid } from "@/components/house-card";
 import { Reveal } from "@/components/reveal";
 import { townsText } from "@/lib/format";
 
@@ -29,7 +29,7 @@ export default async function HousesPage() {
       <SiteHeader />
       <main id="main" tabIndex={-1} className="mx-auto max-w-[1240px] px-4 pb-28 sm:px-6">
         <div className="pb-10 pt-12 sm:pt-16">
-          <h1 className="display text-[clamp(2.4rem,5vw,4rem)]">{houses.length === 1 ? "Our house" : "Our houses"}</h1>
+          <h1 className="display text-[clamp(2.4rem,5vw,4rem)]">Our houses</h1>
           <p className="mt-3 max-w-2xl text-ink/65">
             {where} · {houses.length} {houses.length === 1 ? "house" : "houses"} ·{" "}
             <span className="font-semibold text-ink">
@@ -40,10 +40,10 @@ export default async function HousesPage() {
         </div>
 
         {houses.length ? (
-          <div className="grid gap-x-5 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+          <div className={houseGrid(houses.length)}>
             {houses.map((h, i) => (
-              <Reveal key={h.id} delay={i * 60}>
-                <HouseCard house={h} rooms={rooms.filter((r) => r.houseId === h.id)} priority={i < 3} />
+              <Reveal key={h.id} delay={(i % 3) * 60}>
+                <HouseCard house={h} rooms={rooms.filter((r) => r.houseId === h.id)} priority={i < 3} wide={houses.length === 1} />
               </Reveal>
             ))}
           </div>
