@@ -8,6 +8,7 @@ import { longDate, money, parseList } from "@/lib/format";
 import { getHouse } from "@/lib/content";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 import { HouseImage } from "@/components/room-art";
+import { HouseGallery } from "@/components/house-gallery";
 import { WindowRow } from "@/components/house";
 import { availabilityText } from "@/components/room-card";
 import { openText, roomMix } from "@/components/house-card";
@@ -91,7 +92,6 @@ export default async function HousePage({ params }: { params: Promise<{ slug: st
   if (!home) notFound();
   const photos = parseList(home.photos);
   const videos = parseList(home.videos);
-  const slots = photos.length ? Math.min(photos.length, 3) : 3;
   const from = rooms.length ? Math.min(...rooms.map((r) => r.rentCents)) : 0;
   const where = home.town || business.town;
   const others = houses.filter((h) => h.id !== home.id);
@@ -124,60 +124,13 @@ export default async function HousePage({ params }: { params: Promise<{ slug: st
           </span>
         </p>
 
-        {/* Gallery: one large, two stacked. Only the owner's photos once there are any; stand-ins until then. */}
         <Reveal variant="clip" className="mt-8">
-          {/* Phones: swipe through every photo, one per screen */}
-          <div className="no-scrollbar flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain rounded-[28px] md:hidden" aria-label={`${home.name} photos`} tabIndex={0}>
-            {Array.from({ length: photos.length || 3 }, (_, i) => (
-              <div key={i} className="relative h-[52vh] min-h-[320px] w-full shrink-0 snap-center overflow-hidden rounded-[28px] bg-paper">
-                <HouseImage photos={photos} index={i} alt={`${home.name}, photo ${i + 1}`} />
-                {(photos.length || 3) > 1 && (
-                  <span className="mono absolute bottom-3 right-3 rounded-full bg-ink/70 px-2.5 py-1 text-[0.75rem] text-white tabular">
-                    {i + 1} / {photos.length || 3}
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-          <div className="hidden h-[52vh] min-h-[320px] grid-cols-4 grid-rows-2 gap-2 overflow-hidden rounded-[28px] md:grid">
-            <div className={`col-span-4 row-span-2 bg-paper ${slots === 1 ? "" : "md:col-span-3"}`}>
-              <HouseImage photos={photos} index={0} alt={`${home.name}, main view`} />
-            </div>
-            {slots > 1 && (
-              <div className={`hidden bg-paper md:block ${slots === 2 ? "row-span-2" : ""}`}>
-                <HouseImage photos={photos} index={1} alt={`${home.name}, second view`} />
-              </div>
-            )}
-            {slots > 2 && (
-              <div className="hidden bg-paper md:block">
-                <HouseImage photos={photos} index={2} alt={`${home.name}, third view`} />
-              </div>
-            )}
-          </div>
+          <HouseGallery name={home.name} photos={photos} videos={videos} />
         </Reveal>
-        {photos.length > 3 && (
-          <div className="mt-2 hidden grid-cols-4 gap-2 md:grid lg:grid-cols-6">
-            {photos.slice(3).map((p, i) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img key={p} src={p} alt={`${home.name}, photo ${i + 4}`} loading="lazy" className="aspect-[4/3] w-full rounded-2xl bg-paper object-cover" />
-            ))}
-          </div>
-        )}
 
         <div className="mt-12 grid gap-14 lg:grid-cols-[1fr_380px]">
           <div className="min-w-0 space-y-12">
             {home.summary && <p className="max-w-2xl text-[1.2rem] leading-relaxed text-ink/80">{home.summary}</p>}
-
-            {videos.length > 0 && (
-              <section className="border-t border-line pt-10">
-                <h2 className="mb-6 text-xl font-semibold tracking-tight">{videos.length === 1 ? "Video tour" : "Video tours"}</h2>
-                <div className="grid gap-4">
-                  {videos.map((v, i) => (
-                    <video key={v} src={v} controls playsInline preload="metadata" aria-label={`${home.name}, video ${i + 1}`} className="aspect-video w-full rounded-[22px] bg-night object-cover" />
-                  ))}
-                </div>
-              </section>
-            )}
 
             <section id="rooms" className="scroll-mt-24 border-t border-line pt-10">
               <div className="mb-6 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">

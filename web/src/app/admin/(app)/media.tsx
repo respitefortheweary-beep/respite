@@ -2,7 +2,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ImagePlus, Loader2, Play, X } from "lucide-react";
-import { MEDIA_ACCEPT, isVideo, sendMedia } from "@/lib/send-media";
+import { MEDIA_ACCEPT, isVideo, sendMedia, type Progress } from "@/lib/send-media";
 import type { MediaOwner } from "../actions";
 
 const tile = "relative aspect-[4/3] overflow-hidden rounded-lg bg-ink/[.05] ring-1 ring-line";
@@ -62,33 +62,76 @@ export function MediaPicker({ files, onChange, max = 20, label = "Add photos or 
   );
 }
 
-/** On a room or house page: pick photos and videos and they upload straight away. */
+const mbText = (n: number) => `${(n / 1024 / 1024).toFixed(n < 10 * 1024 * 1024 ? 1 : 0)} MB`;
+
+/** On a room or house page: pick photos and videos and they upload straight away, with a progress bar. */
 export function MediaUpload({ kind, id }: { kind: MediaOwner; id: string }) {
-  const [step, setStep] = useState("");
+  const [progress, setProgress] = useState<Progress | null>(null);
   const [error, setError] = useState("");
+  const [done, setDone] = useState("");
   const input = useRef<HTMLInputElement>(null);
+  const stop = useRef<AbortController | null>(null);
+
+  // Leaving the page mid-upload would lose it, so the browser asks first.
+  useEffect(() => {
+    if (!progress) return;
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [progress]);
 
   const upload = async (files: File[]) => {
     setError("");
-    const { error } = await sendMedia(kind, id, files, (at, of, video) => setStep(of > 1 ? `Uploading ${at} of ${of}` : video ? "Uploading video" : "Uploading"));
-    setStep("");
+    setDone("");
+    stop.current = new AbortController();
+    const { added, error } = await sendMedia(kind, id, files, undefined, { onProgress: setProgress, signal: stop.current.signal });
+    setProgress(null);
+    stop.current = null;
     if (error) setError(error);
+    if (added) setDone(added === 1 ? (files.length === 1 && isVideo(files[0]) ? "Video added." : "Added.") : `${added} added.`);
     if (input.current) input.current.value = "";
   };
 
+  const pct = progress?.total ? Math.min(100, Math.round(((progress.sent ?? 0) / progress.total) * 100)) : 0;
+  const busy = !!progress;
+
   return (
     <>
-      <label
-        className={`press flex aspect-[4/3] cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-line-strong p-3 text-center text-[0.86rem] font-medium transition-colors hover:bg-ink/[.03] focus-within:ring-2 focus-within:ring-ink ${step ? "pointer-events-none opacity-60" : ""}`}
-      >
-        {step ? <Loader2 size={20} className="animate-spin" /> : <ImagePlus size={20} />}
-        {step || "Add photos or videos"}
-        <span className="text-[0.76rem] font-normal text-moss">Photos: JPG, PNG, WebP. Videos: MP4, MOV, WebM.</span>
-        <input ref={input} type="file" multiple accept={MEDIA_ACCEPT} className="sr-only" onChange={(e) => e.currentTarget.files?.length && upload([...e.currentTarget.files])} />
-      </label>
+      {busy ? (
+        <div role="status" aria-live="polite" className="flex aspect-[4/3] flex-col justify-center gap-2.5 rounded-xl bg-ink/[.03] p-3.5 ring-1 ring-line">
+          <p className="flex items-center gap-2 text-[0.86rem] font-medium">
+            <Loader2 size={15} className="shrink-0 animate-spin" />
+            <span className="truncate">
+              {progress.of > 1 ? `${progress.at} of ${progress.of}: ` : ""}
+              {progress.video ? (pct >= 100 ? "Finishing video" : "Uploading video") : "Uploading photo"}
+            </span>
+          </p>
+          <div className="h-2 overflow-hidden rounded-full bg-ink/10" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label="Upload progress">
+            <div className="h-full rounded-full bg-porch transition-[width] duration-300 ease-out" style={{ width: `${progress.video ? Math.max(pct, 2) : 100}%` }} />
+          </div>
+          <div className="flex items-center justify-between gap-2 text-[0.76rem] text-moss">
+            <span className="mono tabular">{progress.video && progress.total ? `${pct}% · ${mbText(progress.sent ?? 0)} of ${mbText(progress.total)}` : "Working"}</span>
+            <button type="button" onClick={() => stop.current?.abort()} className="press rounded-full px-2 py-1 font-medium text-ink hover:bg-ink/[.06]">
+              Stop
+            </button>
+          </div>
+        </div>
+      ) : (
+        <label className="press flex aspect-[4/3] cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-line-strong p-3 text-center text-[0.86rem] font-medium transition-colors hover:bg-ink/[.03] focus-within:ring-2 focus-within:ring-ink">
+          <ImagePlus size={20} />
+          Add photos or videos
+          <span className="text-[0.76rem] font-normal text-moss">Photos: JPG, PNG, WebP. Videos: MP4, MOV, WebM, up to 100 MB.</span>
+          <input ref={input} type="file" multiple accept={MEDIA_ACCEPT} className="sr-only" onChange={(e) => e.currentTarget.files?.length && upload([...e.currentTarget.files])} />
+        </label>
+      )}
       {error && (
         <p role="alert" className="col-span-full rounded-xl bg-ember/10 px-3.5 py-2.5 text-[0.88rem] text-ember ring-1 ring-ember/25">
           {error}
+        </p>
+      )}
+      {done && !error && (
+        <p role="status" className="col-span-full rounded-xl bg-pine/10 px-3.5 py-2.5 text-[0.88rem] text-pine ring-1 ring-pine/25">
+          {done}
         </p>
       )}
     </>

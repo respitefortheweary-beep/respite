@@ -180,3 +180,7 @@ body {
 /* Hide scrollbars on horizontal chip rows */
 .no-scrollbar { scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* House gallery: the autoplay line under the counter, and the full screen view fading in. */
+@keyframes gallery-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes gallery-in { from { opacity: 0; } to { opacity: 1; } }

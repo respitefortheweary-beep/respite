@@ -98,7 +98,7 @@ export function RoomImage({
 }
 
 // until a house has its own photos: the house from the front, then its kitchen and porch
-const HOUSE_STAND_INS = ["/images/hero/house-day.webp", "/images/kitchen.webp", "/images/porch.webp"];
+export const HOUSE_STAND_INS = ["/images/hero/house-day.webp", "/images/kitchen.webp", "/images/porch.webp"];
 
 /** A house photo by position; the owner's photos win, stand-ins only fill in while there are none. */
 export function HouseImage({ photos, index = 0, alt, className = "" }: { photos: string[]; index?: number; alt: string; className?: string }) {

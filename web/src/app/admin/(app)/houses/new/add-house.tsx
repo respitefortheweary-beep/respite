@@ -62,7 +62,10 @@ export function AddHouseForm({ canUpload }: { canUpload: boolean }) {
     // past this point the house exists: a photo that fails can be added again on its page, so carry on
     let failed = false;
     if (houseMedia.length) {
-      const r = await sendMedia("houses", houseId, houseMedia, (at, of) => setBusy(`House photos and videos: ${at} of ${of}`));
+      const r = await sendMedia("houses", houseId, houseMedia, undefined, {
+        onProgress: ({ at, of, video, sent = 0, total = 0 }) =>
+          setBusy(`House photos and videos: ${at} of ${of}${video && total ? ` · ${Math.min(100, Math.round((sent / total) * 100))}%` : ""}`),
+      });
       failed ||= !!r.error;
     }
     for (const [i, r] of rooms.entries()) {
