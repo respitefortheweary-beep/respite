@@ -18,7 +18,21 @@ export function ScheduleEditor({ initial }: { initial: TourSettings }) {
   const [closed, setClosed] = useState("");
   const [state, setState] = useState<FormState>(null);
   const [pending, start] = useTransition();
-  const dirty = JSON.stringify(s) !== JSON.stringify(saved);
+  // a time picked in a box but not yet added with + still counts: saving adds it
+  const typed = Object.entries(adding).filter(([, t]) => /^\d{2}:\d{2}$/.test(t)).map(([d, time]) => ({ day: Number(d), time }));
+  const withTyped = (base: TourSettings) =>
+    typed.length
+      ? { ...base, slots: [...base.slots.filter((x) => !typed.some((t) => t.day === x.day && t.time === x.time)), ...typed].sort((a, b) => a.day - b.day || a.time.localeCompare(b.time)) }
+      : base;
+  const dirty = typed.length > 0 || JSON.stringify(s) !== JSON.stringify(saved);
+
+  // don't lose a schedule by leaving the page before saving
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
 
   const set = (patch: Partial<TourSettings>) => {
     setState(null);
@@ -32,9 +46,14 @@ export function ScheduleEditor({ initial }: { initial: TourSettings }) {
   };
   const save = () =>
     start(async () => {
-      const res = await saveTourSettings(s);
+      const next = withTyped(s);
+      const res = await saveTourSettings(next);
       setState(res);
-      if (res?.ok) setSaved(s);
+      if (res?.ok) {
+        setS(next);
+        setSaved(next);
+        setAdding({});
+      }
     });
 
   return (
@@ -71,6 +90,12 @@ export function ScheduleEditor({ initial }: { initial: TourSettings }) {
                       aria-label={`New ${name} time`}
                       value={adding[day] ?? ""}
                       onChange={(e) => setAdding({ ...adding, [day]: e.target.value })}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          addSlot(day);
+                        }
+                      }}
                       className={`${input} !h-9 !w-[7.5rem] !text-[0.88rem]`}
                     />
                     <button type="button" aria-label={`Add ${name} time`} disabled={!adding[day]} onClick={() => addSlot(day)} className={`${btnQuiet} !h-9 !w-9 !px-0 disabled:opacity-40`}>
@@ -141,6 +166,7 @@ export function ScheduleEditor({ initial }: { initial: TourSettings }) {
             {pending && <Loader2 size={15} className="animate-spin" />}
             Save schedule
           </button>
+          {dirty && !pending && <span className="text-[0.88rem] font-medium text-ember">Not saved yet</span>}
           {state?.ok && !dirty && (
             <span className="inline-flex items-center gap-1 text-[0.88rem] text-moss">
               <Check size={14} /> Saved
@@ -152,7 +178,7 @@ export function ScheduleEditor({ initial }: { initial: TourSettings }) {
             </span>
           )}
         </div>
-        {s.enabled && s.slots.length === 0 && <p className="mt-3 text-[0.85rem] text-moss">Add at least one weekly time. Until then visitors are told every time is taken.</p>}
+        {s.enabled && s.slots.length === 0 && typed.length === 0 && <p className="mt-3 text-[0.85rem] text-moss">Add at least one weekly time. Until then visitors are told every time is taken.</p>}
       </div>
     </Card>
   );

@@ -86,6 +86,15 @@ export default async function Tours({ searchParams }: { searchParams: Promise<{ 
       }
     >
       <InboxTabs on="tours" counts={{ tours: upcoming.length, waitlist: waiting.filter((w) => w.status === "WAITING").length }} />
+      {settings.enabled && settings.slots.length === 0 && (
+        <Notice tone="warn">
+          Online booking is switched on but has no weekly times saved, so the tour page still asks people to call. Add times under{" "}
+          <a href="#schedule" className="font-medium underline underline-offset-2">
+            Weekly schedule
+          </a>{" "}
+          and press Save schedule.
+        </Notice>
+      )}
       {!settings.enabled && (
         <Notice tone="warn">Online booking is off, so the tour page asks people to call. Add your weekly times and switch it on under{" "}
           <a href="#schedule" className="font-medium underline underline-offset-2">

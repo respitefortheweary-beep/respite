@@ -43,7 +43,55 @@ function Windows({ beds }: { beds: BedState[] }) {
   );
 }
 
-type Props = { newRequests: number; overdue: number; beds: BedState[]; unread: number; failedEmails: number; repairs?: number };
+type Me = { name: string; email: string } | null;
+type Props = { newRequests: number; overdue: number; beds: BedState[]; unread: number; failedEmails: number; repairs?: number; me?: Me };
+
+const initial = (me: Me) => (me?.name || me?.email || "?").trim().charAt(0).toUpperCase();
+
+/** Who is signed in, as a round initial. */
+function Avatar({ me, size = 32 }: { me: Me; size?: number }) {
+  return (
+    <span className="grid shrink-0 place-items-center rounded-full bg-porch font-semibold text-ink" style={{ width: size, height: size, fontSize: size * 0.44 }} aria-hidden>
+      {initial(me)}
+    </span>
+  );
+}
+
+/** Phone: tap your initial to see who's signed in, open your account, or log out. */
+function PhoneAccount({ me }: { me: Me }) {
+  return (
+    <details className="group relative">
+      <summary
+        aria-label={me ? `Signed in as ${me.name || me.email}. Account and log out` : "Account and log out"}
+        className="press grid h-10 w-10 cursor-pointer list-none place-items-center rounded-full hover:bg-white/10 [&::-webkit-details-marker]:hidden"
+      >
+        <Avatar me={me} size={28} />
+      </summary>
+      <div className="absolute right-0 top-12 z-50 w-64 rounded-2xl bg-paper p-2 text-ink shadow-[0_18px_50px_-12px_rgb(0_0_0/.45)] ring-1 ring-line">
+        {me && (
+          <div className="flex items-center gap-3 px-3 py-2.5">
+            <Avatar me={me} />
+            <div className="min-w-0">
+              <p className="mono text-[0.66rem] uppercase text-moss">Signed in as</p>
+              <p className="truncate text-[0.93rem] font-medium">{me.name || me.email}</p>
+              {me.name && <p className="truncate text-[0.8rem] text-moss">{me.email}</p>}
+            </div>
+          </div>
+        )}
+        <div className="mt-1 border-t border-line pt-1">
+          <Link href="/admin/team" className="flex h-11 items-center gap-3 rounded-xl px-3 text-[0.93rem] hover:bg-ink/[.04]">
+            <UserCog size={16} className="text-moss" /> Team and your account
+          </Link>
+          <form action={logout}>
+            <button className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-[0.93rem] font-medium text-ember hover:bg-ember/[.06]">
+              <LogOut size={16} /> Log out
+            </button>
+          </form>
+        </div>
+      </div>
+    </details>
+  );
+}
 
 /** The bell: amber when something new came in, ember when an email couldn't be sent. */
 function BellLink({ unread, failedEmails, className }: { unread: number; failedEmails: number; className: string }) {
@@ -61,7 +109,7 @@ function BellLink({ unread, failedEmails, className }: { unread: number; failedE
   );
 }
 
-export function Sidebar({ newRequests, overdue, beds, unread, failedEmails, repairs = 0 }: Props) {
+export function Sidebar({ newRequests, overdue, beds, unread, failedEmails, repairs = 0, me = null }: Props) {
   const path = usePathname();
   const count = { requests: newRequests, overdue, unread: unread + failedEmails, repairs } as const;
   // the waitlist lives under Requests, so it stays lit there too
@@ -88,14 +136,12 @@ export function Sidebar({ newRequests, overdue, beds, unread, failedEmails, repa
           <Link href="/admin/site" aria-label="Website" aria-current={isActive("/admin/site") ? "page" : undefined} className={`press grid h-10 w-10 place-items-center rounded-full hover:bg-white/10 hover:text-white ${isActive("/admin/site") ? "bg-white/10 text-porch" : "text-white/70"}`}>
             <Globe size={18} />
           </Link>
-          <Link href="/admin/team" aria-label="Team and your account" aria-current={isActive("/admin/team") ? "page" : undefined} className={`press grid h-10 w-10 place-items-center rounded-full hover:bg-white/10 hover:text-white ${isActive("/admin/team") ? "bg-white/10 text-porch" : "text-white/70"}`}>
-            <UserCog size={18} />
-          </Link>
+          <PhoneAccount key={path} me={me} />
         </div>
       </header>
 
       {/* Desktop: the night rail */}
-      <aside className="sticky top-0 hidden h-dvh flex-col bg-night px-3 py-5 text-white md:flex print:hidden">
+      <aside className="no-scrollbar sticky top-0 hidden h-dvh flex-col overflow-y-auto bg-night px-3 py-5 text-white md:flex print:hidden">
         <Link href="/admin" className="flex items-center gap-2.5 px-3">
           <Mark />
           <span className="text-[1.06rem] font-semibold leading-none tracking-[-0.045em]">
@@ -131,7 +177,7 @@ export function Sidebar({ newRequests, overdue, beds, unread, failedEmails, repa
           </ul>
         </nav>
 
-        <div className="mt-auto">
+        <div className="mt-auto pt-6">
           <Link href="/admin/houses" className="block rounded-xl px-3 py-3 transition-colors hover:bg-white/[.05]">
             <span className="mono block text-[0.68rem] uppercase tracking-[0.02em] text-white/55">Tonight</span>
             <span className="mt-2 flex items-center justify-between">
@@ -145,9 +191,20 @@ export function Sidebar({ newRequests, overdue, beds, unread, failedEmails, repa
             <Link href="/" target="_blank" className="flex h-10 items-center gap-3 rounded-xl px-3 text-white/60 transition-colors hover:bg-white/[.05] hover:text-white">
               <ArrowUpRight size={17} className="text-white/55" /> View public site
             </Link>
+          </div>
+          <div className="mt-2 rounded-2xl bg-white/[.05] p-2">
+            {me && (
+              <Link href="/admin/team" className="flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-white/[.05]" title="Team and your account">
+                <Avatar me={me} />
+                <span className="min-w-0">
+                  <span className="block text-[0.66rem] uppercase tracking-[0.02em] text-white/50">Signed in as</span>
+                  <span className="block truncate text-[0.88rem] font-medium text-white">{me.name || me.email}</span>
+                </span>
+              </Link>
+            )}
             <form action={logout}>
-              <button className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-white/60 transition-colors hover:bg-white/[.05] hover:text-white">
-                <LogOut size={16} className="text-white/55" /> Log out
+              <button className="mt-1 flex h-10 w-full items-center gap-3 rounded-xl px-2 text-[0.9rem] text-white/75 transition-colors hover:bg-white/[.08] hover:text-white">
+                <LogOut size={16} className="text-white/60" /> Log out
               </button>
             </form>
           </div>
