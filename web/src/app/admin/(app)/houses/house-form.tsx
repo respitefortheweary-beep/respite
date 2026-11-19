@@ -1,13 +1,12 @@
 "use client";
-import { useActionState, useState } from "react";
-import { Plus } from "lucide-react";
-import { createHouse, saveHouse } from "../../actions";
-import { Card, CardHead, Label, btnPrimary, btnQuiet, input } from "../ui";
+import { useActionState } from "react";
+import { saveHouse } from "../../actions";
+import { Label, btnPrimary, input } from "../ui";
 import { SubmitButton } from "../submit";
 
 type HouseFields = { id: string; name: string; address: string; town: string; summary: string; hidden: boolean };
 
-function Fields({ house, autoFocus = false }: { house?: HouseFields; autoFocus?: boolean }) {
+function Fields({ house }: { house?: HouseFields }) {
   return (
     <>
       <label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl bg-oat px-4 py-3.5 sm:col-span-2">
@@ -23,7 +22,7 @@ function Fields({ house, autoFocus = false }: { house?: HouseFields; autoFocus?:
       </label>
       <label className="sm:col-span-2">
         <Label>House name</Label>
-        <input name="name" defaultValue={house?.name} required maxLength={120} placeholder="The Maple Street House" className={input} autoFocus={autoFocus} />
+        <input name="name" defaultValue={house?.name} required maxLength={120} placeholder="The Maple Street House" className={input} />
       </label>
       <label>
         <Label>Street address</Label>
@@ -49,33 +48,6 @@ function Error({ text }: { text?: string }) {
     <p role="alert" className="rounded-xl bg-ember/10 px-3.5 py-2.5 text-[0.88rem] text-ember ring-1 ring-ember/25 sm:col-span-2">
       {text}
     </p>
-  );
-}
-
-/** Closed by default, like Add a room: most visits are to change a room, not to add a property. */
-export function NewHouse() {
-  const [open, setOpen] = useState(false);
-  const [state, action] = useActionState(createHouse, null);
-  if (!open)
-    return (
-      <button type="button" onClick={() => setOpen(true)} className={btnQuiet}>
-        <Plus size={16} /> Add a house
-      </button>
-    );
-  return (
-    <Card className="w-full">
-      <CardHead title="Add a house" hint="Then add its rooms. Each house numbers its own beds from Bed 1." />
-      <form action={action} className="grid gap-4 p-5 pt-4 sm:grid-cols-2 sm:p-6 sm:pt-4">
-        <Fields autoFocus />
-        <Error text={state?.error} />
-        <div className="flex flex-col-reverse gap-2 sm:col-span-2 sm:flex-row">
-          <button type="button" onClick={() => setOpen(false)} className={btnQuiet}>
-            Cancel
-          </button>
-          <SubmitButton className={`${btnPrimary} disabled:opacity-60`}>Add house</SubmitButton>
-        </div>
-      </form>
-    </Card>
   );
 }
 

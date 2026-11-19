@@ -1,15 +1,14 @@
 import Link from "next/link";
-import { ArrowRight, Search } from "lucide-react";
-import { getBeds, getRoomsWithBeds } from "@/lib/availability";
+import { ArrowRight } from "lucide-react";
+import { getBeds, getHouses, getRoomsWithBeds } from "@/lib/availability";
 import { HouseScene } from "@/components/house-scene";
 import { ExpandImage } from "@/components/expand-image";
-import { SearchBar } from "@/components/search-bar";
 import { ScrollWords } from "@/components/scroll-words";
 import { WhoScroll } from "@/components/who-scroll";
 import { MoveInSteps } from "@/components/move-in-steps";
 import { Faq } from "@/components/faq";
 import { Reveal } from "@/components/reveal";
-import { RoomCard } from "@/components/room-card";
+import { HouseCard } from "@/components/house-card";
 import { SiteHeader, SiteFooter, Roll } from "@/components/site-chrome";
 import { shortDate } from "@/lib/format";
 import { getContent } from "@/lib/content";
@@ -22,17 +21,23 @@ const count = (n: number, one: string, many: string) => `${WORDS[n] ?? n} ${n ==
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [beds, rooms, content] = await Promise.all([getBeds(), getRoomsWithBeds(), getContent()]);
+  const [beds, rooms, listed, content] = await Promise.all([getBeds(), getRoomsWithBeds(), getHouses(), getContent()]);
   const { home, who, faq, house } = content;
   const photo = home.photos;
   const open = beds.filter((b) => b.state === "open").length;
-  const houses = new Set(rooms.map((r) => r.houseId)).size;
+  const houses = listed.length;
   const several = houses > 1;
   const live = open
-    ? `${open} of ${beds.length} beds open tonight${several ? ` across ${houses} houses` : ""}`
+    ? `${open} of ${beds.length} bed spaces open tonight${several ? ` across ${houses} houses` : ""}`
     : beds.length
-      ? `All ${beds.length} ${beds.length === 1 ? "bed is" : "beds are"} taken tonight · join the waitlist`
-      : "Rooms opening soon · join the waitlist";
+      ? `All ${beds.length} bed ${beds.length === 1 ? "space is" : "spaces are"} taken tonight · join the waitlist`
+      : "Houses opening soon · join the waitlist";
+  // tonight's beds, house by house, each linking to its room on the house page
+  const bedGroups = listed.map((h) => ({ house: h, beds: beds.filter((b) => b.houseId === h.id) })).filter((g) => g.beds.length);
+  const roomHref = (slug: string, houseId: string | null) => {
+    const h = listed.find((x) => x.id === houseId);
+    return h ? `/houses/${h.slug}#room-${slug}` : "/houses";
+  };
 
   return (
     <>
@@ -60,17 +65,13 @@ export default async function HomePage() {
               <p className="body-7 rise mt-6 max-w-[440px] text-ink/75 [animation-delay:240ms]">
                 {home.heroText}
               </p>
-              <div className="rise mt-8 hidden [animation-delay:320ms] sm:block">
-                <SearchBar />
-              </div>
               <Link
-                href="/rooms"
-                className="press rise mt-8 flex h-14 items-center gap-3 rounded-full bg-paper pl-4 pr-2 text-ink shadow-[0_12px_40px_-12px_rgb(23_33_28/.3)] ring-1 ring-line [animation-delay:320ms] sm:hidden"
+                href="/houses"
+                className="press rise mt-8 flex h-14 max-w-[420px] items-center gap-3 rounded-full bg-paper pl-5 pr-2 text-ink shadow-[0_12px_40px_-12px_rgb(23_33_28/.3)] ring-1 ring-line [animation-delay:320ms]"
               >
-                <Search size={18} />
                 <span className="flex-1">
-                  <span className="title-3 block">Find a bed</span>
-                  <span className="caption-5 block text-ink/60">Who it&apos;s for · Room · Move in</span>
+                  <span className="title-3 block">{several ? "See the houses" : "See the house"}</span>
+                  <span className="caption-5 block text-ink/60">Photos, rooms and the bed spaces open now</span>
                 </span>
                 <span className="grid h-10 w-10 place-items-center rounded-full bg-porch">
                   <ArrowRight size={17} />
@@ -97,37 +98,52 @@ export default async function HomePage() {
             <h2 className="display-2 text-[clamp(2.2rem,4.6vw,4rem)]">
               Tonight, <span className="text-moss">bed by bed.</span>
             </h2>
-            <Link href="/rooms" className="btn btn-ghost press">
-              <Roll>See every room</Roll> <ArrowRight size={16} />
+            <Link href="/houses" className="btn btn-ghost press">
+              <Roll>{several ? "See every house" : "See the house"}</Roll> <ArrowRight size={16} />
             </Link>
           </Reveal>
-          <Reveal>
-            <ul className="hairline grid-cols-2 overflow-hidden rounded-2xl md:grid-cols-3 lg:grid-cols-6">
-              {beds.map((b) => (
-                <li key={b.id}>
-                  <Link href={`/rooms/${b.roomSlug}`} className="group flex h-full flex-col justify-between gap-5 p-4 transition-colors hover:bg-oat sm:p-5 md:min-h-[168px]">
-                    <span className="flex items-start justify-between">
-                      <span className="mono text-[0.78rem] text-moss">{b.label}</span>
-                      <span
-                        className="h-6 w-4 rounded-[3px] sm:h-7 sm:w-5"
-                        style={{
-                          background: b.state === "open" ? "linear-gradient(var(--porch-glow), var(--porch))" : b.state === "soon" ? "rgb(240 165 58 / .3)" : "var(--ink)",
-                          boxShadow: b.state === "open" ? "0 0 18px 2px rgb(240 165 58 / .55)" : "none",
-                        }}
-                        aria-hidden
-                      />
+          <div className="grid gap-10">
+            {bedGroups.map((g) => (
+              <Reveal key={g.house.id}>
+                {several && (
+                  <p className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 text-[1.05rem] font-medium tracking-[-0.02em]">
+                    <Link href={`/houses/${g.house.slug}`} className="hover:underline hover:underline-offset-4">
+                      {g.house.name}
+                    </Link>
+                    <span className="mono text-[0.76rem] font-normal uppercase text-moss">
+                      {g.house.town ? `${g.house.town} · ` : ""}
+                      {g.house.open} of {g.house.beds} open
                     </span>
-                    <span>
-                      <span className="block text-[0.98rem] font-medium leading-tight tracking-[-0.02em] sm:text-[1.05rem]">{b.roomName}</span>
-                      <span className={`mono mt-1 block text-[0.78rem] ${b.state === "open" ? "text-ink" : "text-moss"}`}>
-                        {b.state === "open" ? "Open now" : b.state === "soon" ? `Opens ${shortDate(b.availableFrom!)}` : "Taken"}
+                  </p>
+                )}
+                <ul className="hairline grid-cols-2 overflow-hidden rounded-2xl md:grid-cols-3 lg:grid-cols-6">
+                  {g.beds.map((b) => (
+                  <li key={b.id}>
+                    <Link href={roomHref(b.roomSlug, b.houseId)} className="group flex h-full flex-col justify-between gap-5 p-4 transition-colors hover:bg-oat sm:p-5 md:min-h-[168px]">
+                      <span className="flex items-start justify-between">
+                        <span className="mono text-[0.78rem] text-moss">{b.label}</span>
+                        <span
+                          className="h-6 w-4 rounded-[3px] sm:h-7 sm:w-5"
+                          style={{
+                            background: b.state === "open" ? "linear-gradient(var(--porch-glow), var(--porch))" : b.state === "soon" ? "rgb(240 165 58 / .3)" : "var(--ink)",
+                            boxShadow: b.state === "open" ? "0 0 18px 2px rgb(240 165 58 / .55)" : "none",
+                          }}
+                          aria-hidden
+                        />
                       </span>
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </Reveal>
+                      <span>
+                        <span className="block text-[0.98rem] font-medium leading-tight tracking-[-0.02em] sm:text-[1.05rem]">{b.roomName}</span>
+                        <span className={`mono mt-1 block text-[0.78rem] ${b.state === "open" ? "text-ink" : "text-moss"}`}>
+                          {b.state === "open" ? "Open now" : b.state === "soon" ? `Opens ${shortDate(b.availableFrom!)}` : "Taken"}
+                        </span>
+                      </span>
+                    </Link>
+                  </li>
+                  ))}
+                </ul>
+              </Reveal>
+            ))}
+          </div>
         </section>
 
         <WhoScroll chapters={who.chapters} />
@@ -180,23 +196,23 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* ───────── Rooms ───────── */}
+        {/* ───────── Houses ───────── */}
         <section className="border-t border-line bg-oat">
           <div className="mx-auto max-w-[1280px] px-4 py-28 sm:px-6 md:py-40">
             <Reveal className="mb-14 flex flex-wrap items-end justify-between gap-6">
               <h2 className="display-2 text-[clamp(2.4rem,5.4vw,4.8rem)]">
-                {count(rooms.length, "room", "rooms")}
+                {count(houses, "house", "houses")}
                 <br />
-                <span className="text-moss">{count(beds.length, "bed", "beds")}</span>
+                <span className="text-moss">{count(beds.length, "bed space", "bed spaces")}</span>
               </h2>
-              <Link href="/rooms" className="btn btn-primary press">
-                <Roll>Compare rooms</Roll> <ArrowRight size={16} />
+              <Link href="/houses" className="btn btn-primary press">
+                <Roll>{several ? "Compare houses" : "See the house"}</Roll> <ArrowRight size={16} />
               </Link>
             </Reveal>
-            <div className="grid gap-x-5 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
-              {rooms.map((r, i) => (
-                <Reveal key={r.id} delay={i * 70}>
-                  <RoomCard room={r} showHouse={several} />
+            <div className="grid gap-x-5 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+              {listed.map((h, i) => (
+                <Reveal key={h.id} delay={i * 70}>
+                  <HouseCard house={h} rooms={rooms.filter((r) => r.houseId === h.id)} />
                 </Reveal>
               ))}
             </div>

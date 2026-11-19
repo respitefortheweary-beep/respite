@@ -7,14 +7,14 @@ const abs = (path: string) => (/^https?:\/\//.test(path) ? path : `${siteUrl()}$
 
 /** Turns "123 Main St, Chester, Virginia 23831" into the parts search engines want. */
 function postalAddress(house: House) {
-  const town = house.town.split(",")[0]?.trim() || "Chester";
+  const town = house.town.split(",")[0]?.trim();
   const zip = house.address.match(/\b\d{5}\b/)?.[0];
-  const i = house.address.toLowerCase().indexOf(town.toLowerCase());
+  const i = town ? house.address.toLowerCase().indexOf(town.toLowerCase()) : -1;
   const street = i > 0 ? house.address.slice(0, i).replace(/[,\s]+$/, "") : "";
   return {
     "@type": "PostalAddress",
     ...(street ? { streetAddress: street } : {}),
-    addressLocality: town,
+    ...(town ? { addressLocality: town } : {}),
     addressRegion: "VA",
     ...(zip ? { postalCode: zip } : {}),
     addressCountry: "US",
@@ -68,15 +68,18 @@ export function breadcrumbLd(trail: { name: string; path: string }[]) {
   };
 }
 
-export function roomLd(room: { name: string; slug: string; summary: string; kind: string; bathroom: string; photos: string[]; features: string[] }) {
+/** One listed house and the rooms in it, for search results. */
+export function houseLd(house: { name: string; slug: string; summary: string; town: string; photos: string[] }, rooms: { name: string; slug: string; summary: string }[]) {
+  const url = abs(`/houses/${house.slug}`);
   return {
     "@context": "https://schema.org",
-    "@type": "Room",
-    name: room.name,
-    url: abs(`/rooms/${room.slug}`),
-    description: room.summary,
-    ...(room.photos.length ? { image: room.photos.map(abs) } : {}),
-    amenityFeature: room.features.map((f) => ({ "@type": "LocationFeatureSpecification", name: f, value: true })),
+    "@type": "Accommodation",
+    name: house.name,
+    url,
+    description: house.summary,
+    ...(house.photos.length ? { image: house.photos.map(abs) } : {}),
+    ...(house.town ? { address: { "@type": "PostalAddress", addressLocality: house.town.split(",")[0].trim(), addressRegion: "VA", addressCountry: "US" } } : {}),
+    containsPlace: rooms.map((r) => ({ "@type": "Room", name: r.name, url: `${url}#room-${r.slug}`, description: r.summary })),
     containedInPlace: { "@id": `${siteUrl()}/#organization` },
   };
 }

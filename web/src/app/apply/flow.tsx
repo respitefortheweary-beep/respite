@@ -382,7 +382,7 @@ function Done({ name, rooms, phone }: { name: string; rooms: RoomOpt[]; phone: {
       </p>
       <div className="mt-9 flex flex-wrap justify-center gap-3">
         <Link href="/" className="btn btn-primary press !h-12 !px-6">Back to home</Link>
-        <Link href="/rooms" className="btn btn-ghost press !h-12 !px-6">Look at rooms</Link>
+        <Link href="/houses" className="btn btn-ghost press !h-12 !px-6">Look at houses</Link>
       </div>
     </motion.section>
   );

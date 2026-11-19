@@ -114,8 +114,8 @@ export function WhoScroll({ chapters }: { chapters: Chapter[] }) {
                   <p className="text-[0.95rem] text-moss">{c.referred}</p>
                 </div>
               )}
-              <Link href={`/rooms?program=${c.key}`} className="group mt-6 inline-flex items-center gap-2 font-medium text-ink">
-                See rooms
+              <Link href="/houses" className="group mt-6 inline-flex items-center gap-2 font-medium text-ink">
+                See the houses
                 <ArrowRight size={17} className="transition-transform duration-200 ease-[var(--ease-out)] group-hover:translate-x-1" />
               </Link>
             </div>

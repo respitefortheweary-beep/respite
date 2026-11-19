@@ -32,11 +32,11 @@ export default async function Overview() {
     : late.length
       ? { text: `${money(lateTotal)} is past due from ${new Set(late.map((c) => c.residentId)).size === 1 ? late[0].resident.name.split(" ")[0] : `${new Set(late.map((c) => c.residentId)).size} residents`}.`, href: "/admin/payments", cta: "Open payments" }
       : open
-        ? { text: `${open} ${open === 1 ? "bed is" : "beds are"} open and showing on the site.`, href: "/admin/rooms", cta: "Rooms & beds" }
+        ? { text: `${open} ${open === 1 ? "bed is" : "beds are"} open and showing on the site.`, href: "/admin/houses", cta: "Houses" }
         : { text: `${several ? "Every house" : "The house"} is full and everyone is paid up.`, href: "/admin/residents", cta: "Residents" };
 
   const facts: [string, string, string][] = [
-    ["Open beds", `${open}/${beds.length}`, "/admin/rooms"],
+    ["Open beds", `${open}/${beds.length}`, "/admin/houses"],
     ["Active requests", String(active.length), "/admin/requests"],
     ["Waiting to be paid", money(owed), "/admin/payments"],
     ["Collected this month", money(collectedThisMonthCents), "/admin/payments?tab=paid"],
@@ -129,7 +129,7 @@ export default async function Overview() {
         </Card>
 
         <Card className="lg:col-span-2 xl:col-span-1">
-          <CardHead title="Beds" action={<Link href="/admin/rooms" className="text-[0.86rem] text-moss hover:text-ink">Manage</Link>} />
+          <CardHead title="Beds" action={<Link href="/admin/houses" className="text-[0.86rem] text-moss hover:text-ink">Manage</Link>} />
           <ul className="mt-3 grid sm:grid-cols-2 xl:grid-cols-1">
             {beds.map((b, i) => (
               <li key={b.id} className="contents">
@@ -168,7 +168,7 @@ function Houses({ houses }: { houses: Property[] }) {
     <ul className={`grid content-end gap-2 px-6 pb-6 md:px-0 md:pb-9 md:pr-9 ${houses.length > 2 ? "grid-cols-2" : "grid-cols-2 md:grid-cols-1"}`}>
       {houses.map((h) => (
         <li key={h.id}>
-          <Link href={`/admin/rooms#house-${h.id}`} className="group flex items-center gap-3 rounded-2xl p-2 ring-1 ring-white/10 transition-colors hover:bg-white/[.05]">
+          <Link href={`/admin/houses#house-${h.id}`} className="group flex items-center gap-3 rounded-2xl p-2 ring-1 ring-white/10 transition-colors hover:bg-white/[.05]">
             <HouseNight states={h.states} className="w-20 shrink-0 sm:w-24" />
             <span className="min-w-0">
               <span className="block truncate text-[0.95rem] font-medium">{h.name}</span>

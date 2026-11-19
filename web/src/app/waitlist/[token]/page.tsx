@@ -39,8 +39,8 @@ export default async function WaitlistPlace({ params }: { params: Promise<{ toke
             <button className={quietSolid}>Yes, take me off</button>
           </form>
         )}
-        <Link href="/rooms" className={quietGhost}>
-          See the rooms
+        <Link href="/houses" className={quietGhost}>
+          See the houses
         </Link>
       </div>
       <p className="mono mt-8 text-[0.8rem] text-white/55">

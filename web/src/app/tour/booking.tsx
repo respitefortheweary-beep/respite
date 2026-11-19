@@ -101,7 +101,7 @@ export function Booking({ days: initialDays, phone, address }: { days: Day[]; ph
                 </div>
               </div>
               <div className="mt-9 flex flex-wrap justify-center gap-3">
-                <Link href="/rooms" className="btn btn-primary press !h-12 !px-6">Look at rooms</Link>
+                <Link href="/houses" className="btn btn-primary press !h-12 !px-6">Look at houses</Link>
                 <Link href="/" className="btn btn-ghost press !h-12 !px-6">Back to home</Link>
               </div>
             </motion.section>

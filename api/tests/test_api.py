@@ -240,6 +240,36 @@ def test_room_edit_and_photo(client, auth):
     assert txt.status_code == 400
 
 
+def test_house_photos(client, auth):
+    house = client.get("/admin/houses", headers=auth).json()[0]
+    assert house["photos"] == "[]"
+    a = client.post(f"/admin/houses/{house['id']}/photos", headers=auth, files={"photo": ("h.png", b"\x89PNG fake", "image/png")})
+    assert a.status_code == 201, a.text
+    first = a.json()["photos"][-1]
+    second = client.post(f"/admin/houses/{house['id']}/photos", headers=auth, files={"photo": ("i.webp", b"RIFF fake", "image/webp")}).json()["photos"][-1]
+    assert client.post(f"/admin/houses/{house['id']}/photos/cover", headers=auth, json={"src": second}).json()["photos"] == [second, first]
+    client.post(f"/admin/houses/{house['id']}/photos/remove", headers=auth, json={"src": second})
+    assert client.post(f"/admin/houses/{house['id']}/photos/remove", headers=auth, json={"src": first}).json()["photos"] == []
+
+
+def test_videos_for_houses_and_rooms(client, auth):
+    house = client.get("/admin/houses", headers=auth).json()[0]
+    room = client.get("/admin/rooms", headers=auth).json()[0]
+    # no Cloudinary in tests: the video comes through the API
+    assert client.post(f"/admin/houses/{house['id']}/videos/ticket", headers=auth).json() == {"direct": False}
+    up = client.post(f"/admin/rooms/{room['id']}/videos", headers=auth, files={"video": ("t.mp4", b"fake mp4", "video/mp4")})
+    assert up.status_code == 201, up.text
+    src = up.json()["videos"][-1]
+    assert src.startswith("/uploads/") and src.endswith(".mp4")
+    assert client.post(f"/admin/rooms/{room['id']}/videos", headers=auth, files={"video": ("a.png", b"x", "image/png")}).status_code == 400
+    assert client.post(f"/admin/houses/{house['id']}/videos/link", headers=auth, json={"src": "https://evil.example/v.mp4"}).status_code == 400
+    cdn = "https://res.cloudinary.com/demo/video/upload/v1/respite/tour.mp4"
+    assert client.post(f"/admin/houses/{house['id']}/videos/link", headers=auth, json={"src": cdn}).json()["videos"] == [cdn]
+    assert client.post(f"/admin/houses/{house['id']}/videos/remove", headers=auth, json={"src": cdn}).json()["videos"] == []
+    assert client.post(f"/admin/rooms/{room['id']}/videos/remove", headers=auth, json={"src": src}).json()["videos"] == []
+    assert client.post(f"/admin/beds/x/videos/ticket", headers=auth).status_code == 404
+
+
 def test_password_change_revokes_old_tokens(client):
     tok = client.post("/auth/login", json={"email": "owner@example.com", "password": PW}).json()["accessToken"]
     h = {"Authorization": f"Bearer {tok}"}

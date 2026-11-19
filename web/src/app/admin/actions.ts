@@ -107,6 +107,7 @@ export async function saveRoom(id: string, _: FormState, form: FormData): Promis
       bathroom: str(form, "bathroom") || undefined,
       hidden: !form.has("visible"),
       houseId: str(form, "houseId") || undefined,
+      ...(form.has("hidden") ? { hidden: str(form, "hidden") === "true" } : {}),
     });
     return { ok: "Saved" };
   });
@@ -139,7 +140,7 @@ export async function createRoom(form: FormData): Promise<{ id?: string; error?:
 export async function deleteRoom(id: string) {
   await admin.delete(`/admin/rooms/${id}`);
   refresh();
-  redirect("/admin/rooms?deleted=1");
+  redirect("/admin/houses?deleted=1");
 }
 
 /** Moves a room one place up or down the list the site shows. */
@@ -161,14 +162,16 @@ const houseBody = (form: FormData) => ({
   hidden: !form.has("visible"),
 });
 
-export async function createHouse(_: FormState, form: FormData): Promise<FormState> {
-  let id = "";
-  const state = await attempt(async () => {
-    id = (await admin.post<{ id: string }>("/admin/houses", houseBody(form))).id;
-  });
-  refresh();
-  if (id) redirect(`/admin/rooms?house=added#house-${id}`);
-  return state;
+/** For the one-page Add a house form: makes the house and hands back its id, so its photos and rooms can follow. */
+export async function addHouse(form: FormData): Promise<{ id?: string; error?: string }> {
+  try {
+    const house = await admin.post<{ id: string }>("/admin/houses", houseBody(form));
+    refresh();
+    return { id: house.id };
+  } catch (e) {
+    if (e instanceof ApiError && e.status < 500) return { error: e.message };
+    throw e;
+  }
 }
 
 export async function saveHouse(id: string, _: FormState, form: FormData): Promise<FormState> {
@@ -186,7 +189,7 @@ export async function deleteHouse(id: string): Promise<FormState> {
   });
   if (state?.error) return state;
   refresh();
-  redirect("/admin/rooms?house=deleted");
+  redirect("/admin/houses?house=deleted");
 }
 
 /** Moves a house one place up or down: the order the dashboard and the site list them in. */
@@ -245,6 +248,67 @@ export async function coverPhoto(roomId: string, src: string) {
 
 export async function removePhoto(roomId: string, src: string) {
   await admin.post(`/admin/rooms/${roomId}/photos/remove`, { src });
+  refresh();
+}
+
+export async function uploadHousePhoto(houseId: string, form: FormData): Promise<FormState> {
+  const file = form.get("photo") as File | null;
+  if (!file || file.size === 0) return { error: "Choose a photo first." };
+  const body = new FormData();
+  body.set("photo", file);
+  const state = await attempt(async () => {
+    await admin.post(`/admin/houses/${houseId}/photos`, body);
+  });
+  refresh();
+  return state;
+}
+
+export async function coverHousePhoto(houseId: string, src: string) {
+  await admin.post(`/admin/houses/${houseId}/photos/cover`, { src });
+  refresh();
+}
+
+export async function removeHousePhoto(houseId: string, src: string) {
+  await admin.post(`/admin/houses/${houseId}/photos/remove`, { src });
+  refresh();
+}
+
+/* Videos belong to a room or a house. They're too big to pass through here on Vercel, so with
+   Cloudinary set up the browser sends them straight there and only the address comes back through. */
+export type MediaOwner = "rooms" | "houses";
+export type VideoTicket = { direct: false } | { direct: true; url: string; fields: Record<string, string>; host: string };
+
+export async function videoTicket(kind: MediaOwner, id: string): Promise<VideoTicket | { error: string }> {
+  try {
+    return await admin.post<VideoTicket>(`/admin/${kind}/${id}/videos/ticket`, {});
+  } catch (e) {
+    if (e instanceof ApiError && e.status < 500) return { error: e.message };
+    throw e;
+  }
+}
+
+export async function linkVideo(kind: MediaOwner, id: string, src: string): Promise<FormState> {
+  const state = await attempt(async () => {
+    await admin.post(`/admin/${kind}/${id}/videos/link`, { src });
+  });
+  refresh();
+  return state;
+}
+
+export async function uploadVideo(kind: MediaOwner, id: string, form: FormData): Promise<FormState> {
+  const file = form.get("video") as File | null;
+  if (!file || file.size === 0) return { error: "Choose a video first." };
+  const body = new FormData();
+  body.set("video", file);
+  const state = await attempt(async () => {
+    await admin.post(`/admin/${kind}/${id}/videos`, body);
+  });
+  refresh();
+  return state;
+}
+
+export async function removeVideo(kind: MediaOwner, id: string, src: string) {
+  await admin.post(`/admin/${kind}/${id}/videos/remove`, { src });
   refresh();
 }
 

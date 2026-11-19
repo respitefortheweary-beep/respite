@@ -39,6 +39,8 @@ class House(Base):
     address: Mapped[str] = mapped_column(String, default="")  # street, town, state and zip
     town: Mapped[str] = mapped_column(String, default="")  # the short place name, e.g. "Chester"
     summary: Mapped[str] = mapped_column(Text, default="")
+    photos: Mapped[str] = mapped_column(Text, default="[]", server_default=text("'[]'"))  # JSON string[], outside and shared spaces
+    videos: Mapped[str] = mapped_column(Text, default="[]", server_default=text("'[]'"))  # JSON string[]
     sortOrder: Mapped[int] = mapped_column(Integer, default=0)
     # hidden houses (and every room in them) stay off the public site
     hidden: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
@@ -61,6 +63,7 @@ class Room(Base):
     description: Mapped[str] = mapped_column(Text)
     features: Mapped[str] = mapped_column(Text)  # JSON string[]
     photos: Mapped[str] = mapped_column(Text, default="[]")  # JSON string[]
+    videos: Mapped[str] = mapped_column(Text, default="[]", server_default=text("'[]'"))  # JSON string[]
     tone: Mapped[str] = mapped_column(String, default="sage")
     sortOrder: Mapped[int] = mapped_column(Integer, default=0)
     # hidden rooms stay in the dashboard but drop off the public site

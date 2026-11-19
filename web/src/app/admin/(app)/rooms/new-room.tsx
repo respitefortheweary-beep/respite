@@ -1,39 +1,31 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ImagePlus, Loader2, Plus, X } from "lucide-react";
-import { createRoom, uploadPhoto } from "../../actions";
-import { sendPhotos } from "@/lib/shrink-photo";
+import { Loader2, Plus } from "lucide-react";
+import { createRoom } from "../../actions";
 import { Card, CardHead, Label, btnPrimary, btnQuiet, input, select } from "../ui";
 
-/** Closed by default: most visits to Rooms are to change a date, not to build a room. */
+/** Closed by default: most visits are to change a date, not to build a room. */
 export function NewRoom({ houseId, houseName }: { houseId?: string; houseName?: string }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [kind, setKind] = useState("SHARED");
-  const [photos, setPhotos] = useState<File[]>([]);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
 
-  const previews = useMemo(() => photos.map((f) => URL.createObjectURL(f)), [photos]);
-  useEffect(() => () => previews.forEach((u) => URL.revokeObjectURL(u)), [previews]);
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setBusy("Adding the room");
     const form = new FormData(e.currentTarget);
-    form.delete("photos");
     const room = await createRoom(form);
     if (!room.id) {
       setBusy("");
       setError(room.error ?? "The room couldn't be added.");
       return;
     }
-    const id = room.id;
-    const { error: photoError } = await sendPhotos(photos, (f) => uploadPhoto(id, f), (at) => setBusy(`Uploading photo ${at} of ${photos.length}`));
-    // the room exists either way; a failed photo can be added again on its page
-    router.push(`/admin/rooms/${id}?new=1${photoError ? "&photos=failed" : ""}`);
+    router.push(`/admin/rooms/${room.id}?new=1`);
   };
 
   if (!open)
@@ -45,7 +37,7 @@ export function NewRoom({ houseId, houseName }: { houseId?: string; houseName?: 
 
   return (
     <Card className="w-full">
-      <CardHead title={houseName ? `Add a room to ${houseName}` : "Add a room"} hint="It stays hidden from the site until you switch it on, so you can check the photos and words first." />
+      <CardHead title={houseName ? `Add a room to ${houseName}` : "Add a room"} hint="It stays hidden from the site until you switch it on. Photos and videos go on the house." />
       <form onSubmit={submit} className="grid gap-4 p-5 pt-4 sm:grid-cols-2 sm:p-6 sm:pt-4">
         {houseId && <input type="hidden" name="houseId" value={houseId} />}
         <label className="sm:col-span-2">
@@ -55,8 +47,8 @@ export function NewRoom({ houseId, houseName }: { houseId?: string; houseName?: 
         <label>
           <Label>Kind</Label>
           <select name="kind" value={kind} onChange={(e) => setKind(e.target.value)} className={select}>
-            <option value="SHARED">Shared</option>
-            <option value="PRIVATE">Private</option>
+            <option value="SHARED">Shared, more than one bed</option>
+            <option value="PRIVATE">Single room, one bed</option>
           </select>
         </label>
         <label>
@@ -95,43 +87,6 @@ export function NewRoom({ houseId, houseName }: { houseId?: string; houseName?: 
           <Label>Deposit ($)</Label>
           <input name="deposit" type="number" inputMode="decimal" min={0} className={`${input} mono tabular`} />
         </label>
-
-        <div className="sm:col-span-2">
-          <Label>Photos</Label>
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-            {previews.map((src, i) => (
-              <div key={src} className="relative aspect-[4/3] overflow-hidden rounded-lg bg-ink/[.05] ring-1 ring-line">
-                <img src={src} alt="" className="h-full w-full object-cover" />
-                {i === 0 && <span className="mono absolute bottom-1 left-1 rounded-full bg-porch px-2 py-0.5 text-[0.62rem] font-semibold uppercase text-ink">Cover</span>}
-                <button
-                  type="button"
-                  aria-label="Take this photo out"
-                  onClick={() => setPhotos((p) => p.filter((_, j) => j !== i))}
-                  className="press absolute right-1 top-1 grid h-7 w-7 place-items-center rounded-full bg-night/75 text-white hover:bg-ember"
-                >
-                  <X size={13} />
-                </button>
-              </div>
-            ))}
-            <label className="press flex aspect-[4/3] cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-line-strong text-center text-[0.8rem] font-medium transition-colors hover:bg-ink/[.03] focus-within:ring-2 focus-within:ring-ink">
-              <ImagePlus size={18} />
-              {photos.length ? "Add more" : "Add photos"}
-              <input
-                type="file"
-                name="photos"
-                multiple
-                accept="image/jpeg,image/png,image/webp"
-                className="sr-only"
-                onChange={(e) => {
-                  const picked = [...(e.currentTarget.files ?? [])];
-                  setPhotos((p) => [...p, ...picked].slice(0, 12));
-                  e.currentTarget.value = "";
-                }}
-              />
-            </label>
-          </div>
-          <span className="mt-1.5 block text-[0.82rem] text-moss">Optional. The first one is the cover. You can add, remove or change the cover later.</span>
-        </div>
 
         {error && (
           <p role="alert" className="rounded-xl bg-ember/10 px-3.5 py-2.5 text-[0.88rem] text-ember ring-1 ring-ember/25 sm:col-span-2">

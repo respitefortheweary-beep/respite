@@ -27,7 +27,7 @@ from ..services.email import site_url
 from .notifications import failed_count, unread_count
 from ..services.fmt import first_name, money, month_label, month_start, parse_day, period
 from ..services.labels import ACTIVE_STATUSES, PAY_METHODS, STATUSES
-from ..services.storage import save_photo
+from ..services.storage import save_photo, video_ticket
 
 log = logging.getLogger("respite.admin")
 router = APIRouter(prefix="/admin", tags=["owner dashboard"], dependencies=[Depends(current_admin)])
@@ -379,9 +379,9 @@ IMAGE_TYPES = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}
 MAX_PHOTO = 8 * 1024 * 1024
 
 
-def _photos(room: Room) -> list[str]:
+def _photos(thing: Room | House) -> list[str]:
     try:
-        return json.loads(room.photos)
+        return json.loads(thing.photos or "[]")
     except ValueError:
         return []
 
@@ -398,46 +398,147 @@ def _read_photo(photo: UploadFile) -> tuple[str, bytes]:
     return ctype, data
 
 
-@router.post("/rooms/{room_id}/photos", status_code=201)
-def upload_photo(room_id: str, photo: UploadFile = File(...), db: Session = Depends(get_db)):
-    room = _get(db, Room, room_id, "room")
+def _add_photo(db: Session, thing: Room | House, photo: UploadFile) -> dict:
     if not get_settings().can_upload_photos:
         raise HTTPException(400, "Photo uploads aren't set up on this server yet.")
     ctype, data = _read_photo(photo)
     ext = IMAGE_TYPES.get(ctype, "jpg")
+    prefix = "house-" if isinstance(thing, House) else ""
     try:
-        url = save_photo(f"{room.id}-{int(time.time() * 1000)}.{ext}", data, ctype)
+        url = save_photo(f"{prefix}{thing.id}-{int(time.time() * 1000)}.{ext}", data, ctype)
     except Exception:
         log.exception("Photo upload failed")
         raise HTTPException(502, "The photo couldn't be saved. Try again in a minute.") from None
-    room.photos = json.dumps([*_photos(room), url])
+    thing.photos = json.dumps([*_photos(thing), url])
     db.commit()
-    return {"photos": _photos(room)}
+    return {"photos": _photos(thing)}
+
+
+def _remove_photo(db: Session, thing: Room | House, src: str) -> dict:
+    thing.photos = json.dumps([p for p in _photos(thing) if p != src])
+    db.commit()
+    return {"photos": _photos(thing)}
+
+
+def _cover_photo(db: Session, thing: Room | House, src: str) -> dict:
+    """Moves one photo to the front: the site shows the first."""
+    photos = _photos(thing)
+    if src not in photos:
+        raise HTTPException(404, "That photo isn't here any more.")
+    thing.photos = json.dumps([src, *[p for p in photos if p != src]])
+    db.commit()
+    return {"photos": _photos(thing)}
 
 
 class PhotoRef(BaseModel):
     src: str
 
 
+@router.post("/rooms/{room_id}/photos", status_code=201)
+def upload_photo(room_id: str, photo: UploadFile = File(...), db: Session = Depends(get_db)):
+    return _add_photo(db, _get(db, Room, room_id, "room"), photo)
+
+
 @router.post("/rooms/{room_id}/photos/remove")
 def remove_photo(room_id: str, body: PhotoRef, db: Session = Depends(get_db)):
-    room = _get(db, Room, room_id, "room")
-    room.photos = json.dumps([p for p in _photos(room) if p != body.src])
-    db.commit()
-    return {"photos": _photos(room)}
-
+    return _remove_photo(db, _get(db, Room, room_id, "room"), body.src)
 
 
 @router.post("/rooms/{room_id}/photos/cover")
 def cover_photo(room_id: str, body: PhotoRef, db: Session = Depends(get_db)):
-    """Moves one photo to the front: the room card on the site shows the first."""
-    room = _get(db, Room, room_id, "room")
-    photos = _photos(room)
-    if body.src not in photos:
-        raise HTTPException(404, "That photo isn't on this room any more.")
-    room.photos = json.dumps([body.src, *[p for p in photos if p != body.src]])
+    return _cover_photo(db, _get(db, Room, room_id, "room"), body.src)
+
+
+@router.post("/houses/{house_id}/photos", status_code=201)
+def upload_house_photo(house_id: str, photo: UploadFile = File(...), db: Session = Depends(get_db)):
+    return _add_photo(db, _get(db, House, house_id, "house"), photo)
+
+
+@router.post("/houses/{house_id}/photos/remove")
+def remove_house_photo(house_id: str, body: PhotoRef, db: Session = Depends(get_db)):
+    return _remove_photo(db, _get(db, House, house_id, "house"), body.src)
+
+
+@router.post("/houses/{house_id}/photos/cover")
+def cover_house_photo(house_id: str, body: PhotoRef, db: Session = Depends(get_db)):
+    return _cover_photo(db, _get(db, House, house_id, "house"), body.src)
+
+
+VIDEO_TYPES = {"video/mp4": "mp4", "video/quicktime": "mov", "video/webm": "webm"}
+MAX_VIDEO = 100 * 1024 * 1024
+
+
+def _videos(thing: Room | House) -> list[str]:
+    try:
+        return json.loads(thing.videos or "[]")
+    except ValueError:
+        return []
+
+
+def _owner(db: Session, kind: str, id_: str) -> Room | House:
+    if kind == "rooms":
+        return _get(db, Room, id_, "room")
+    if kind == "houses":
+        return _get(db, House, id_, "house")
+    raise HTTPException(404, "Not found.")
+
+
+@router.post("/{kind}/{id_}/videos/ticket")
+def start_video(kind: str, id_: str, db: Session = Depends(get_db)):
+    """With Cloudinary: a signed ticket for the browser to send the video straight there.
+    Without it: direct is false, and the video comes through POST /videos instead."""
+    thing = _owner(db, kind, id_)
+    if not get_settings().can_upload_photos:
+        raise HTTPException(400, "Uploads aren't set up on this server yet.")
+    ticket = video_ticket(f"video-{thing.id}-{int(time.time() * 1000)}")
+    return {"direct": bool(ticket), **(ticket or {})}
+
+
+class VideoRef(BaseModel):
+    src: str = Field(min_length=1, max_length=600)
+
+
+@router.post("/{kind}/{id_}/videos/link", status_code=201)
+def link_video(kind: str, id_: str, body: VideoRef, db: Session = Depends(get_db)):
+    """Saves a video the browser already sent to Cloudinary. Only Cloudinary addresses are taken."""
+    thing = _owner(db, kind, id_)
+    if not body.src.startswith("https://res.cloudinary.com/"):
+        raise HTTPException(400, "That video address isn't one this site uploaded.")
+    thing.videos = json.dumps([*_videos(thing), body.src])
     db.commit()
-    return {"photos": _photos(room)}
+    return {"videos": _videos(thing)}
+
+
+@router.post("/{kind}/{id_}/videos", status_code=201)
+def upload_video(kind: str, id_: str, video: UploadFile = File(...), db: Session = Depends(get_db)):
+    thing = _owner(db, kind, id_)
+    if not get_settings().can_upload_photos:
+        raise HTTPException(400, "Uploads aren't set up on this server yet.")
+    ctype = (video.content_type or "").lower()
+    if ctype not in VIDEO_TYPES:
+        raise HTTPException(400, "That file isn't a video. Use MP4, MOV or WebM.")
+    data = video.file.read(MAX_VIDEO + 1)
+    if not data:
+        raise HTTPException(400, "Choose a video first.")
+    if len(data) > MAX_VIDEO:
+        raise HTTPException(400, "That video is over 100 MB. Use a shorter one.")
+    try:
+        url = save_photo(f"video-{thing.id}-{int(time.time() * 1000)}.{VIDEO_TYPES[ctype]}", data, ctype)
+    except Exception:
+        log.exception("Video upload failed")
+        raise HTTPException(502, "The video couldn't be saved. Try again in a minute.") from None
+    thing.videos = json.dumps([*_videos(thing), url])
+    db.commit()
+    return {"videos": _videos(thing)}
+
+
+@router.post("/{kind}/{id_}/videos/remove")
+def remove_video(kind: str, id_: str, body: VideoRef, db: Session = Depends(get_db)):
+    thing = _owner(db, kind, id_)
+    thing.videos = json.dumps([v for v in _videos(thing) if v != body.src])
+    db.commit()
+    return {"videos": _videos(thing)}
+
 
 # ───── Houses ─────
 

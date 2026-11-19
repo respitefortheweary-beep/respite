@@ -1,26 +1,22 @@
-/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowUpRight, EyeOff, Trash2, X } from "lucide-react";
+import { ArrowUpRight, EyeOff, Trash2 } from "lucide-react";
 import { admin, orNull } from "@/lib/api";
 import type { Bed, HouseBrief, Property, Resident, Room } from "@/lib/types";
 import { parseList } from "@/lib/format";
-import { setBedOpening, removePhoto, coverPhoto, renameBed, deleteBed, deleteRoom } from "../../../actions";
+import { setBedOpening, renameBed, deleteBed, deleteRoom } from "../../../actions";
 import { Page, Card, CardHead, Label, Notice, btnQuiet, input, link } from "../../ui";
 import { SubmitButton } from "../../submit";
 import { ConfirmAction } from "../../confirm";
-import { PhotoUpload } from "./upload";
 import { AddBed, RoomForm } from "./room-form";
 
-export default async function RoomEdit({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ new?: string; photos?: string }> }) {
-  const [{ id }, { new: isNew, photos: photoNote }] = await Promise.all([params, searchParams]);
-  const [room, { canUploadPhotos }, houses] = await Promise.all([
+export default async function RoomEdit({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ new?: string }> }) {
+  const [{ id }, { new: isNew }] = await Promise.all([params, searchParams]);
+  const [room, houses] = await Promise.all([
     orNull(admin.get<Room & { house: HouseBrief | null; beds: (Bed & { resident: Resident | null })[] }>(`/admin/rooms/${encodeURIComponent(id)}`)),
-    admin.get<{ canUploadPhotos: boolean }>("/admin/config"),
     admin.get<Property[]>("/admin/houses"),
   ]);
   if (!room) notFound();
-  const photos = parseList(room.photos);
   const beds = [...room.beds].sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true }));
   const occupied = beds.filter((b) => b.resident?.active).length;
   const canAddBed = room.kind === "SHARED" && beds.length < 6;
@@ -31,11 +27,11 @@ export default async function RoomEdit({ params, searchParams }: { params: Promi
       title={room.name}
       crumb={
         <>
-          <Link href="/admin/rooms" className="hover:text-ink">
-            Rooms
+          <Link href="/admin/houses" className="hover:text-ink">
+            Houses
           </Link>
           <span aria-hidden>/</span>
-          {houses.length > 1 && room.house && (
+          {room.house && (
             <>
               <Link href={`/admin/houses/${room.house.id}`} className="hover:text-ink">
                 {room.house.name}
@@ -52,42 +48,14 @@ export default async function RoomEdit({ params, searchParams }: { params: Promi
         </>
       }
       actions={
-        <Link className={btnQuiet} href={`/rooms/${room.slug}`} target="_blank">
+        <Link className={btnQuiet} href={room.house ? `/houses/${room.house.slug}#room-${room.slug}` : "/houses"} target="_blank">
           View on site <ArrowUpRight size={15} />
         </Link>
       }
     >
-      {isNew && <Notice>Room added. It stays hidden until you switch on Show on the site.{photoNote === "failed" ? " One or more photos didn't upload. Add them again below." : ""}</Notice>}
+      {isNew && <Notice>Room added. It stays hidden until you switch on Show on the site. Photos and videos go on the house page.</Notice>}
       <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="grid min-w-0 gap-5">
-          <Card>
-            <CardHead title="Photos" hint={photos.length ? "The cover is the photo people see first on the room card." : "Until you add photos, the site shows a stand-in picture of a similar room."} />
-            <div className="grid grid-cols-2 gap-3 p-5 pt-4 sm:grid-cols-3 sm:p-6 sm:pt-4">
-              {photos.map((p, i) => (
-                <div key={p} className="relative aspect-[4/3] overflow-hidden rounded-xl bg-ink/[.05] ring-1 ring-line">
-                  <img src={p} alt="" className="h-full w-full object-cover" />
-                  {i === 0 ? (
-                    <span className="mono absolute bottom-1.5 left-1.5 inline-flex h-6 items-center rounded-full bg-porch px-2.5 text-[0.68rem] font-semibold uppercase text-ink">Cover</span>
-                  ) : (
-                    <form action={coverPhoto.bind(null, room.id, p)} className="absolute bottom-1.5 left-1.5">
-                      <button className="press inline-flex h-8 items-center rounded-full bg-night/75 px-3 text-[0.78rem] font-medium text-white backdrop-blur-sm transition-colors hover:bg-night">Make cover</button>
-                    </form>
-                  )}
-                  <form action={removePhoto.bind(null, room.id, p)} className="absolute right-1.5 top-1.5">
-                    <button aria-label="Remove photo" className="press grid h-9 w-9 place-items-center rounded-full bg-night/75 text-white backdrop-blur-sm transition-colors hover:bg-ember">
-                      <X size={15} />
-                    </button>
-                  </form>
-                </div>
-              ))}
-              {process.env.SHOWCASE || !canUploadPhotos ? (
-                <div className="flex aspect-[4/3] items-center justify-center rounded-xl border border-dashed border-line-strong p-3 text-center text-[0.82rem] leading-snug text-moss">Adding photos is switched on in the live version.</div>
-              ) : (
-                <PhotoUpload roomId={room.id} />
-              )}
-            </div>
-          </Card>
-
           <Card>
             <CardHead title="What the site says" hint="Saved changes show on the public site right away." />
             <RoomForm

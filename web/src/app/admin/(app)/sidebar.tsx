@@ -9,7 +9,7 @@ import { LogoMark } from "@/components/brand";
 const ITEMS = [
   { href: "/admin", label: "Overview", short: "Home", icon: Home, exact: true },
   { href: "/admin/requests", label: "Requests", short: "Requests", icon: Inbox, badge: "requests" },
-  { href: "/admin/rooms", label: "Rooms & beds", short: "Rooms", icon: BedDouble },
+  { href: "/admin/houses", label: "Houses", short: "Houses", icon: BedDouble },
   { href: "/admin/residents", label: "Residents", short: "Residents", icon: Users },
   { href: "/admin/payments", label: "Payments", short: "Payments", icon: CreditCard, badge: "overdue" },
   { href: "/admin/repairs", label: "Repairs", short: "Repairs", icon: Wrench, badge: "repairs", rail: true },
@@ -131,7 +131,7 @@ export function Sidebar({ newRequests, overdue, beds, unread, failedEmails, repa
         </nav>
 
         <div className="mt-auto">
-          <Link href="/admin/rooms" className="block rounded-xl px-3 py-3 transition-colors hover:bg-white/[.05]">
+          <Link href="/admin/houses" className="block rounded-xl px-3 py-3 transition-colors hover:bg-white/[.05]">
             <span className="mono block text-[0.68rem] uppercase tracking-[0.02em] text-white/55">Tonight</span>
             <span className="mt-2 flex items-center justify-between">
               <Windows beds={beds} />

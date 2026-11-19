@@ -18,3 +18,14 @@ export function timeAgo(d: Date | string) {
 export const parseList = (json: string): string[] => {
   try { return JSON.parse(json); } catch { return []; }
 };
+
+/** "Chester and Petersburg, Virginia": the towns the houses are in, from the houses themselves. */
+export function townsText(towns: string[], fallback: string) {
+  const list = [...new Set(towns.map((t) => t.trim()).filter(Boolean))];
+  if (!list.length) return fallback;
+  if (list.length === 1) return list[0];
+  const states = new Set(list.map((t) => t.split(",")[1]?.trim()).filter(Boolean));
+  const short = states.size === 1 ? list.map((t) => t.split(",")[0].trim()) : list;
+  const joined = `${short.slice(0, -1).join(", ")} and ${short.at(-1)}`;
+  return states.size === 1 ? `${joined}, ${[...states][0]}` : joined;
+}

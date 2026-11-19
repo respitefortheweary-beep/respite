@@ -96,3 +96,13 @@ export function RoomImage({
   if (standIn) return <img src={standIn} alt={alt} loading="lazy" decoding="async" className={`h-full w-full object-cover ${className}`} />;
   return <RoomArt tone={tone} variant={index} className={`h-full w-full ${className}`} />;
 }
+
+// until a house has its own photos: the house from the front, then its kitchen and porch
+const HOUSE_STAND_INS = ["/images/hero/house-day.webp", "/images/kitchen.webp", "/images/porch.webp"];
+
+/** A house photo by position; the owner's photos win, stand-ins only fill in while there are none. */
+export function HouseImage({ photos, index = 0, alt, className = "" }: { photos: string[]; index?: number; alt: string; className?: string }) {
+  const src = photos[index] ?? (photos.length ? undefined : HOUSE_STAND_INS[index % HOUSE_STAND_INS.length]);
+  if (!src) return null;
+  return <img src={src} alt={alt} loading={index ? "lazy" : undefined} decoding="async" className={`h-full w-full object-cover ${className}`} />;
+}

@@ -13,6 +13,7 @@ def _sign(params: dict[str, str], secret: str) -> str:
 
 
 def _to_cloudinary(creds: tuple[str, str, str], name: str, data: bytes, content_type: str, folder: str) -> str:
+    kind = "video" if content_type.startswith("video/") else "image"
     key, secret, cloud = creds
     params = {
         "folder": folder,
@@ -20,10 +21,10 @@ def _to_cloudinary(creds: tuple[str, str, str], name: str, data: bytes, content_
         "timestamp": str(int(time.time())),
     }
     r = httpx.post(
-        f"https://api.cloudinary.com/v1_1/{cloud}/image/upload",
+        f"https://api.cloudinary.com/v1_1/{cloud}/{kind}/upload",
         data={**params, "api_key": key, "signature": _sign(params, secret)},
         files={"file": (name, data, content_type)},
-        timeout=60,
+        timeout=300,
     )
     r.raise_for_status()
     return r.json()["secure_url"]
@@ -64,3 +65,18 @@ def save_photo(name: str, data: bytes, content_type: str) -> str:
     s.upload_dir.mkdir(parents=True, exist_ok=True)
     (s.upload_dir / name).write_bytes(data)
     return f"{s.upload_url_prefix.rstrip('/')}/{name}"
+
+
+def video_ticket(name: str) -> dict | None:
+    """Videos are too big to pass through the website, so with Cloudinary set up the browser sends
+    them straight there. This signs that one upload; the secret never leaves the server."""
+    s = get_settings()
+    if not s.cloudinary:
+        return None
+    key, secret, cloud = s.cloudinary
+    params = {"folder": s.cloudinary_folder, "public_id": name, "timestamp": str(int(time.time()))}
+    return {
+        "url": f"https://api.cloudinary.com/v1_1/{cloud}/video/upload",
+        "fields": {**params, "api_key": key, "signature": _sign(params, secret)},
+        "host": "https://res.cloudinary.com/",
+    }

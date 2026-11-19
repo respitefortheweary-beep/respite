@@ -3,9 +3,12 @@ import Link from "next/link";
 import { Phone, X } from "lucide-react";
 import { api } from "@/lib/api";
 import { getHouse } from "@/lib/content";
+import { getWhere } from "@/lib/where";
 import { Booking } from "./booking";
 
-export const metadata: Metadata = { title: "Book a tour", description: "Pick a time to visit a house in Chester, Virginia, and see the rooms before you decide.", alternates: { canonical: "/tour" } };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: "Book a tour", description: `Pick a time to visit a house in ${await getWhere()} and see the rooms before you decide.`, alternates: { canonical: "/tour" } };
+}
 export const dynamic = "force-dynamic";
 
 type Slots = { enabled: boolean; days: { date: string; times: string[] }[] };

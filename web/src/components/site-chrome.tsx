@@ -9,7 +9,7 @@ import { EqualHousingLogo } from "./equal-housing";
 export { Roll, Logo } from "./brand";
 
 const NAV = [
-  ["/rooms", "Rooms"],
+  ["/houses", "Houses"],
   ["/#who", "Who it's for"],
   ["/#included", "Included"],
   ["/#referrals", "Professionals"],
@@ -93,7 +93,7 @@ export async function SiteFooter() {
             <p className="eyebrow mb-4 !text-white/55">Pages</p>
             <ul className="space-y-1.5 text-white/75">
               {[
-                ["/rooms", "Rooms and availability"],
+                ["/houses", "Houses and open beds"],
                 ["/apply", "Request a room"],
                 ["/tour", "Book a tour"],
                 ["/waitlist", "Join the waitlist"],
