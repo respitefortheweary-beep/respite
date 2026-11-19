@@ -865,7 +865,7 @@ def save_tour_settings(body: dict, db: Session = Depends(get_db)):
 
 
 def _tour_row(t: Tour) -> dict:
-    return row(t, when=tours.when(t.date, t.time), startsAt=tours.starts_at(t.date, t.time).isoformat())
+    return row(t, when=tours.when(t.date, t.time), startsAt=tours.starts_at(t.date, t.time).isoformat(), houseName=t.house.name if t.house else None)
 
 
 @router.get("/tours")
@@ -912,6 +912,7 @@ class TourByHouse(BaseModel):
     phone: str = Field(min_length=7, max_length=60)
     email: str | None = Field(default=None, max_length=200)
     note: str = Field(default="", max_length=1000)
+    houseId: str | None = None
 
 
 @router.post("/tours", status_code=201)
@@ -921,10 +922,11 @@ def book_for_caller(body: TourByHouse, db: Session = Depends(get_db)):
         raise HTTPException(400, "That isn't a date.")
     if db.scalar(select(Tour).where(Tour.date == body.date, Tour.time == body.time, Tour.status == "BOOKED")):
         raise HTTPException(409, "There's already a tour at that time.")
+    house = _get(db, House, body.houseId, "house") if body.houseId else None
     email = (body.email or "").strip() or None
     t = Tour(
         date=body.date, time=body.time, name=body.name.strip(), phone=body.phone.strip(), email=email,
-        note=body.note.strip(), bookedBy="HOUSE", token=tours.new_token(),
+        note=body.note.strip(), bookedBy="HOUSE", token=tours.new_token(), house=house,
     )
     db.add(t)
     tours.email_booked(db, t)

@@ -10,7 +10,10 @@ import { cancelTour } from "../actions";
 export const metadata: Metadata = { title: "Your tour", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
-type Tour = { when: string; firstName: string; status: "BOOKED" | "DONE" | "NO_SHOW" | "CANCELLED"; past: boolean; phone: string; startsAt: string | Date; endsAt: string | Date };
+type Tour = {
+  when: string; firstName: string; status: "BOOKED" | "DONE" | "NO_SHOW" | "CANCELLED"; past: boolean; phone: string; startsAt: string | Date; endsAt: string | Date;
+  house: { name: string; slug: string; town: string; address: string } | null;
+};
 
 /** The link in the visitor's email: shows the tour and lets them cancel it. */
 export default async function YourTour({ params, searchParams }: { params: Promise<{ token: string }>; searchParams: Promise<{ cancel?: string }> }) {
@@ -18,11 +21,14 @@ export default async function YourTour({ params, searchParams }: { params: Promi
   const [tour, house] = await Promise.all([orNull(api.get<Tour>(`/public/tours/${encodeURIComponent(token)}`)), getHouse()]);
   if (!tour) notFound();
   const live = tour.status === "BOOKED" && !tour.past;
-  const cal = tourCalendar({ token, startsAt: tour.startsAt, endsAt: tour.endsAt, address: house.address, phone: house.phone });
+  const address = tour.house?.address || house.address;
+  const cal = tourCalendar({ token, startsAt: tour.startsAt, endsAt: tour.endsAt, address, phone: house.phone });
 
   return (
     <Shell>
-      <p className="mono text-[0.72rem] uppercase text-white/55">{tour.status === "CANCELLED" ? "Cancelled" : live ? "Your tour" : "Past tour"}</p>
+      <p className="mono text-[0.72rem] uppercase text-white/55">{tour.status === "CANCELLED" ? "Cancelled" : live ? "Your tour" : "Past tour"}
+        {tour.house && ` · ${tour.house.name}`}
+      </p>
       <h1 className="display-2 mt-3 text-[clamp(2rem,7vw,2.8rem)]" style={{ textWrap: "balance" }}>
         {tour.when}
       </h1>
@@ -30,7 +36,7 @@ export default async function YourTour({ params, searchParams }: { params: Promi
         {tour.status === "CANCELLED"
           ? `This tour is cancelled, ${tour.firstName}. Pick another time whenever you're ready.`
           : live
-            ? `We'll see you then, ${tour.firstName}. The house is at ${house.address}.`
+            ? `We'll see you then, ${tour.firstName}. ${tour.house ? tour.house.name : "The house"} is at ${address}.`
             : `Thanks for coming by, ${tour.firstName}.`}
       </p>
 
@@ -64,7 +70,7 @@ export default async function YourTour({ params, searchParams }: { params: Promi
           </>
         )}
         {!live && (
-          <Link href="/tour" className={solid}>
+          <Link href={tour.house ? `/tour?house=${tour.house.slug}` : "/tour"} className={solid}>
             Book a time
           </Link>
         )}

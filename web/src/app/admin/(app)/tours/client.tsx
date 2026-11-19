@@ -4,7 +4,7 @@ import { Plus, X, Loader2, Check } from "lucide-react";
 import type { TourSettings } from "@/lib/types";
 import { clock, longDay, WEEKDAYS_MON_FIRST } from "@/lib/when";
 import { bookTourForCaller, saveTourSettings, type FormState } from "../../actions";
-import { Card, CardHead, Label, btnPrimary, btnQuiet, input } from "../ui";
+import { Card, CardHead, Label, btnPrimary, btnQuiet, input, select } from "../ui";
 import { SubmitButton } from "../submit";
 
 const chip = "inline-flex h-7 items-center gap-1 rounded-full bg-ink/[.06] pl-2.5 pr-1 text-[0.8rem]";
@@ -38,7 +38,7 @@ export function ScheduleEditor({ initial }: { initial: TourSettings }) {
     });
 
   return (
-    <Card>
+    <Card id="schedule">
       <CardHead
         title="Weekly schedule"
         hint="Visitors can book these times on the site. All times are house time."
@@ -159,7 +159,7 @@ export function ScheduleEditor({ initial }: { initial: TourSettings }) {
 }
 
 /** For someone who called: any date and time, not just the weekly ones. */
-export function CallerForm() {
+export function CallerForm({ houses }: { houses: { id: string; name: string }[] }) {
   const [state, action] = useActionState(bookTourForCaller, null);
   const form = useRef<HTMLFormElement>(null);
   useEffect(() => {
@@ -180,6 +180,22 @@ export function CallerForm() {
             <input name="time" type="time" step={900} required className={input} />
           </label>
         </div>
+        {houses.length > 1 && (
+          <label>
+            <Label>House</Label>
+            <select name="houseId" required defaultValue="" className={select}>
+              <option value="" disabled>
+                Pick a house
+              </option>
+              {houses.map((h) => (
+                <option key={h.id} value={h.id}>
+                  {h.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        {houses.length === 1 && <input type="hidden" name="houseId" value={houses[0].id} />}
         <label>
           <Label>Name</Label>
           <input name="name" required minLength={2} autoComplete="off" className={input} />

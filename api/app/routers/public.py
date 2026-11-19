@@ -12,7 +12,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..models import Request, Room, Tour, WaitlistEntry
+from ..models import House, Request, Room, Tour, WaitlistEntry
 from ..services.availability import get_beds, get_houses, get_rooms_with_beds
 from ..serialize import iso
 from ..services import ics, notify, tours
@@ -137,12 +137,15 @@ class TourIn(BaseModel):
     email: str | None = Field(default=None, max_length=200)
     program: Literal["VETERAN", "RECOVERY", "SENIOR"] | None = None
     note: str | None = Field(default=None, max_length=1000)
+    house: str | None = Field(default=None, max_length=200)  # the house's slug or id
 
 
 def _tour_view(t: Tour) -> dict:
     start = tours.starts_at(t.date, t.time)
+    h = t.house
     return {
         "date": t.date, "time": t.time, "when": tours.when(t.date, t.time), "name": t.name, "status": t.status, "firstName": first_name(t.name),
+        "house": {"name": h.name, "slug": h.slug, "town": h.town, "address": h.address} if h else None,
         # UTC, for "add to calendar" links
         "startsAt": iso(start.astimezone(UTC)), "endsAt": iso((start + ics.LENGTH).astimezone(UTC)),
     }
@@ -159,9 +162,14 @@ def book_tour(body: TourIn, db: Session = Depends(get_db)):
     )
     if problem:
         raise HTTPException(400, problem)
+    house = None
+    if body.house:
+        house = db.scalar(select(House).where((House.slug == body.house) | (House.id == body.house), House.hidden.is_(False)))
+        if house is None:
+            raise HTTPException(400, "We couldn't find that house. Please pick one from the list.")
     if not tours.is_open(db, body.date, body.time):
         raise HTTPException(409, "Someone just took that time. Please pick another.")
-    t = Tour(date=body.date, time=body.time, name=name, phone=phone, email=email, program=body.program, note=note or "", token=tours.new_token())
+    t = Tour(date=body.date, time=body.time, name=name, phone=phone, email=email, program=body.program, note=note or "", token=tours.new_token(), house=house)
     db.add(t)
     try:
         db.flush()
@@ -170,12 +178,13 @@ def book_tour(body: TourIn, db: Session = Depends(get_db)):
         raise HTTPException(409, "Someone just took that time. Please pick another.")
     at = tours.when(t.date, t.time)
     lines = [
+        f"House: {house.name}" if house else "",
         f"{name} · {phone}" + (f" · {email}" if email else ""),
         f"Interested in: {PROGRAMS[body.program]['long']}" if body.program else "",
         f'\n"{note}"' if note else "",
         "" if email else "\nNo email given, so they won't get a reminder. Call or text them the day before.",
     ]
-    notify.owner(db, "tour.booked", f"Tour booked: {at}, {name}", "\n".join(x for x in lines if x), "/admin/tours")
+    notify.owner(db, "tour.booked", f"Tour booked: {at}, {name}" + (f" · {house.name}" if house else ""), "\n".join(x for x in lines if x), "/admin/tours")
     tours.email_booked(db, t)
     db.commit()
     return {**_tour_view(t), "token": t.token}
@@ -201,9 +210,9 @@ def tour_calendar(token: str, db: Session = Depends(get_db)):
     house = get_section(db, "house")
     body = ics.calendar(
         [ics.event(
-            t, summary="Tour at Respite for the Weary",
+            t, summary=f"Tour of {t.house.name}" if t.house else "Tour at Respite for the Weary",
             description=f"Questions? Call {house_phone(db)}.\nNeed to cancel? {site_url()}/tour/{t.token}",
-            location=house.get("address", ""),
+            location=(t.house.address if t.house and t.house.address else house.get("address", "")),
         )],
         "Respite for the Weary",
     )

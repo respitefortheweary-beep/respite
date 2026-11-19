@@ -286,7 +286,7 @@ export const tile = (on: boolean) =>
     on ? "ring-2 ring-ink bg-[#fff8ea] shadow-[0_3px_0_var(--ink)]" : "ring-line shadow-[0_3px_0_rgb(23_33_28/.12)] hover:ring-line-strong"
   }`;
 
-export function Q({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
+export function Q({ title, hint, children }: { title: string; hint?: React.ReactNode; children: React.ReactNode }) {
   return (
     <section>
       <h1 tabIndex={-1} className="display-2 text-[clamp(2.1rem,5.4vw,3.4rem)] outline-none">{title}</h1>

@@ -176,7 +176,7 @@ export default async function HousePage({ params }: { params: Promise<{ slug: st
               </p>
               <p className="mt-4 text-[0.95rem] text-ink/70">
                 The exact address is shared when you{" "}
-                <Link href="/tour" className="font-medium text-ink underline underline-offset-4">
+                <Link href={`/tour?house=${home.slug}`} className="font-medium text-ink underline underline-offset-4">
                   book a tour
                 </Link>
                 .
@@ -204,7 +204,7 @@ export default async function HousePage({ params }: { params: Promise<{ slug: st
               <Link href={anyOpen ? "#rooms" : "/waitlist"} className="btn btn-primary press !h-12 w-full">
                 {anyOpen ? "Pick a room" : "Join the waitlist"}
               </Link>
-              <Link href="/tour" className="btn btn-ghost press mt-2.5 !h-12 w-full">
+              <Link href={`/tour?house=${home.slug}`} className="btn btn-ghost press mt-2.5 !h-12 w-full">
                 <CalendarDays size={15} /> Book a tour
               </Link>
               <a href={business.phoneHref} className="press mono mt-2.5 flex h-10 w-full items-center justify-center gap-2 rounded-full text-[0.88rem] text-ink/65 hover:text-ink">

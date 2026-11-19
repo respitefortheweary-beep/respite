@@ -3,9 +3,10 @@ import { revalidatePath } from "next/cache";
 import { api, ApiError } from "@/lib/api";
 
 export type Program = "VETERAN" | "RECOVERY" | "SENIOR";
-export type TourInput = { date: string; time: string; name: string; phone: string; email?: string; program?: Program; note?: string };
+export type TourInput = { date: string; time: string; name: string; phone: string; email?: string; program?: Program; note?: string; house?: string };
 export type WaitlistInput = { name: string; email: string; phone?: string; program?: Program; room?: string; note?: string };
-export type Booked = { firstName: string; when: string; token: string; startsAt: string | Date; endsAt: string | Date };
+export type TourHouseInfo = { name: string; slug: string; town: string; address: string };
+export type Booked = { firstName: string; when: string; token: string; startsAt: string | Date; endsAt: string | Date; house: TourHouseInfo | null };
 type Result<T> = ({ ok: true } & T) | { ok: false; error: string; taken?: boolean };
 
 const SERVER_ERROR = "Something went wrong on our side. Please call and we'll take it by phone.";

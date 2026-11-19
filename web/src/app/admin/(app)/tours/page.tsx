@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { Phone, Mail, BellRing } from "lucide-react";
+import { Phone, Mail, BellRing, Home } from "lucide-react";
 import { admin } from "@/lib/api";
-import type { Tour, TourSettings, WaitlistEntry } from "@/lib/types";
+import type { Property, Tour, TourSettings, WaitlistEntry } from "@/lib/types";
 import { clock, longDay } from "@/lib/when";
 import { PROGRAMS, type Program } from "@/lib/labels";
 import { resetTourFeed, setTourStatus } from "../../actions";
@@ -24,6 +24,11 @@ function Who({ t }: { t: Tour }) {
         {t.name}
         {t.bookedBy === "HOUSE" && <span className="mono ml-2 text-[0.7rem] uppercase text-moss">booked by phone</span>}
       </p>
+      {t.houseName && (
+        <p className="mt-1 inline-flex items-center gap-1.5 text-[0.86rem] font-medium text-ink/80">
+          <Home size={13} className="text-moss" /> {t.houseName}
+        </p>
+      )}
       <p className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[0.86rem] text-moss">
         <a href={`tel:${t.phone.replace(/[^\d+]/g, "")}`} className="inline-flex items-center gap-1.5 hover:text-ink">
           <Phone size={13} /> {t.phone}
@@ -46,13 +51,14 @@ export default async function Tours({ searchParams }: { searchParams: Promise<{ 
   const calendar = view === "calendar";
   const month = pickMonth(m);
   const tab = past ? "past" : calendar ? "calendar" : "upcoming";
-  const [settings, upcoming, list, waiting, monthTours, feed] = await Promise.all([
+  const [settings, upcoming, list, waiting, monthTours, feed, houses] = await Promise.all([
     admin.get<TourSettings>("/admin/tours/settings"),
     admin.get<Tour[]>("/admin/tours?when=upcoming"),
     past ? admin.get<Tour[]>("/admin/tours?when=past") : Promise.resolve(null),
     admin.get<WaitlistEntry[]>("/admin/waitlist"),
     calendar ? admin.get<Tour[]>(`/admin/tours?when=month&month=${month}`) : Promise.resolve([] as Tour[]),
     admin.get<{ url: string }>("/admin/tours/feed"),
+    admin.get<Property[]>("/admin/houses").catch(() => [] as Property[]),
   ]);
   const days = [...new Set(upcoming.map((t) => t.date))];
 
@@ -81,7 +87,12 @@ export default async function Tours({ searchParams }: { searchParams: Promise<{ 
     >
       <InboxTabs on="tours" counts={{ tours: upcoming.length, waitlist: waiting.filter((w) => w.status === "WAITING").length }} />
       {!settings.enabled && (
-        <Notice tone="warn">Online booking is off, so the tour page asks people to call. Add your weekly times and switch it on under Weekly schedule.</Notice>
+        <Notice tone="warn">Online booking is off, so the tour page asks people to call. Add your weekly times and switch it on under{" "}
+          <a href="#schedule" className="font-medium underline underline-offset-2">
+            Weekly schedule
+          </a>
+          .
+        </Notice>
       )}
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_400px]">
@@ -170,7 +181,7 @@ export default async function Tours({ searchParams }: { searchParams: Promise<{ 
         </div>
 
         <div className="space-y-6">
-          <CallerForm />
+          <CallerForm houses={houses.map((h) => ({ id: h.id, name: h.name }))} />
           <FeedCard url={feed.url} reset={resetTourFeed} />
           <ScheduleEditor initial={settings} />
         </div>

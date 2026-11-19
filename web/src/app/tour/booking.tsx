@@ -2,14 +2,18 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { X, ArrowLeft, Loader2, CalendarCheck, CalendarPlus } from "lucide-react";
+import { X, ArrowLeft, Loader2, CalendarCheck, CalendarPlus, MapPin } from "lucide-react";
 import { Q, Field, tile } from "../apply/flow";
 import { bookTour, tourSlots, type Program } from "./actions";
 import { clock, dayChip, longDay } from "@/lib/when";
 import { tourCalendar } from "@/lib/calendar";
+import { HouseImage } from "@/components/room-art";
 
 type Day = { date: string; times: string[] };
 type Phone = { label: string; href: string };
+/** A house visitors can choose to see. */
+export type TourHouse = { slug: string; name: string; town: string; photos: string[]; open: number; beds: number };
+type Step = "house" | "when" | "you";
 
 const PROGRAMS: [Program, string][] = [
   ["VETERAN", "Veteran"],
@@ -17,27 +21,53 @@ const PROGRAMS: [Program, string][] = [
   ["SENIOR", "Independent senior"],
 ];
 
-export function Booking({ days: initialDays, phone, address }: { days: Day[]; phone: Phone; address: string }) {
+export function Booking({
+  days: initialDays,
+  phone,
+  address: fallbackAddress,
+  houses,
+  chosen,
+}: {
+  days: Day[];
+  phone: Phone;
+  address: string;
+  houses: TourHouse[];
+  /** the house they came from, when they pressed "Book a tour" on its page */
+  chosen?: string;
+}) {
   const [days, setDays] = useState(initialDays);
   const [date, setDate] = useState(initialDays[0]?.date ?? "");
   const [time, setTime] = useState("");
-  const [step, setStep] = useState<"when" | "you">("when");
+  // one house: nothing to choose. Several: ask first, unless they came from a house's page
+  const preset = houses.length === 1 ? houses[0].slug : houses.find((h) => h.slug === chosen)?.slug;
+  const [houseSlug, setHouseSlug] = useState(preset ?? "");
+  const [step, setStep] = useState<Step>(houses.length > 1 && !preset ? "house" : "when");
   const [form, setForm] = useState({ name: "", phone: "", email: "", note: "" });
   const [program, setProgram] = useState<Program | undefined>();
   const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState<{ firstName: string; when: string; email: boolean; cal: ReturnType<typeof tourCalendar> } | null>(null);
+  const [done, setDone] = useState<{ firstName: string; when: string; email: boolean; address: string; cal: ReturnType<typeof tourCalendar> } | null>(null);
   const [pending, start] = useTransition();
   const reduce = useReducedMotion();
 
   const day = days.find((d) => d.date === date);
+  const house = houses.find((h) => h.slug === houseSlug);
+  const choosing = houses.length > 1;
+  const first: Step = choosing ? "house" : "when";
+  const back = () => {
+    setError(null);
+    setStep(step === "you" ? "when" : first);
+  };
   const canSend = form.name.trim().length >= 2 && form.phone.replace(/\D/g, "").length >= 7;
 
   function submit() {
     setError(null);
     start(async () => {
-      const res = await bookTour({ date, time, ...form, email: form.email.trim() || undefined, note: form.note.trim() || undefined, program });
+      const res = await bookTour({ date, time, ...form, email: form.email.trim() || undefined, note: form.note.trim() || undefined, program, house: house?.slug });
       if (res.ok) {
+        // the street address is only shared once they've booked
+        const address = res.house?.address || fallbackAddress;
         setDone({
+          address,
           firstName: res.firstName,
           when: res.when,
           email: !!form.email.trim(),
@@ -83,7 +113,7 @@ export function Booking({ days: initialDays, phone, address }: { days: Day[]; ph
               </h1>
               <p className="mt-4 max-w-md text-[1.05rem] text-ink/70" style={{ textWrap: "pretty" }}>
                 {done.email ? "We emailed the details and a link to cancel if plans change. You'll get a reminder the day before." : "We'll call the day before to confirm."}{" "}
-                The house is at {address}. Questions? Call{" "}
+                {house && choosing ? `${house.name} is at ${done.address}.` : `The house is at ${done.address}.`} Questions? Call{" "}
                 <a href={phone.href} className="font-semibold text-ink underline underline-offset-4">
                   {phone.label}
                 </a>
@@ -108,13 +138,60 @@ export function Booking({ days: initialDays, phone, address }: { days: Day[]; ph
           ) : (
             <motion.div
               key={step}
-              initial={reduce ? { opacity: 0 } : { opacity: 0, x: step === "you" ? 40 : -40 }}
+              initial={reduce ? { opacity: 0 } : { opacity: 0, x: step === first ? -40 : 40 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={reduce ? { opacity: 0 } : { opacity: 0, x: step === "you" ? -40 : 40 }}
+              exit={reduce ? { opacity: 0 } : { opacity: 0, x: step === first ? 40 : -40 }}
               transition={{ duration: 0.28, ease: [0.23, 1, 0.32, 1] }}
             >
-              {step === "when" ? (
-                <Q title="When would you like to visit?" hint="A tour takes about half an hour. You'll see the rooms, the kitchen and the porch.">
+              {step === "house" ? (
+                <Q title="Which house would you like to see?" hint="Pick one and we'll show you around it. You can ask about the others while you're there.">
+                  <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="House">
+                    {houses.map((h) => {
+                      const on = h.slug === houseSlug;
+                      return (
+                        <button
+                          key={h.slug}
+                          type="button"
+                          role="radio"
+                          aria-checked={on}
+                          onClick={() => setHouseSlug(h.slug)}
+                          className={`${tile(on)} !flex-row !items-center gap-4 !p-3 text-left`}
+                        >
+                          <span className="relative h-[4.5rem] w-[5.5rem] shrink-0 overflow-hidden rounded-xl bg-oat">
+                            <HouseImage photos={h.photos} alt="" />
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block truncate text-[1.08rem] font-semibold tracking-[-0.02em]">{h.name}</span>
+                            {h.town && <span className="block truncate text-[0.9rem] text-ink/65">{h.town}</span>}
+                            <span className="mono mt-1 block text-[0.74rem] text-moss">
+                              {!h.beds ? "Opening soon" : h.open ? `${h.open} ${h.open === 1 ? "bed" : "beds"} open` : "Full right now"}
+                            </span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </Q>
+              ) : step === "when" ? (
+                <Q
+                  title="When would you like to visit?"
+                  hint={
+                    house && choosing ? (
+                      <>
+                        <span className="inline-flex flex-wrap items-center gap-x-1.5 font-medium text-ink">
+                          <MapPin size={15} className="text-moss" /> {house.name}
+                          {house.town && <span className="font-normal text-ink/65">· {house.town}</span>}
+                          <button type="button" onClick={() => setStep("house")} className="ml-1 font-medium text-ink/65 underline underline-offset-4 hover:text-ink">
+                            Change
+                          </button>
+                        </span>
+                        <br />A tour takes about half an hour. You&apos;ll see the rooms, the kitchen and the porch.
+                      </>
+                    ) : (
+                      "A tour takes about half an hour. You'll see the rooms, the kitchen and the porch."
+                    )
+                  }
+                >
                   {days.length === 0 ? (
                     <p className="rounded-2xl bg-oat p-5 text-[1.02rem]">
                       Every time is taken right now. Call{" "}
@@ -174,7 +251,10 @@ export function Booking({ days: initialDays, phone, address }: { days: Day[]; ph
                   )}
                 </Q>
               ) : (
-                <Q title="Who's coming?" hint={`${longDay(date)} at ${clock(time)}. Bring anyone you like: family, a case manager, a friend.`}>
+                <Q
+                  title="Who's coming?"
+                  hint={`${house && choosing ? `${house.name}, ` : ""}${longDay(date)} at ${clock(time)}. Bring anyone you like: family, a case manager, a friend.`}
+                >
                   <div className="grid gap-4">
                     <Field label="Your name" value={form.name} onChange={(v) => setForm({ ...form, name: v })} autoComplete="name" autoFocus />
                     <div className="grid gap-4 sm:grid-cols-2">
@@ -219,7 +299,7 @@ export function Booking({ days: initialDays, phone, address }: { days: Day[]; ph
       {!done && days.length > 0 && (
         <footer className="fixed inset-x-0 bottom-0 border-t border-line bg-white/90 backdrop-blur-md">
           <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
-            <button type="button" onClick={() => { setError(null); setStep("when"); }} disabled={step === "when"} className="btn btn-ghost press disabled:invisible">
+            <button type="button" onClick={back} disabled={step === first} className="btn btn-ghost press disabled:invisible">
               <ArrowLeft size={16} /> Back
             </button>
             <div className="flex min-w-0 flex-1 items-center justify-end gap-4">
@@ -230,11 +310,11 @@ export function Booking({ days: initialDays, phone, address }: { days: Day[]; ph
               )}
               <button
                 type="button"
-                onClick={step === "when" ? () => { setError(null); setStep("you"); } : submit}
-                disabled={(step === "when" ? !time : !canSend) || pending}
+                onClick={step === "you" ? submit : () => { setError(null); setStep(step === "house" ? "when" : "you"); }}
+                disabled={(step === "house" ? !house : step === "when" ? !time : !canSend) || pending}
                 className="btn press !h-12 min-w-[9.5rem] shrink-0 bg-ink text-white shadow-[0_4px_0_#000] transition-[transform,box-shadow,opacity] active:translate-y-[3px] active:shadow-[0_1px_0_#000] disabled:opacity-35 disabled:shadow-none"
               >
-                {pending ? <Loader2 size={18} className="animate-spin" /> : step === "when" ? "Continue" : "Book the tour"}
+                {pending ? <Loader2 size={18} className="animate-spin" /> : step === "you" ? "Book the tour" : "Continue"}
               </button>
             </div>
           </div>

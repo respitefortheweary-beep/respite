@@ -3,8 +3,10 @@ import Link from "next/link";
 import { Phone, X } from "lucide-react";
 import { api } from "@/lib/api";
 import { getHouse } from "@/lib/content";
+import { getHouses } from "@/lib/availability";
+import { parseList } from "@/lib/format";
 import { getWhere } from "@/lib/where";
-import { Booking } from "./booking";
+import { Booking, type TourHouse } from "./booking";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: "Book a tour", description: `Pick a time to visit a house in ${await getWhere()} and see the rooms before you decide.`, alternates: { canonical: "/tour" } };
@@ -13,10 +15,18 @@ export const dynamic = "force-dynamic";
 
 type Slots = { enabled: boolean; days: { date: string; times: string[] }[] };
 
-export default async function TourPage() {
-  const [slots, house] = await Promise.all([api.get<Slots>("/public/tours/slots").catch((): Slots => ({ enabled: false, days: [] })), getHouse()]);
+export default async function TourPage({ searchParams }: { searchParams: Promise<{ house?: string | string[] }> }) {
+  const [slots, house, listed, params] = await Promise.all([
+    api.get<Slots>("/public/tours/slots").catch((): Slots => ({ enabled: false, days: [] })),
+    getHouse(),
+    getHouses().catch(() => []),
+    searchParams,
+  ]);
   const phone = { label: house.phone, href: house.phoneHref };
-  if (slots.enabled) return <Booking days={slots.days} phone={phone} address={house.address} />;
+  const houses: TourHouse[] = listed.map((h) => ({ slug: h.slug, name: h.name, town: h.town, photos: parseList(h.photos), open: h.open, beds: h.beds }));
+  const chosen = typeof params.house === "string" ? params.house : undefined;
+  if (slots.enabled) return <Booking days={slots.days} phone={phone} address={house.address} houses={houses} chosen={chosen} />;
+  const picked = houses.length > 1 ? houses.find((h) => h.slug === chosen) : undefined;
 
   // no weekly times set yet: tours are by phone
   return (
@@ -28,10 +38,10 @@ export default async function TourPage() {
       </header>
       <main id="main" className="mx-auto w-full max-w-3xl flex-1 px-4 pb-24 pt-10 sm:px-6 sm:pt-16">
         <h1 className="display-2 text-[clamp(2.1rem,5.4vw,3.4rem)]" style={{ textWrap: "balance" }}>
-          Come and see where you&apos;d live.
+          {picked ? <>Come and see {picked.name}.</> : <>Come and see where you&apos;d live.</>}
         </h1>
         <p className="mt-4 max-w-xl text-[1.05rem] text-ink/65" style={{ textWrap: "pretty" }}>
-          Call and we&apos;ll set up a time that works for you. {house.tourNote}
+          Call and we&apos;ll set up a time that works for you{picked ? ` to tour ${picked.name}` : ""}. {house.tourNote}
         </p>
         <div className="mt-9 flex flex-col gap-3 sm:flex-row">
           <a href={house.phoneHref} className="btn btn-primary press mono !h-12 !px-6">

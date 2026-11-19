@@ -129,6 +129,9 @@ def new_token() -> str:
 
 def _details(db: Session, tour: Tour) -> str:
     house = get_section(db, "house")
+    if tour.house:
+        where = tour.house.address or house["address"]
+        return f"House: {tour.house.name}\nWhen: {when(tour.date, tour.time)}\nWhere: {where}\nIf you need to call: {house_phone(db)}"
     return f"When: {when(tour.date, tour.time)}\nWhere: {house['address']}\nIf you need to call: {house_phone(db)}"
 
 

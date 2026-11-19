@@ -78,6 +78,7 @@ export type Tour = {
   id: string; createdAt: Date; date: string; time: string; name: string; phone: string; email: string | null;
   program: string | null; note: string; status: TourStatus; cancelledBy: "VISITOR" | "HOUSE" | null;
   bookedBy: "VISITOR" | "HOUSE"; reminderSentAt: Date | null; when: string; startsAt: string;
+  houseId: string | null; houseName: string | null;
 };
 export type TourSlot = { day: number; time: string };
 export type TourSettings = { enabled: boolean; slots: TourSlot[]; closedDays: string[]; daysAhead: number; minNoticeHours: number };

@@ -471,6 +471,37 @@ def test_tours_schedule_book_cancel_and_remind(client):
     assert any(n.recipient == "owner@example.com" and "Rae Kim" in n.subject for n in _sent("tour.reminder"))
 
 
+def test_tour_names_the_house_they_picked(client):
+    auth = _login(client)
+    every_day = [{"day": d, "time": t} for d in range(7) for t in ("09:00", "11:15", "16:45")]
+    client.put("/admin/tours/settings", json={"enabled": True, "slots": every_day}, headers=auth)
+    days = client.get("/public/tours/slots").json()["days"]
+    house = client.get("/public/houses").json()[0]
+    pick = {"date": days[-1]["date"], "time": days[-1]["times"][-1]}
+
+    # an unknown house is turned down, a real one is kept and named everywhere
+    assert client.post("/public/tours", json={**pick, "name": "Jo March", "phone": "804-555-0110", "house": "no-such-house"}).status_code == 400
+    r = client.post("/public/tours", json={**pick, "name": "Jo March", "phone": "804-555-0110", "email": "jo@example.com", "house": house["slug"]})
+    assert r.status_code == 201, r.text
+    assert r.json()["house"]["slug"] == house["slug"]
+    assert client.get(f"/public/tours/{r.json()['token']}").json()["house"]["name"] == house["name"]
+    assert any(n.recipient == "jo@example.com" and f"House: {house['name']}" in n.body for n in _sent("tour.confirmed"))
+    assert any(house["name"] in n.subject for n in _sent("tour.booked") if "Jo March" in n.subject)
+    listed = next(t for t in client.get("/admin/tours", headers=auth).json() if t["name"] == "Jo March")
+    assert listed["houseName"] == house["name"] and listed["houseId"] == house["id"]
+    assert f"Tour of {house['name']}" in client.get(f"/public/tours/{r.json()['token']}/calendar.ics").text
+
+    # without a house it still books, like tours from before there was a choice
+    other = {"date": days[-1]["date"], "time": days[-1]["times"][0]}
+    r = client.post("/public/tours", json={**other, "name": "Amy March", "phone": "804-555-0111"})
+    assert r.status_code == 201 and r.json()["house"] is None
+
+    # the house can book a caller for a given house too
+    r = client.post("/admin/tours", json={"date": days[-2]["date"], "time": "12:00", "name": "Meg March", "phone": "804-555-0112", "houseId": house["id"]}, headers=auth)
+    assert r.status_code == 201 and r.json()["houseName"] == house["name"]
+    assert client.post("/admin/tours", json={"date": days[-2]["date"], "time": "12:30", "name": "Beth March", "phone": "804-555-0113", "houseId": "nope"}, headers=auth).status_code == 404
+
+
 def test_waitlist_join_announce_and_leave(client):
     auth = _login(client)
     from app.models import WaitlistEntry

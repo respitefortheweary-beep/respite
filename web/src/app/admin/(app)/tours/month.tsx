@@ -96,7 +96,7 @@ export function MonthView({ month, tours }: { month: string; tours: Tour[] }) {
                           {list.slice(0, 3).map((t) => (
                             <li
                               key={t.id}
-                              title={`${clock(t.time)} ${t.name}`}
+                              title={`${clock(t.time)} ${t.name}${t.houseName ? ` · ${t.houseName}` : ""}`}
                               className={`truncate rounded-md px-1.5 py-0.5 text-[0.72rem] leading-tight ${t.status === "BOOKED" ? "bg-porch-glow text-ink" : "bg-ink/[.05] text-moss"}`}
                             >
                               <span className="mono tabular">{clock(t.time)}</span> {t.name.split(" ")[0]}
@@ -122,7 +122,10 @@ export function MonthView({ month, tours }: { month: string; tours: Tour[] }) {
                 <li key={t.id} className="flex items-baseline gap-4 px-5 py-3 sm:px-6">
                   <span className="w-24 shrink-0 text-[0.86rem] text-moss">{short(d)}</span>
                   <span className="mono tabular w-16 shrink-0 text-[0.86rem]">{clock(t.time)}</span>
-                  <span className="min-w-0 flex-1 truncate text-[0.93rem] font-medium">{t.name}</span>
+                  <span className="min-w-0 flex-1 truncate text-[0.93rem] font-medium">
+                    {t.name}
+                    {t.houseName && <span className="font-normal text-moss"> · {t.houseName}</span>}
+                  </span>
                   {t.status !== "BOOKED" && <span className="mono text-[0.7rem] uppercase text-moss">{t.status === "DONE" ? "Came" : "No show"}</span>}
                 </li>
               )),

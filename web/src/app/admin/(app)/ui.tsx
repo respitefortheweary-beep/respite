@@ -21,8 +21,8 @@ export function Page({ title, eyebrow, actions, children, crumb, wide = false }:
 }
 
 /** White surface. Everything that can be read or tapped sits on one. */
-export function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <section className={`rounded-2xl bg-paper ring-1 ring-line ${className}`}>{children}</section>;
+export function Card({ children, className = "", id }: { children: React.ReactNode; className?: string; id?: string }) {
+  return <section id={id} className={`scroll-mt-24 rounded-2xl bg-paper ring-1 ring-line ${className}`}>{children}</section>;
 }
 
 export function CardHead({ title, hint, action }: { title: string; hint?: React.ReactNode; action?: React.ReactNode }) {

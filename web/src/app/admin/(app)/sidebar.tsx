@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Inbox, BedDouble, Users, CreditCard, ArrowUpRight, LogOut, Bell, Globe, UserCog, Wrench } from "lucide-react";
+import { Home, Inbox, BedDouble, Users, CreditCard, ArrowUpRight, LogOut, Bell, Globe, UserCog, Wrench, CalendarDays } from "lucide-react";
 import type { BedState } from "@/lib/availability";
 import { logout } from "../actions";
 import { LogoMark } from "@/components/brand";
@@ -9,6 +9,7 @@ import { LogoMark } from "@/components/brand";
 const ITEMS = [
   { href: "/admin", label: "Overview", short: "Home", icon: Home, exact: true },
   { href: "/admin/requests", label: "Requests", short: "Requests", icon: Inbox, badge: "requests" },
+  { href: "/admin/tours", label: "Tours", short: "Tours", icon: CalendarDays, rail: true },
   { href: "/admin/houses", label: "Houses", short: "Houses", icon: BedDouble },
   { href: "/admin/residents", label: "Residents", short: "Residents", icon: Users },
   { href: "/admin/payments", label: "Payments", short: "Payments", icon: CreditCard, badge: "overdue" },
@@ -63,11 +64,11 @@ function BellLink({ unread, failedEmails, className }: { unread: number; failedE
 export function Sidebar({ newRequests, overdue, beds, unread, failedEmails, repairs = 0 }: Props) {
   const path = usePathname();
   const count = { requests: newRequests, overdue, unread: unread + failedEmails, repairs } as const;
-  // tours and the waitlist live under Requests, so it stays lit there too
+  // the waitlist lives under Requests, so it stays lit there too
   const isActive = (href: string, exact?: boolean) =>
     exact
       ? path === href
-      : path.startsWith(href) || (href === "/admin/requests" && /^\/admin\/(tours|waitlist)/.test(path));
+      : path.startsWith(href) || (href === "/admin/requests" && /^\/admin\/waitlist/.test(path));
   const open = beds.filter((b) => b === "open").length;
 
   return (
@@ -157,8 +158,11 @@ export function Sidebar({ newRequests, overdue, beds, unread, failedEmails, repa
       <nav aria-label="Dashboard" className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-paper/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden print:hidden">
         <ul className="grid grid-cols-5">
           {TABS.map(({ href, short, icon: Icon, ...it }) => {
-            // repairs has no tab of its own on phones; it lives under Residents
-            const active = isActive(href, "exact" in it && it.exact) || (href === "/admin/residents" && path.startsWith("/admin/repairs"));
+            // repairs and tours have no tab of their own on phones; they live under Residents and Requests
+            const active =
+              isActive(href, "exact" in it && it.exact) ||
+              (href === "/admin/residents" && path.startsWith("/admin/repairs")) ||
+              (href === "/admin/requests" && path.startsWith("/admin/tours"));
             const n = "badge" in it ? count[it.badge] : 0;
             return (
               <li key={href}>

@@ -225,10 +225,14 @@ class Tour(Base):
     program: Mapped[str | None] = mapped_column(String, nullable=True)  # VETERAN | RECOVERY | SENIOR
     note: Mapped[str] = mapped_column(Text, default="")
     status: Mapped[str] = mapped_column(String, default="BOOKED")  # BOOKED | DONE | NO_SHOW | CANCELLED
+    # which house they want to see; empty for tours booked before there was a choice
+    houseId: Mapped[str | None] = mapped_column(ForeignKey("House.id"), nullable=True)
     cancelledBy: Mapped[str | None] = mapped_column(String, nullable=True)  # VISITOR | HOUSE
     bookedBy: Mapped[str] = mapped_column(String, default="VISITOR")  # VISITOR | HOUSE (taken over the phone)
     token: Mapped[str] = mapped_column(String, unique=True)  # the visitor's link to see or cancel it
     reminderSentAt: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
+
+    house: Mapped["House | None"] = relationship()
 
 
 class WaitlistEntry(Base):

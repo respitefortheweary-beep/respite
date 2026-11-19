@@ -521,6 +521,7 @@ export async function bookTourForCaller(_: FormState, form: FormData): Promise<F
       phone: str(form, "phone").trim(),
       email: email || null,
       note: str(form, "note").trim(),
+      houseId: str(form, "houseId") || null,
     });
     refresh();
     return { ok: email ? "Booked. We emailed them the details." : "Booked." };
