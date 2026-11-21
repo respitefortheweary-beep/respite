@@ -18,6 +18,8 @@ def _sign(params: dict[str, str], secret: str) -> str:
 
 # Cloudinary "incoming transformation": the sound track is taken off before the video is stored
 NO_SOUND = "ac_none"
+# put in the name of every video saved without sound, so older ones can be told apart
+SILENT = "-silent"
 
 
 def strip_audio(data: bytes, ext: str) -> bytes:

@@ -14,6 +14,7 @@ from .security import hash_password
 from .services.content import refresh_old_wording
 from .services.houses import ensure_houses
 from .services.notify import outbox
+from .services.silence import silence_old_videos
 
 log = logging.getLogger("respite")
 
@@ -47,6 +48,7 @@ def bootstrap() -> None:
     with SessionLocal() as db:
         ensure_houses(db)
         refresh_old_wording(db)
+        silence_old_videos(db)
         if db.scalar(select(func.count()).select_from(AdminUser)):
             return
         if s.admin_email and s.admin_password:

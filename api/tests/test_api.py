@@ -294,6 +294,31 @@ def test_videos_for_houses_and_rooms(client, auth):
     assert client.post(f"/admin/beds/x/videos/ticket", headers=auth).status_code == 404
 
 
+def test_older_videos_lose_their_sound(client, auth):
+    import json
+
+    from app.models import House
+    from app.services.silence import silence_old_videos
+
+    house = client.get("/admin/houses", headers=auth).json()[0]
+    (_tmp / "uploads").mkdir(exist_ok=True)
+    (_tmp / "uploads" / "old-tour.mp4").write_bytes(_clip_with_sound())
+    cdn = "https://res.cloudinary.com/demo/video/upload/v1/respite/old-tour.mp4"
+    with SessionLocal() as db:
+        db.get(House, house["id"]).videos = json.dumps(["/uploads/old-tour.mp4", cdn])
+        db.commit()
+        assert silence_old_videos(db) == 2
+        local, cloud = json.loads(db.get(House, house["id"]).videos)
+        # doing it again changes nothing
+        assert silence_old_videos(db) == 0
+        db.get(House, house["id"]).videos = "[]"
+        db.commit()
+    assert cloud == "https://res.cloudinary.com/demo/video/upload/ac_none/v1/respite/old-tour.mp4"
+    assert local.startswith("/uploads/") and "-silent" in local
+    streams = _streams(_tmp / "uploads" / local.removeprefix("/uploads/"))
+    assert "Video:" in streams and "Audio:" not in streams
+
+
 def test_password_change_revokes_old_tokens(client):
     tok = client.post("/auth/login", json={"email": "owner@example.com", "password": PW}).json()["accessToken"]
     h = {"Authorization": f"Bearer {tok}"}

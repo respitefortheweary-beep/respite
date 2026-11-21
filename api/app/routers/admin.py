@@ -27,7 +27,7 @@ from ..services.email import site_url
 from .notifications import failed_count, unread_count
 from ..services.fmt import first_name, money, month_label, month_start, parse_day, period
 from ..services.labels import ACTIVE_STATUSES, PAY_METHODS, STATUSES
-from ..services.storage import save_photo, strip_audio, video_ticket
+from ..services.storage import SILENT, save_photo, strip_audio, video_ticket
 
 log = logging.getLogger("respite.admin")
 router = APIRouter(prefix="/admin", tags=["owner dashboard"], dependencies=[Depends(current_admin)])
@@ -490,7 +490,7 @@ def start_video(kind: str, id_: str, db: Session = Depends(get_db)):
     thing = _owner(db, kind, id_)
     if not get_settings().can_upload_photos:
         raise HTTPException(400, "Uploads aren't set up on this server yet.")
-    ticket = video_ticket(f"video-{thing.id}-{int(time.time() * 1000)}")
+    ticket = video_ticket(f"video-{thing.id}-{int(time.time() * 1000)}{SILENT}")
     return {"direct": bool(ticket), **(ticket or {})}
 
 
@@ -528,7 +528,7 @@ def upload_video(kind: str, id_: str, video: UploadFile = File(...), db: Session
         log.exception("Couldn't take the sound off a video")
         raise HTTPException(400, "That video couldn't be read. Try an MP4 file.") from None
     try:
-        url = save_photo(f"video-{thing.id}-{int(time.time() * 1000)}.{VIDEO_TYPES[ctype]}", data, ctype)
+        url = save_photo(f"video-{thing.id}-{int(time.time() * 1000)}{SILENT}.{VIDEO_TYPES[ctype]}", data, ctype)
     except Exception:
         log.exception("Video upload failed")
         raise HTTPException(502, "The video couldn't be saved. Try again in a minute.") from None
