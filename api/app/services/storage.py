@@ -1,7 +1,11 @@
 import hashlib
+import subprocess
+import tempfile
 import time
+from pathlib import Path
 
 import httpx
+import imageio_ffmpeg
 
 from ..config import get_settings
 
@@ -12,6 +16,25 @@ def _sign(params: dict[str, str], secret: str) -> str:
     return hashlib.sha1((payload + secret).encode()).hexdigest()
 
 
+# Cloudinary "incoming transformation": the sound track is taken off before the video is stored
+NO_SOUND = "ac_none"
+
+
+def strip_audio(data: bytes, ext: str) -> bytes:
+    """Property videos are shown without sound, so the sound track is removed before saving.
+    The picture is copied as it is (no re-encoding), so this is quick and loses no quality."""
+    with tempfile.TemporaryDirectory() as tmp:
+        src, out = Path(tmp) / f"in.{ext}", Path(tmp) / f"out.{ext}"
+        src.write_bytes(data)
+        subprocess.run(
+            [imageio_ffmpeg.get_ffmpeg_exe(), "-y", "-loglevel", "error", "-i", str(src), "-map", "0:v", "-c", "copy", "-an", str(out)],
+            check=True,
+            capture_output=True,
+            timeout=120,
+        )
+        return out.read_bytes()
+
+
 def _to_cloudinary(creds: tuple[str, str, str], name: str, data: bytes, content_type: str, folder: str) -> str:
     kind = "video" if content_type.startswith("video/") else "image"
     key, secret, cloud = creds
@@ -19,6 +42,7 @@ def _to_cloudinary(creds: tuple[str, str, str], name: str, data: bytes, content_
         "folder": folder,
         "public_id": name.rsplit(".", 1)[0],
         "timestamp": str(int(time.time())),
+        **({"transformation": NO_SOUND} if kind == "video" else {}),
     }
     r = httpx.post(
         f"https://api.cloudinary.com/v1_1/{cloud}/{kind}/upload",
@@ -69,12 +93,13 @@ def save_photo(name: str, data: bytes, content_type: str) -> str:
 
 def video_ticket(name: str) -> dict | None:
     """Videos are too big to pass through the website, so with Cloudinary set up the browser sends
-    them straight there. This signs that one upload; the secret never leaves the server."""
+    them straight there. This signs that one upload; the secret never leaves the server.
+    Cloudinary removes the sound track before storing it, so property videos have no audio."""
     s = get_settings()
     if not s.cloudinary:
         return None
     key, secret, cloud = s.cloudinary
-    params = {"folder": s.cloudinary_folder, "public_id": name, "timestamp": str(int(time.time()))}
+    params = {"folder": s.cloudinary_folder, "public_id": name, "timestamp": str(int(time.time())), "transformation": NO_SOUND}
     return {
         "url": f"https://api.cloudinary.com/v1_1/{cloud}/video/upload",
         "fields": {**params, "api_key": key, "signature": _sign(params, secret)},

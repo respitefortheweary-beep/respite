@@ -1,4 +1,5 @@
 import os
+import subprocess
 import tempfile
 from pathlib import Path
 
@@ -20,6 +21,7 @@ os.environ.update(
     NOTIFY_WORKER="false",  # tests send the outbox by hand
 )
 
+import imageio_ffmpeg  # noqa: E402
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
@@ -252,15 +254,37 @@ def test_house_photos(client, auth):
     assert client.post(f"/admin/houses/{house['id']}/photos/remove", headers=auth, json={"src": first}).json()["photos"] == []
 
 
+def _clip_with_sound() -> bytes:
+    """A one-second MP4 with a picture and a tone, made by the same ffmpeg the API uses."""
+    out = _tmp / "clip.mp4"
+    subprocess.run(
+        [imageio_ffmpeg.get_ffmpeg_exe(), "-y", "-loglevel", "error", "-f", "lavfi", "-i", "testsrc=duration=1:size=64x64:rate=10",
+         "-f", "lavfi", "-i", "sine=frequency=440:duration=1", "-shortest", str(out)],
+        check=True,
+    )
+    assert "Audio:" in _streams(out)
+    return out.read_bytes()
+
+
+def _streams(path: Path) -> str:
+    # ffmpeg -i with no output lists the file's streams on stderr
+    return subprocess.run([imageio_ffmpeg.get_ffmpeg_exe(), "-hide_banner", "-i", str(path)], capture_output=True, text=True).stderr
+
+
 def test_videos_for_houses_and_rooms(client, auth):
     house = client.get("/admin/houses", headers=auth).json()[0]
     room = client.get("/admin/rooms", headers=auth).json()[0]
     # no Cloudinary in tests: the video comes through the API
     assert client.post(f"/admin/houses/{house['id']}/videos/ticket", headers=auth).json() == {"direct": False}
-    up = client.post(f"/admin/rooms/{room['id']}/videos", headers=auth, files={"video": ("t.mp4", b"fake mp4", "video/mp4")})
+    up = client.post(f"/admin/rooms/{room['id']}/videos", headers=auth, files={"video": ("t.mp4", _clip_with_sound(), "video/mp4")})
     assert up.status_code == 201, up.text
     src = up.json()["videos"][-1]
     assert src.startswith("/uploads/") and src.endswith(".mp4")
+    # the sound track is taken off before saving; the picture stays
+    streams = _streams(_tmp / "uploads" / src.removeprefix("/uploads/"))
+    assert "Video:" in streams and "Audio:" not in streams
+    # something that isn't really a video is turned down instead of saved
+    assert client.post(f"/admin/rooms/{room['id']}/videos", headers=auth, files={"video": ("t.mp4", b"fake mp4", "video/mp4")}).status_code == 400
     assert client.post(f"/admin/rooms/{room['id']}/videos", headers=auth, files={"video": ("a.png", b"x", "image/png")}).status_code == 400
     assert client.post(f"/admin/houses/{house['id']}/videos/link", headers=auth, json={"src": "https://evil.example/v.mp4"}).status_code == 400
     cdn = "https://res.cloudinary.com/demo/video/upload/v1/respite/tour.mp4"

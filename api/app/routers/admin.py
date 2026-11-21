@@ -27,7 +27,7 @@ from ..services.email import site_url
 from .notifications import failed_count, unread_count
 from ..services.fmt import first_name, money, month_label, month_start, parse_day, period
 from ..services.labels import ACTIVE_STATUSES, PAY_METHODS, STATUSES
-from ..services.storage import save_photo, video_ticket
+from ..services.storage import save_photo, strip_audio, video_ticket
 
 log = logging.getLogger("respite.admin")
 router = APIRouter(prefix="/admin", tags=["owner dashboard"], dependencies=[Depends(current_admin)])
@@ -522,6 +522,11 @@ def upload_video(kind: str, id_: str, video: UploadFile = File(...), db: Session
         raise HTTPException(400, "Choose a video first.")
     if len(data) > MAX_VIDEO:
         raise HTTPException(400, "That video is over 100 MB. Use a shorter one.")
+    try:
+        data = strip_audio(data, VIDEO_TYPES[ctype])
+    except Exception:
+        log.exception("Couldn't take the sound off a video")
+        raise HTTPException(400, "That video couldn't be read. Try an MP4 file.") from None
     try:
         url = save_photo(f"video-{thing.id}-{int(time.time() * 1000)}.{VIDEO_TYPES[ctype]}", data, ctype)
     except Exception:
