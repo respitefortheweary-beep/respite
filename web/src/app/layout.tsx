@@ -10,8 +10,8 @@ const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono"
 // the town comes from the houses listed, so a new house in a new town shows up in search titles by itself
 export async function generateMetadata(): Promise<Metadata> {
   const where = await getWhere();
-  const TITLE = `Respite for the Weary · Sober, shared homes in ${where}`;
-  const DESCRIPTION = `Safe, supportive shared homes in ${where} for veterans, people in recovery and independent seniors. See open beds and request a room.`;
+  const TITLE = `Sober Living, Veteran & Senior Housing in ${where} · Respite for the Weary`;
+  const DESCRIPTION = `Sober living and supportive shared homes in ${where} for veterans, people in recovery and independent seniors. Furnished rooms, VA benefits accepted. See open beds.`;
   return {
   metadataBase: new URL(siteUrl()),
   title: { default: TITLE, template: "%s · Respite for the Weary" },

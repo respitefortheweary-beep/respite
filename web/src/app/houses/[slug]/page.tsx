@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const description = (home.summary || `A sober, shared house in ${where}.`) + ` ${roomMix(rooms)}.${from}`;
   const image = parseList(home.photos)[0] || "/images/hero/house-day.webp";
   return {
-    title: `${home.name} · ${where}`,
+    title: `${home.name} · Sober shared house and rooms for rent in ${where}`,
     description,
     alternates: { canonical: `/houses/${home.slug}` },
     openGraph: { type: "website", url: `/houses/${home.slug}`, title: home.name, description, images: [{ url: image, alt: home.name }] },

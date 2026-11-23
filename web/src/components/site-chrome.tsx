@@ -5,6 +5,7 @@ import { Logo, Roll } from "./brand";
 import { HeaderShell } from "./header-shell";
 import { MobileMenu } from "./mobile-menu";
 import { EqualHousingLogo } from "./equal-housing";
+import { PROGRAMS } from "@/lib/programs";
 
 export { Roll, Logo } from "./brand";
 
@@ -94,6 +95,7 @@ export async function SiteFooter() {
             <ul className="space-y-1.5 text-white/75">
               {[
                 ["/houses", "Houses and open beds"],
+                ...PROGRAMS.map((p) => [p.path, p.label]),
                 ["/apply", "Request a room"],
                 ["/tour", "Book a tour"],
                 ["/waitlist", "Join the waitlist"],

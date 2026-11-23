@@ -41,7 +41,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <JsonLd data={[...organizationLd(house), ...(faq.items.length ? [faqLd(faq.items)] : [])]} />
+      <JsonLd data={[...organizationLd(house, listed.map((h) => h.town)), ...(faq.items.length ? [faqLd(faq.items)] : [])]} />
       <SiteHeader />
       <main id="main" tabIndex={-1} className="outline-none">
         {/* ───────── Hero: one screen, the house in the morning, the live count and the search ───────── */}

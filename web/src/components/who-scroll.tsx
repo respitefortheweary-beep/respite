@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import type { Chapter } from "@/lib/types";
+import { programFor } from "@/lib/programs";
 
 export function WhoScroll({ chapters }: { chapters: Chapter[] }) {
   const [active, setActive] = useState(0);
@@ -114,8 +115,8 @@ export function WhoScroll({ chapters }: { chapters: Chapter[] }) {
                   <p className="text-[0.95rem] text-moss">{c.referred}</p>
                 </div>
               )}
-              <Link href="/houses" className="group mt-6 inline-flex items-center gap-2 font-medium text-ink">
-                See the houses
+              <Link href={programFor(c.key).path} className="group mt-6 inline-flex items-center gap-2 font-medium text-ink">
+                {programFor(c.key).label}: how it works
                 <ArrowRight size={17} className="transition-transform duration-200 ease-[var(--ease-out)] group-hover:translate-x-1" />
               </Link>
             </div>
