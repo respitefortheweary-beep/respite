@@ -4,7 +4,7 @@ import { Check, Copy, Loader2, Mail, MessageSquare } from "lucide-react";
 import { updateResident, type FormState } from "../../../actions";
 import { Label, btnPrimary, input } from "../../ui";
 
-const tile = "press flex h-12 items-center justify-center gap-2 rounded-xl bg-white/[.08] px-2 text-[0.9rem] font-medium text-white transition-colors hover:bg-white/[.14] disabled:opacity-45";
+const tile = "press flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-2 text-[0.9rem] font-semibold text-ink ring-1 ring-line-strong transition-colors hover:bg-oat disabled:opacity-45";
 
 /** Three ways to hand a resident their pay link: copy it, text it, or email it. */
 export function PayLink({ url, phone, firstName, hasEmail, send }: { url: string; phone: string | null; firstName: string; hasEmail: boolean; send: () => Promise<FormState> }) {
@@ -30,7 +30,7 @@ export function PayLink({ url, phone, firstName, hasEmail, send }: { url: string
 
   return (
     <div>
-      <a href={url} target="_blank" className="mono block truncate rounded-xl bg-white/[.06] px-3.5 py-3 text-[0.78rem] text-white/70 ring-1 ring-white/10 transition-colors hover:text-white">
+      <a href={url} target="_blank" className="mono block truncate rounded-xl bg-white px-3.5 py-3 text-[0.8rem] text-moss ring-1 ring-line transition-colors hover:text-porch">
         {url.replace(/^https?:\/\//, "")}
       </a>
       <div className="mt-2 grid grid-cols-3 gap-2">
@@ -50,7 +50,7 @@ export function PayLink({ url, phone, firstName, hasEmail, send }: { url: string
           {pending ? <Loader2 size={15} className="animate-spin" /> : <Mail size={15} />} Email
         </button>
       </div>
-      <p className={`mt-2 min-h-5 text-[0.8rem] leading-snug ${note?.error ? "text-[#ff9c82]" : "text-white/55"}`} aria-live="polite">
+      <p className={`mt-2 min-h-5 text-[0.8rem] leading-snug ${note?.error ? "text-ember" : "text-moss"}`} aria-live="polite">
         {note?.error ?? note?.ok ?? (hasEmail ? "They pay from this link. No password needed." : "No email on file, so text them the link.")}
       </p>
     </div>
@@ -88,7 +88,7 @@ export function EditResident({ id, name, phone, email, rent }: { id: string; nam
         <button disabled={pending} className={`${btnPrimary} disabled:opacity-60`}>
           {pending && <Loader2 size={15} className="animate-spin" />} Save details
         </button>
-        <span className="mono flex items-center gap-1 text-[0.72rem] uppercase text-moss" aria-live="polite">
+        <span className="mono flex items-center gap-1 text-[0.8rem] text-moss" aria-live="polite">
           {!pending && state?.ok && (
             <>
               <Check size={12} strokeWidth={3} /> {state.ok}

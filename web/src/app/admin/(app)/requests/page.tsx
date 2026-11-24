@@ -30,7 +30,7 @@ export default async function Requests({ searchParams }: { searchParams: Promise
     >
       <span className="flex items-start justify-between gap-3">
         <span className="font-medium leading-snug">{r.name}</span>
-        <span className="mono shrink-0 pt-0.5 text-[0.72rem] uppercase text-moss">{timeAgo(r.createdAt)}</span>
+        <span className="mono shrink-0 pt-0.5 text-[0.8rem] text-moss">{timeAgo(r.createdAt)}</span>
       </span>
       <span className="mt-1 block text-[0.86rem] text-moss">
         {PROGRAMS[r.program as Program]?.long ?? "Not said"} · {r.room?.name.replace("The ", "") ?? "Any room"}
@@ -103,7 +103,7 @@ export default async function Requests({ searchParams }: { searchParams: Promise
                     key={col}
                     href={`/admin/requests?s=${col}`}
                     aria-current={on ? "true" : undefined}
-                    className={`press flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-[0.9rem] ${on ? "bg-ink font-medium text-white" : "bg-paper text-ink ring-1 ring-line"}`}
+                    className={`press flex h-10 shrink-0 items-center gap-2 rounded-xl px-4 text-[0.9rem] ${on ? "bg-ink font-medium text-white" : "bg-paper text-ink ring-1 ring-line"}`}
                   >
                     {STATUS_LABEL[col]}
                     <span className={`mono tabular text-[0.76rem] ${on ? "text-porch" : "text-moss"}`}>{by(col).length}</span>
@@ -135,7 +135,7 @@ export default async function Requests({ searchParams }: { searchParams: Promise
                         <span className="mono mr-2 text-[0.72rem] font-normal text-moss">{n + 1}/4</span>
                         {STATUS_LABEL[col]}
                       </span>
-                      <span className={`mono tabular grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-[0.72rem] ${col === "NEW" && items.length ? "bg-porch text-ink" : "text-moss"}`}>{items.length}</span>
+                      <span className={`mono tabular grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-[0.72rem] ${col === "NEW" && items.length ? "bg-porch text-white" : "text-moss"}`}>{items.length}</span>
                     </h2>
                     <p className="mt-0.5 text-[0.8rem] text-moss">{HINT[col]}</p>
                   </header>

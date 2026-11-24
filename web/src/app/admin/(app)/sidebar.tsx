@@ -22,23 +22,18 @@ const ITEMS = [
 const TABS = ITEMS.filter((it) => !("rail" in it));
 
 function Mark() {
-  return <LogoMark onDark className="h-[24px] w-[27px] text-white" />;
+  return <LogoMark className="h-[24px] w-[27px] text-ink" />;
 }
 
-/** Six small windows, one per bed. Lit means open. */
-function Windows({ beds }: { beds: BedState[] }) {
+/** How full the houses are: a thin bar, teal for free beds. */
+function BedBar({ beds, className = "" }: { beds: BedState[]; className?: string }) {
+  const n = beds.length || 1;
+  const open = beds.filter((b) => b === "open").length;
+  const soon = beds.filter((b) => b === "soon").length;
   return (
-    <span className="flex gap-1" aria-hidden>
-      {beds.map((s, i) => (
-        <span
-          key={i}
-          className="h-[15px] w-3 rounded-[2px]"
-          style={{
-            background: s === "open" ? "linear-gradient(#ffe3a6, #f0a53a)" : s === "soon" ? "rgb(240 165 58 / .3)" : "rgb(255 255 255 / .12)",
-            boxShadow: s === "open" ? "0 0 10px 1px rgb(240 165 58 / .5)" : "none",
-          }}
-        />
-      ))}
+    <span className={`flex h-1.5 overflow-hidden rounded-full bg-line ${className}`} aria-hidden>
+      <span className="bg-porch" style={{ width: `${(open / n) * 100}%` }} />
+      <span className="bg-porch/35" style={{ width: `${(soon / n) * 100}%` }} />
     </span>
   );
 }
@@ -51,7 +46,7 @@ const initial = (me: Me) => (me?.name || me?.email || "?").trim().charAt(0).toUp
 /** Who is signed in, as a round initial. */
 function Avatar({ me, size = 32 }: { me: Me; size?: number }) {
   return (
-    <span className="grid shrink-0 place-items-center rounded-full bg-porch font-semibold text-ink" style={{ width: size, height: size, fontSize: size * 0.44 }} aria-hidden>
+    <span className="grid shrink-0 place-items-center rounded-full bg-porch font-semibold text-white" style={{ width: size, height: size, fontSize: size * 0.44 }} aria-hidden>
       {initial(me)}
     </span>
   );
@@ -63,23 +58,23 @@ function PhoneAccount({ me }: { me: Me }) {
     <details className="group relative">
       <summary
         aria-label={me ? `Signed in as ${me.name || me.email}. Account and log out` : "Account and log out"}
-        className="press grid h-10 w-10 cursor-pointer list-none place-items-center rounded-full hover:bg-white/10 [&::-webkit-details-marker]:hidden"
+        className="press grid h-10 w-10 cursor-pointer list-none place-items-center rounded-full hover:bg-oat [&::-webkit-details-marker]:hidden"
       >
         <Avatar me={me} size={28} />
       </summary>
-      <div className="absolute right-0 top-12 z-50 w-64 rounded-2xl bg-paper p-2 text-ink shadow-[0_18px_50px_-12px_rgb(0_0_0/.45)] ring-1 ring-line">
+      <div className="absolute right-0 top-12 z-50 w-64 rounded-2xl bg-paper p-2 text-ink shadow-[0_12px_40px_-12px_rgba(20,24,28,0.25)] ring-1 ring-line">
         {me && (
           <div className="flex items-center gap-3 px-3 py-2.5">
             <Avatar me={me} />
             <div className="min-w-0">
-              <p className="mono text-[0.66rem] uppercase text-moss">Signed in as</p>
+              <p className="text-[0.75rem] text-moss">Signed in as</p>
               <p className="truncate text-[0.93rem] font-medium">{me.name || me.email}</p>
               {me.name && <p className="truncate text-[0.8rem] text-moss">{me.email}</p>}
             </div>
           </div>
         )}
         <div className="mt-1 border-t border-line pt-1">
-          <Link href="/admin/team" className="flex h-11 items-center gap-3 rounded-xl px-3 text-[0.93rem] hover:bg-ink/[.04]">
+          <Link href="/admin/team" className="flex h-11 items-center gap-3 rounded-xl px-3 text-[0.93rem] hover:bg-oat">
             <UserCog size={16} className="text-moss" /> Team and your account
           </Link>
           <form action={logout}>
@@ -93,7 +88,7 @@ function PhoneAccount({ me }: { me: Me }) {
   );
 }
 
-/** The bell: amber when something new came in, ember when an email couldn't be sent. */
+/** The bell: teal when something new came in, ember when an email couldn't be sent. */
 function BellLink({ unread, failedEmails, className }: { unread: number; failedEmails: number; className: string }) {
   const n = unread + failedEmails;
   const label = n ? `Notifications, ${unread} unread${failedEmails ? `, ${failedEmails} emails failed` : ""}` : "Notifications";
@@ -102,7 +97,7 @@ function BellLink({ unread, failedEmails, className }: { unread: number; failedE
       <span className="relative">
         <Bell size={18} />
         {n > 0 && (
-          <span className={`absolute -right-[3px] -top-[2px] h-2 w-2 rounded-full ring-2 ring-night ${failedEmails ? "bg-ember" : "bg-porch shadow-[0_0_8px_1px_rgb(240_165_58/.6)]"}`} />
+          <span className={`absolute -right-[3px] -top-[2px] h-2 w-2 rounded-full ring-2 ring-white ${failedEmails ? "bg-ember" : "bg-porch"}`} />
         )}
       </span>
     </Link>
@@ -122,30 +117,30 @@ export function Sidebar({ newRequests, overdue, beds, unread, failedEmails, repa
   return (
     <>
       {/* Phone: slim top bar */}
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between bg-night px-4 text-white md:hidden print:hidden">
+      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-line bg-white px-4 text-ink md:hidden print:hidden">
         <Link href="/admin" className="flex items-center gap-2" aria-label="Dashboard home">
           <Mark />
-          <span className="text-[1.02rem] font-semibold tracking-[-0.04em]">Respite</span>
+          <span className="text-[1.02rem] font-extrabold tracking-[-0.03em]">Respite</span>
         </Link>
         <div className="flex items-center gap-1">
-          <span className="mr-2 flex items-center gap-2 text-white/60">
-            <Windows beds={beds} />
-            <span className="mono text-[0.72rem]">{open}/{beds.length}</span>
+          <span className="mr-2 flex items-center gap-2 text-moss">
+            <BedBar beds={beds} className="w-12" />
+            <span className="tabular text-[0.75rem] font-semibold">{open}/{beds.length}</span>
           </span>
-          <BellLink unread={unread} failedEmails={failedEmails} className="press grid h-10 w-10 place-items-center rounded-full text-white/70 hover:bg-white/10 hover:text-white" />
-          <Link href="/admin/site" aria-label="Website" aria-current={isActive("/admin/site") ? "page" : undefined} className={`press grid h-10 w-10 place-items-center rounded-full hover:bg-white/10 hover:text-white ${isActive("/admin/site") ? "bg-white/10 text-porch" : "text-white/70"}`}>
+          <BellLink unread={unread} failedEmails={failedEmails} className="press grid h-10 w-10 place-items-center rounded-full text-moss hover:bg-oat hover:text-ink" />
+          <Link href="/admin/site" aria-label="Website" aria-current={isActive("/admin/site") ? "page" : undefined} className={`press grid h-10 w-10 place-items-center rounded-full hover:bg-oat hover:text-ink ${isActive("/admin/site") ? "bg-oat text-porch" : "text-moss"}`}>
             <Globe size={18} />
           </Link>
           <PhoneAccount key={path} me={me} />
         </div>
       </header>
 
-      {/* Desktop: the night rail */}
-      <aside className="no-scrollbar sticky top-0 hidden h-dvh flex-col overflow-y-auto bg-night px-3 py-5 text-white md:flex print:hidden">
+      {/* Desktop: the side rail */}
+      <aside className="no-scrollbar sticky top-0 hidden h-dvh flex-col overflow-y-auto border-r border-line bg-white px-3 py-5 text-ink md:flex print:hidden">
         <Link href="/admin" className="flex items-center gap-2.5 px-3">
           <Mark />
-          <span className="text-[1.06rem] font-semibold leading-none tracking-[-0.045em]">
-            Respite <span className="font-normal text-white/55">for the Weary</span>
+          <span className="text-[1.06rem] font-extrabold leading-none tracking-[-0.03em]">
+            Respite <span className="font-medium text-moss">for the Weary</span>
           </span>
         </Link>
 
@@ -160,13 +155,13 @@ export function Sidebar({ newRequests, overdue, beds, unread, failedEmails, repa
                     href={href}
                     aria-current={active ? "page" : undefined}
                     className={`group relative flex h-10 items-center gap-3 rounded-xl px-3 text-[0.93rem] transition-colors duration-150 ${
-                      active ? "bg-white/[.09] font-medium text-white" : "text-white/60 hover:bg-white/[.05] hover:text-white"
+                      active ? "bg-porch/[.08] font-semibold text-ink" : "text-moss hover:bg-oat hover:text-ink"
                     }`}
                   >
-                    <Icon size={17} strokeWidth={1.8} className={active ? "text-porch" : "text-white/55 group-hover:text-white/80"} />
+                    <Icon size={17} strokeWidth={1.8} className={active ? "text-porch" : "text-moss/80 group-hover:text-ink"} />
                     <span className="flex-1">{label}</span>
                     {n > 0 && (
-                      <span className={`mono tabular grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-[0.7rem] font-semibold ${"badge" in it && (it.badge === "overdue" || (it.badge === "unread" && failedEmails)) ? "bg-ember text-white" : "bg-porch text-ink"}`}>
+                      <span className={`mono tabular grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-[0.7rem] font-semibold ${"badge" in it && (it.badge === "overdue" || (it.badge === "unread" && failedEmails)) ? "bg-ember text-white" : "bg-porch text-white"}`}>
                         {n}
                       </span>
                     )}
@@ -178,33 +173,33 @@ export function Sidebar({ newRequests, overdue, beds, unread, failedEmails, repa
         </nav>
 
         <div className="mt-auto pt-6">
-          <Link href="/admin/houses" className="block rounded-xl px-3 py-3 transition-colors hover:bg-white/[.05]">
-            <span className="mono block text-[0.68rem] uppercase tracking-[0.02em] text-white/55">Tonight</span>
-            <span className="mt-2 flex items-center justify-between">
-              <Windows beds={beds} />
-              <span className="mono text-[0.78rem] text-white/70">
-                {open} of {beds.length} open
+          <Link href="/admin/houses" className="block rounded-xl bg-oat px-3 py-3 transition-colors hover:bg-line">
+            <span className="flex items-center justify-between text-[0.8rem]">
+              <span className="font-semibold text-ink">Beds free</span>
+              <span className="tabular text-moss">
+                {open} of {beds.length}
               </span>
             </span>
+            <BedBar beds={beds} className="mt-2" />
           </Link>
-          <div className="mt-2 border-t border-white/10 pt-2 text-[0.9rem]">
-            <Link href="/" target="_blank" className="flex h-10 items-center gap-3 rounded-xl px-3 text-white/60 transition-colors hover:bg-white/[.05] hover:text-white">
-              <ArrowUpRight size={17} className="text-white/55" /> View public site
+          <div className="mt-2 border-t border-line pt-2 text-[0.9rem]">
+            <Link href="/" target="_blank" className="flex h-10 items-center gap-3 rounded-xl px-3 text-moss transition-colors hover:bg-oat hover:text-ink">
+              <ArrowUpRight size={17} className="text-moss/80" /> View public site
             </Link>
           </div>
-          <div className="mt-2 rounded-2xl bg-white/[.05] p-2">
+          <div className="mt-2 rounded-2xl p-1 ring-1 ring-line">
             {me && (
-              <Link href="/admin/team" className="flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-white/[.05]" title="Team and your account">
+              <Link href="/admin/team" className="flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-oat" title="Team and your account">
                 <Avatar me={me} />
                 <span className="min-w-0">
-                  <span className="block text-[0.66rem] uppercase tracking-[0.02em] text-white/50">Signed in as</span>
-                  <span className="block truncate text-[0.88rem] font-medium text-white">{me.name || me.email}</span>
+                  <span className="block text-[0.72rem] text-moss">Signed in as</span>
+                  <span className="block truncate text-[0.88rem] font-semibold text-ink">{me.name || me.email}</span>
                 </span>
               </Link>
             )}
             <form action={logout}>
-              <button className="mt-1 flex h-10 w-full items-center gap-3 rounded-xl px-2 text-[0.9rem] text-white/75 transition-colors hover:bg-white/[.08] hover:text-white">
-                <LogOut size={16} className="text-white/60" /> Log out
+              <button className="mt-1 flex h-10 w-full items-center gap-3 rounded-xl px-2 text-[0.9rem] text-moss transition-colors hover:bg-ember/[.06] hover:text-ember">
+                <LogOut size={16} /> Log out
               </button>
             </form>
           </div>
@@ -212,7 +207,7 @@ export function Sidebar({ newRequests, overdue, beds, unread, failedEmails, repa
       </aside>
 
       {/* Phone: tab bar within thumb reach */}
-      <nav aria-label="Dashboard" className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-paper/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden print:hidden">
+      <nav aria-label="Dashboard" className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden print:hidden">
         <ul className="grid grid-cols-5">
           {TABS.map(({ href, short, icon: Icon, ...it }) => {
             // repairs and tours have no tab of their own on phones; they live under Residents and Requests
@@ -227,7 +222,7 @@ export function Sidebar({ newRequests, overdue, beds, unread, failedEmails, repa
                   <span className="relative">
                     <Icon size={21} strokeWidth={active ? 2.2 : 1.7} />
                     {n > 0 && (
-                      <span className={`mono absolute -right-2.5 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full px-1 text-[0.62rem] font-semibold ${"badge" in it && it.badge === "overdue" ? "bg-ember text-white" : "bg-porch text-ink"}`}>
+                      <span className={`mono absolute -right-2.5 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full px-1 text-[0.62rem] font-semibold ${"badge" in it && it.badge === "overdue" ? "bg-ember text-white" : "bg-porch text-white"}`}>
                         {n}
                       </span>
                     )}

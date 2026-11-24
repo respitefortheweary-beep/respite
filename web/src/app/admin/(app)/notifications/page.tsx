@@ -53,7 +53,7 @@ function Lamp({ on }: { on: boolean }) {
       className="mt-[5px] h-[13px] w-[10px] shrink-0 rounded-[2px]"
       style={{
         background: on ? "linear-gradient(#ffe3a6, #f0a53a)" : "rgb(15 17 16 / .1)",
-        boxShadow: on ? "0 0 9px 1px rgb(240 165 58 / .45)" : "none",
+        boxShadow: on ? "0 0 9px 1px rgb(14 124 116 / .45)" : "none",
       }}
     />
   );
@@ -149,7 +149,7 @@ async function EmailList({ status }: { status: string }) {
               const [label, tone] = PILL[n.status];
               return (
                 <li key={n.id} className="flex flex-col gap-2.5 px-5 py-4 sm:flex-row sm:items-start sm:gap-4 sm:px-6">
-                  <span className={`mono inline-flex h-6 w-fit shrink-0 items-center rounded-full px-2.5 text-[0.72rem] font-medium uppercase sm:mt-px sm:w-[5.5rem] sm:justify-center ${tone}`}>{label}</span>
+                  <span className={`mono inline-flex h-6 w-fit shrink-0 items-center rounded-full px-2.5 text-[0.8rem] font-medium sm:mt-px sm:w-[5.5rem] sm:justify-center ${tone}`}>{label}</span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[0.95rem] font-medium leading-snug">{n.subject}</p>
                     <p className="mt-0.5 truncate text-[0.84rem] text-moss">

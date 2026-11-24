@@ -32,12 +32,12 @@ export default async function TourPage({ searchParams }: { searchParams: Promise
   return (
     <div className="flex min-h-dvh flex-col bg-white">
       <header className="mx-auto flex w-full max-w-3xl items-center gap-4 px-4 pt-5 sm:px-6">
-        <Link href="/" aria-label="Close and go home" className="press grid h-10 w-10 shrink-0 place-items-center rounded-full text-ink/60 hover:bg-ink/5 hover:text-ink">
+        <Link href="/" aria-label="Close and go home" className="press grid h-10 w-10 shrink-0 place-items-center rounded-xl text-moss hover:bg-oat hover:text-ink">
           <X size={22} />
         </Link>
       </header>
       <main id="main" className="mx-auto w-full max-w-3xl flex-1 px-4 pb-24 pt-10 sm:px-6 sm:pt-16">
-        <h1 className="display-2 text-[clamp(2.1rem,5.4vw,3.4rem)]" style={{ textWrap: "balance" }}>
+        <h1 className="text-[clamp(1.8rem,4.5vw,2.6rem)] font-extrabold leading-tight tracking-[-0.03em]" style={{ textWrap: "balance" }}>
           {picked ? <>Come and see {picked.name}.</> : <>Come and see where you&apos;d live.</>}
         </h1>
         <p className="mt-4 max-w-xl text-[1.05rem] text-ink/65" style={{ textWrap: "pretty" }}>

@@ -20,11 +20,11 @@ export default async function WaitlistPlace({ params }: { params: Promise<{ toke
 
   return (
     <QuietPage>
-      <p className="mono text-[0.72rem] uppercase text-white/55">{left ? "Off the waitlist" : "On the waitlist"}</p>
+      <p className="text-[0.85rem] font-semibold text-porch">{left ? "Off the waiting list" : "On the waiting list"}</p>
       <h1 className="display-2 mt-3 text-[clamp(2rem,7vw,2.8rem)]" style={{ textWrap: "balance" }}>
         {left ? `You're off the list, ${entry.firstName}.` : `Leave the waitlist, ${entry.firstName}?`}
       </h1>
-      <p className="mx-auto mt-4 max-w-sm text-[0.98rem] leading-relaxed text-white/60" style={{ textWrap: "pretty" }}>
+      <p className="mx-auto mt-4 max-w-sm text-[0.98rem] leading-relaxed text-moss" style={{ textWrap: "pretty" }}>
         {left
           ? "We won't email you about open beds. If you change your mind, join again any time."
           : `You'll stop getting emails about open beds${entry.room ? ` in ${entry.room}` : ""}.`}
@@ -43,8 +43,8 @@ export default async function WaitlistPlace({ params }: { params: Promise<{ toke
           See the houses
         </Link>
       </div>
-      <p className="mono mt-8 text-[0.8rem] text-white/55">
-        Questions? <a href={house.phoneHref} className="underline underline-offset-4 hover:text-white/70">{house.phone}</a>
+      <p className="mt-8 text-[0.8rem] text-moss">
+        Questions? <a href={house.phoneHref} className="underline underline-offset-4 hover:text-ink">{house.phone}</a>
       </p>
     </QuietPage>
   );

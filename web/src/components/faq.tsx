@@ -19,7 +19,7 @@ export function Faq({ items }: { items: [string, string][] }) {
               {q}
               <span
                 className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ring-1 ring-line-strong transition-[transform,background-color] duration-300 ease-[var(--ease-out)] ${
-                  isOpen ? "rotate-45 bg-porch text-ink ring-porch" : ""
+                  isOpen ? "rotate-45 bg-porch text-white ring-porch" : ""
                 }`}
               >
                 <Plus size={16} strokeWidth={2.4} />

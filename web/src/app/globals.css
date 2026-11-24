@@ -1,30 +1,29 @@
 @import "tailwindcss";
 
 /*
-  Respite for the Weary — design system
-  The idea: a house at night with the porch light on. Six windows, one per bed;
-  a lit window is an open bed. Everything else stays quiet so the light can speak.
+  Respite for the Weary — design system (2026-11 redesign)
+  A calm booking-site layout: white pages, warm grey panels, one teal accent.
 
-  Type   Geist, one family, set like a poster: huge, tight, black-on-white.
-         Geist Mono for facts (counts, prices, dates, labels).
-  Color  Neutral ink + white. Porch amber is the only color, and it only ever
-         means "light is on": an open bed or the one primary action.
+  Type   Plus Jakarta Sans for everything. Numbers use tabular figures, not a mono face.
+  Color  Ink on white. Teal is the only accent: main buttons, open beds, active states.
 
-  Token names are kept from v1 so the dashboard keeps working:
-  oat = page, paper = surface, pine = ink surface, moss = secondary text.
+  Token names are kept from v1 so every page and the dashboard keep working:
+  oat = warm grey panel, paper = white surface, pine = dark surface,
+  moss = secondary text, porch = the teal accent, porch-glow = a light teal tint.
 */
 :root {
-  --oat: #f4f4f1;        /* page */
-  --paper: #ffffff;      /* surfaces */
-  --ink: #0f1110;        /* text */
-  --pine: #0f1110;       /* dark surfaces, primary buttons */
-  --night: #000000;      /* hero sky (flat, from the approved dark set) */
-  --moss: #5e625f;       /* secondary text */
-  --porch: #f0a53a;      /* the light — availability + primary moment */
-  --porch-glow: #ffd98f;
-  --ember: #c24a2c;      /* overdue / errors */
-  --line: rgb(15 17 16 / 0.1);
-  --line-strong: rgb(15 17 16 / 0.2);
+  --oat: #f7f6f3;
+  --paper: #ffffff;
+  --ink: #1a1d1f;
+  --pine: #1a1d1f;
+  --night: #12302d;      /* deep teal, for the few dark panels left */
+  --moss: #5b6168;
+  --porch: #0e7c74;      /* teal accent */
+  --porch-deep: #0a625c; /* teal hover */
+  --porch-glow: #e3f1ef; /* teal tint */
+  --ember: #c2410c;      /* overdue / errors */
+  --line: #ecece8;
+  --line-strong: #d9d9d4;
 
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
@@ -39,112 +38,87 @@
   --color-night: var(--night);
   --color-moss: var(--moss);
   --color-porch: var(--porch);
+  --color-porch-deep: var(--porch-deep);
   --color-porch-glow: var(--porch-glow);
   --color-ember: var(--ember);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
-  --font-display: var(--font-geist);
-  --font-sans: var(--font-geist);
-  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-jakarta);
+  --font-sans: var(--font-jakarta);
+  --font-mono: var(--font-jakarta);
 }
 
 html { -webkit-text-size-adjust: 100%; }
 body {
   background: var(--paper);
   color: var(--ink);
-  font-family: var(--font-geist), system-ui, sans-serif;
-  font-size: 1.0625rem;
-  letter-spacing: -0.011em;
+  font-family: var(--font-jakarta), system-ui, sans-serif;
+  font-size: 1rem;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
-::selection { background: var(--porch-glow); color: var(--ink); }
+::selection { background: #bfe3de; color: var(--ink); }
 
 /* Named text styles. Sizes and line heights come straight from Tailwind's scale steps. */
-@utility heading-1 { font-size: var(--text-6xl); line-height: var(--text-6xl--line-height); font-weight: 600; letter-spacing: -0.045em; text-wrap: balance; }
-@utility heading-2 { font-size: var(--text-5xl); line-height: var(--text-5xl--line-height); font-weight: 600; letter-spacing: -0.045em; text-wrap: balance; }
-@utility heading-3 { font-size: var(--text-4xl); line-height: var(--text-4xl--line-height); font-weight: 600; letter-spacing: -0.035em; text-wrap: balance; }
-@utility heading-4 { font-size: var(--text-3xl); line-height: var(--text-3xl--line-height); font-weight: 600; letter-spacing: -0.03em; text-wrap: balance; }
+@utility heading-1 { font-size: var(--text-6xl); line-height: var(--text-6xl--line-height); font-weight: 800; letter-spacing: -0.035em; text-wrap: balance; }
+@utility heading-2 { font-size: var(--text-5xl); line-height: var(--text-5xl--line-height); font-weight: 800; letter-spacing: -0.035em; text-wrap: balance; }
+@utility heading-3 { font-size: var(--text-4xl); line-height: var(--text-4xl--line-height); font-weight: 800; letter-spacing: -0.03em; text-wrap: balance; }
+@utility heading-4 { font-size: var(--text-3xl); line-height: var(--text-3xl--line-height); font-weight: 800; letter-spacing: -0.025em; text-wrap: balance; }
 @utility title-3 { font-size: var(--text-base); line-height: var(--text-base--line-height); font-weight: 500; }
 @utility body-3 { font-size: var(--text-base); line-height: var(--text-base--line-height); font-weight: 400; text-wrap: pretty; }
 @utility body-6 { font-size: var(--text-sm); line-height: var(--text-sm--line-height); font-weight: 400; }
 @utility body-7 { font-size: var(--text-lg); line-height: var(--text-lg--line-height); font-weight: 400; text-wrap: pretty; } /* lead paragraph */
-@utility button-md { font-size: var(--text-base); line-height: var(--text-base--line-height); font-weight: 600; }
+@utility button-md { font-size: var(--text-base); line-height: var(--text-base--line-height); font-weight: 700; }
 @utility caption-4 { font-size: var(--text-xs); line-height: var(--text-xs--line-height); font-weight: 500; }
 @utility caption-5 { font-size: var(--text-xs); line-height: var(--text-xs--line-height); font-weight: 400; }
 
 @layer components {
-/* Hero heading on dark: the one place a gradient is allowed, and only on the text */
-.hero-gradient {
-  background-image: linear-gradient(90deg, #ffffff, #9b9b9b);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-/* the same treatment for dark words on the light morning hero */
-.hero-gradient-day { background-image: linear-gradient(90deg, var(--ink), #4b5a50); -webkit-background-clip: text; background-clip: text; color: transparent; }
+/* kept for old markup: plain ink text now, no gradient */
+.hero-gradient { color: #fff; }
+.hero-gradient-day { color: var(--ink); }
 
-/* Display: poster scale, tight, set rarely */
-.display {
-  font-family: var(--font-geist), system-ui, sans-serif;
-  font-weight: 600;
-  letter-spacing: -0.055em;
-  line-height: 0.9;
-  text-wrap: balance;
-}
-.display-2 {
-  font-weight: 600;
-  letter-spacing: -0.045em;
-  line-height: 0.98;
-  text-wrap: balance;
-}
-.eyebrow {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 0.72rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: var(--moss);
-}
-.mono { font-family: var(--font-geist-mono), ui-monospace, monospace; letter-spacing: -0.01em; }
+.display { font-weight: 800; letter-spacing: -0.035em; line-height: 1.02; text-wrap: balance; }
+.display-2 { font-weight: 800; letter-spacing: -0.03em; line-height: 1.06; text-wrap: balance; }
+/* small label above a heading: sentence case, quiet */
+.eyebrow { font-size: 0.85rem; font-weight: 600; color: var(--moss); }
+/* numbers line up; same typeface as the rest */
+.mono { font-variant-numeric: tabular-nums; }
 .tabular { font-variant-numeric: tabular-nums; }
 
-/* Pressable: every button and tappable card */
 .press { transition: transform 160ms var(--ease-out), background-color 200ms var(--ease-out), color 200ms var(--ease-out), box-shadow 200ms var(--ease-out); }
-.press:active { transform: scale(0.97); }
+.press:active { transform: scale(0.98); }
 
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
-  height: 2.75rem; padding: 0 1.2rem; border-radius: 999px;
-  font-weight: 500; font-size: 0.95rem; letter-spacing: -0.01em; white-space: nowrap;
+  height: 3rem; padding: 0 1.25rem; border-radius: 12px;
+  font-weight: 700; font-size: 0.95rem; white-space: nowrap;
 }
-.btn-primary { background: var(--ink); color: #fff; }
-.btn-porch { background: var(--porch); color: var(--ink); }
-.btn-ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1px var(--line-strong); }
+.btn-primary, .btn-porch { background: var(--porch); color: #fff; }
+.btn-dark { background: var(--ink); color: #fff; }
+.btn-ghost { background: #fff; color: var(--ink); box-shadow: inset 0 0 0 1px var(--line-strong); }
 .btn-light { background: #fff; color: var(--ink); }
 @media (hover: hover) and (pointer: fine) {
-  .btn-primary:hover { background: #2a2d2b; }
-  .btn-porch:hover { background: var(--porch-glow); }
-  .btn-ghost:hover { background: rgb(15 17 16 / 0.05); }
+  .btn-primary:hover, .btn-porch:hover { background: var(--porch-deep); }
+  .btn-dark:hover { background: #000; }
+  .btn-ghost:hover { background: var(--oat); }
   .btn-light:hover { background: var(--porch-glow); }
 }
 
-/* Rolling label (hover): the text slides up and its copy follows from below */
-.roll { display: inline-flex; overflow: hidden; position: relative; vertical-align: top; line-height: 1.25; }
-.roll > span { display: inline-block; transition: transform 420ms var(--ease-out); }
-.roll > span::after { content: attr(data-text); position: absolute; left: 0; top: 100%; }
-@media (hover: hover) and (pointer: fine) {
-  :is(a, button):hover > .roll > span, .roll:hover > span { transform: translateY(-100%); }
-}
+/* Roll used to be a rolling hover label; now it's plain text */
+.roll { display: inline; }
+.roll > span::after { content: none; }
 
-/* Hairline grid: cells share 1px rules (Stripe-style) */
+/* Card: white, hairline ring, rounded */
+.card { background: #fff; border-radius: 16px; box-shadow: 0 0 0 1px var(--line); }
+
+/* Hairline grid: cells share 1px rules */
 .hairline { display: grid; gap: 1px; background: var(--line); box-shadow: 0 0 0 1px var(--line); }
 .hairline > * { background: var(--paper); }
 }
 
 /* Keyboard focus: dark on light pages, the porch light on dark ones (both clear 3:1 against what's behind) */
-:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 6px; }
-:where(.bg-night, .bg-ink, .bg-pine, [data-night], [data-tone="night"], footer, #mobile-menu) :focus-visible { outline-color: var(--porch); }
+:focus-visible { outline: 2px solid var(--porch); outline-offset: 3px; border-radius: 6px; }
+:where(.bg-night, .bg-ink, .bg-pine, [data-night], [data-tone="night"], footer, #mobile-menu) :focus-visible { outline-color: #fff; }
 #main:focus { outline: none; }
 
 /* Lit window glow used by the signature element */

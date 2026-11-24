@@ -25,7 +25,7 @@ export default async function Residents({ searchParams }: { searchParams: Promis
         return (
           <li key={r.id}>
             <Link href={`/admin/residents/${r.id}`} className="flex items-center gap-3.5 px-5 py-3.5 transition-colors hover:bg-ink/[.025] sm:px-6">
-              <span className={`mono grid h-10 w-10 shrink-0 place-items-center rounded-full text-[0.8rem] font-medium uppercase ${r.active ? "bg-ink text-white" : "bg-ink/[.06] text-moss"}`}>{initials}</span>
+              <span className={`mono grid h-10 w-10 shrink-0 place-items-center rounded-full text-[0.8rem] font-medium ${r.active ? "bg-ink text-white" : "bg-ink/[.06] text-moss"}`}>{initials}</span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-medium">{r.name}</span>
                 <span className="block truncate text-[0.85rem] text-moss">

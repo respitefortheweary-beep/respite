@@ -106,7 +106,7 @@ export function HouseGallery({ name, photos, videos = [] }: { name: string; phot
   return (
     <section ref={root} aria-roledescription="carousel" aria-label={`${name} photos and videos`}>
       <div
-        className="group/gallery relative h-[52vh] min-h-[300px] max-h-[660px] overflow-hidden rounded-[28px] bg-night md:h-[62vh]"
+        className="group/gallery relative h-[52vh] min-h-[300px] max-h-[660px] overflow-hidden rounded-2xl bg-oat md:h-[62vh]"
         onPointerEnter={(e) => e.pointerType === "mouse" && setHover(true)}
         onPointerLeave={() => setHover(false)}
       >

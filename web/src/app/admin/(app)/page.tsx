@@ -4,7 +4,6 @@ import { admin } from "@/lib/api";
 import type { BedView, Charge, Property, Request, Resident, Room } from "@/lib/types";
 import { money, timeAgo, shortDate } from "@/lib/format";
 import { PROGRAMS, type Program } from "@/lib/labels";
-import { HouseNight } from "@/components/house";
 import { Card, CardHead, Empty, StatusPill, ChargePill, isOverdue } from "./ui";
 
 export default async function Overview() {
@@ -44,35 +43,28 @@ export default async function Overview() {
 
   return (
     <main id="main" tabIndex={-1} className="mx-auto w-full max-w-[1240px] px-4 pb-16 pt-4 sm:px-8 md:pt-8">
-      {/* The house tonight */}
-      <section className="relative overflow-hidden rounded-3xl bg-night text-white">
-        <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-[radial-gradient(55%_80%_at_78%_100%,rgb(240_165_58/0.14),transparent_70%)]" />
-        <div className="relative grid gap-2 md:grid-cols-[minmax(0,1fr)_minmax(280px,420px)]">
-          <div className="p-6 sm:p-9 md:pb-10">
-            <p className="mono text-[0.72rem] uppercase tracking-[0.02em] text-white/55">{today}</p>
-            <h1 className="display-2 mt-4 text-[clamp(2.2rem,5vw,3.6rem)]">{greeting}</h1>
-            <p className="mt-4 max-w-md text-[1.08rem] leading-snug text-white/70">{next.text}</p>
-            <Link href={next.href} className="press mt-6 inline-flex h-11 items-center gap-2 rounded-full bg-porch px-5 text-[0.93rem] font-medium text-ink hover:bg-porch-glow">
+      {/* Today at a glance */}
+      <section className="overflow-hidden rounded-[20px] bg-white ring-1 ring-line">
+        <div className="grid gap-6 p-6 sm:p-8 md:grid-cols-[minmax(0,1fr)_minmax(280px,400px)]">
+          <div>
+            <p className="text-[0.85rem] font-semibold text-porch">{today}</p>
+            <h1 className="mt-2 text-[clamp(1.9rem,4vw,2.6rem)] font-extrabold leading-tight tracking-[-0.03em]">{greeting}</h1>
+            <p className="mt-2 max-w-md text-[1.02rem] leading-snug text-moss">{next.text}</p>
+            <Link href={next.href} className="btn btn-primary press mt-5">
               {next.cta} <ArrowRight size={16} />
             </Link>
           </div>
-          {several ? (
-            <Houses houses={houses} />
-          ) : (
-            <div className="flex items-end px-6 md:px-0 md:pr-9">
-              <HouseNight states={beds.map((b) => b.state)} labels={beds.map((b) => b.label)} className="w-full" />
-            </div>
-          )}
+          <Houses houses={houses} />
         </div>
-        <dl className="relative grid grid-cols-2 border-t border-white/10 md:grid-cols-4">
+        <dl className="grid grid-cols-2 border-t border-line bg-oat/50 md:grid-cols-4">
           {facts.map(([k, v, href], i) => (
             <Link
               key={k}
               href={href}
-              className={`group p-5 transition-colors hover:bg-white/[.04] sm:px-9 ${i % 2 ? "border-l border-white/10" : ""} ${i > 1 ? "border-t border-white/10 md:border-t-0" : ""} ${i === 2 ? "md:border-l" : ""}`}
+              className={`group p-5 transition-colors hover:bg-oat sm:px-8 ${i % 2 ? "border-l border-line" : ""} ${i > 1 ? "border-t border-line md:border-t-0" : ""} ${i === 2 ? "md:border-l" : ""}`}
             >
-              <dt className="text-[0.82rem] text-white/50">{k}</dt>
-              <dd className="mono tabular mt-1.5 text-[1.5rem] font-medium tracking-[-0.04em]">{v}</dd>
+              <dt className="text-[0.85rem] text-moss">{k}</dt>
+              <dd className="tabular mt-1 text-[1.5rem] font-extrabold tracking-[-0.03em]">{v}</dd>
             </Link>
           ))}
         </dl>
@@ -134,20 +126,13 @@ export default async function Overview() {
             {beds.map((b, i) => (
               <li key={b.id} className="contents">
                 {several && b.houseId !== beds[i - 1]?.houseId && (
-                  <p className="mono border-t border-line bg-oat/60 px-5 py-2 text-[0.7rem] uppercase tracking-[0.02em] text-moss sm:col-span-2 sm:px-6 xl:col-span-1">{b.houseName}</p>
+                  <p className="border-t border-line bg-oat px-5 py-2 text-[0.8rem] font-semibold text-moss sm:col-span-2 sm:px-6 xl:col-span-1">{b.houseName}</p>
                 )}
                 <div className="flex items-center gap-3 border-t border-line px-5 py-3 text-[0.92rem] sm:px-6">
-                <span
-                  aria-hidden
-                  className="h-[18px] w-3.5 shrink-0 rounded-[2px]"
-                  style={{
-                    background: b.state === "open" ? "linear-gradient(#ffe3a6, #f0a53a)" : b.state === "soon" ? "rgb(240 165 58 / .35)" : "var(--ink)",
-                    boxShadow: b.state === "open" ? "0 0 10px 1px rgb(240 165 58 / .5)" : "none",
-                  }}
-                />
+                <span aria-hidden className={`h-2.5 w-2.5 shrink-0 rounded-full ${b.state === "open" ? "bg-porch" : b.state === "soon" ? "bg-porch/35" : "bg-line-strong"}`} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium">{b.state === "open" ? "Open" : b.residentName}</span>
-                  <span className="mono block truncate text-[0.74rem] uppercase text-moss">
+                  <span className="block truncate text-[0.8rem] text-moss">
                     {b.label} · {b.roomName.replace("The ", "")}
                   </span>
                 </span>
@@ -162,24 +147,31 @@ export default async function Overview() {
   );
 }
 
-/** With more than one house, the hero shows each one as its own small house, lit by its own beds. */
+/** Each house with a bar showing how many of its beds are free. */
 function Houses({ houses }: { houses: Property[] }) {
   return (
-    <ul className={`grid content-end gap-2 px-6 pb-6 md:px-0 md:pb-9 md:pr-9 ${houses.length > 2 ? "grid-cols-2" : "grid-cols-2 md:grid-cols-1"}`}>
-      {houses.map((h) => (
-        <li key={h.id}>
-          <Link href={`/admin/houses#house-${h.id}`} className="group flex items-center gap-3 rounded-2xl p-2 ring-1 ring-white/10 transition-colors hover:bg-white/[.05]">
-            <HouseNight states={h.states} className="w-20 shrink-0 sm:w-24" />
-            <span className="min-w-0">
-              <span className="block truncate text-[0.95rem] font-medium">{h.name}</span>
-              <span className="mono tabular block text-[0.78rem] text-white/55">
-                {h.beds ? `${h.open} of ${h.beds} open` : "No beds yet"}
-                {h.hidden ? " · hidden" : ""}
+    <ul className="grid content-start gap-2">
+      {houses.map((h) => {
+        const n = h.beds || 1;
+        const soon = h.states.filter((st) => st === "soon").length;
+        return (
+          <li key={h.id}>
+            <Link href={`/admin/houses#house-${h.id}`} className="block rounded-xl bg-oat px-4 py-3 transition-colors hover:bg-line">
+              <span className="flex items-baseline justify-between gap-3">
+                <span className="truncate text-[0.95rem] font-semibold">{h.name}</span>
+                <span className="tabular shrink-0 text-[0.82rem] text-moss">
+                  {h.beds ? `${h.open} of ${h.beds} free` : "No beds yet"}
+                  {h.hidden ? " · hidden" : ""}
+                </span>
               </span>
-            </span>
-          </Link>
-        </li>
-      ))}
+              <span className="mt-2 flex h-1.5 overflow-hidden rounded-full bg-line-strong/50" aria-hidden>
+                <span className="bg-porch" style={{ width: `${(h.open / n) * 100}%` }} />
+                <span className="bg-porch/35" style={{ width: `${(soon / n) * 100}%` }} />
+              </span>
+            </Link>
+          </li>
+        );
+      })}
     </ul>
   );
 }

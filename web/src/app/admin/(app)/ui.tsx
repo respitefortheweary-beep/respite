@@ -3,7 +3,7 @@ import { STATUS_LABEL, type Status } from "@/lib/labels";
 
 /**
  * Dashboard kit. Same system as the public site: ink on oat, white surfaces,
- * mono for facts, and amber only where a light is on (something new, open or owed).
+ * one teal accent for what is new, open or owed.
  */
 export function Page({ title, eyebrow, actions, children, crumb, wide = false }: { title: string; eyebrow?: React.ReactNode; actions?: React.ReactNode; children: React.ReactNode; crumb?: React.ReactNode; wide?: boolean }) {
   return (
@@ -11,7 +11,7 @@ export function Page({ title, eyebrow, actions, children, crumb, wide = false }:
       <header className="mb-7 flex flex-wrap items-end justify-between gap-x-6 gap-y-4 md:mb-10">
         <div className="min-w-0">
           {(crumb || eyebrow) && <p className="eyebrow mb-2.5 flex items-center gap-2">{crumb ?? eyebrow}</p>}
-          <h1 className="display-2 text-[clamp(1.9rem,4.4vw,2.9rem)]">{title}</h1>
+          <h1 className="text-[clamp(1.8rem,3.6vw,2.4rem)] font-extrabold leading-tight tracking-[-0.03em]">{title}</h1>
         </div>
         {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
       </header>
@@ -49,13 +49,13 @@ export function StatusPill({ status }: { status: string }) {
   const label = STATUS_LABEL[s] ?? status;
   if (s === "MOVED_IN")
     return (
-      <span className="mono inline-flex h-6 items-center gap-1.5 rounded-full bg-ink px-2.5 text-[0.72rem] font-medium uppercase text-white">
+      <span className="mono inline-flex h-6 items-center gap-1.5 rounded-full bg-ink px-2.5 text-[0.8rem] font-medium text-white">
         <Check size={11} strokeWidth={3} /> {label}
       </span>
     );
-  if (s === "DECLINED") return <span className="mono inline-flex h-6 items-center rounded-full bg-ink/[.06] px-2.5 text-[0.72rem] font-medium uppercase text-moss">{label}</span>;
+  if (s === "DECLINED") return <span className="mono inline-flex h-6 items-center rounded-full bg-ink/[.06] px-2.5 text-[0.8rem] font-medium text-moss">{label}</span>;
   return (
-    <span className={`mono inline-flex h-6 items-center gap-2 whitespace-nowrap rounded-full px-2.5 text-[0.72rem] font-medium uppercase ${s === "NEW" ? "bg-porch-glow text-ink" : "bg-ink/[.06] text-ink"}`}>
+    <span className={`mono inline-flex h-6 items-center gap-2 whitespace-nowrap rounded-full px-2.5 text-[0.8rem] font-medium ${s === "NEW" ? "bg-porch-glow text-ink" : "bg-ink/[.06] text-ink"}`}>
       <span className="flex gap-[3px]" aria-hidden>
         {[1, 2, 3, 4].map((i) => (
           <span key={i} className={`h-[7px] w-[5px] rounded-[1px] ${n && i <= n ? (s === "NEW" ? "bg-ink" : "bg-ink") : "bg-ink/15"}`} />
@@ -70,7 +70,7 @@ export const isOverdue = (c: { status: string; dueDate: Date }) => c.status === 
 
 export function ChargePill({ status, dueDate }: { status: string; dueDate: Date }) {
   const overdue = isOverdue({ status, dueDate });
-  const base = "mono inline-flex h-6 items-center gap-1 whitespace-nowrap rounded-full px-2.5 text-[0.72rem] font-medium uppercase";
+  const base = "mono inline-flex h-6 items-center gap-1 whitespace-nowrap rounded-full px-2.5 text-[0.78rem] font-semibold";
   if (status === "PAID")
     return (
       <span className={`${base} bg-ink/[.06] text-ink`}>
@@ -97,7 +97,7 @@ export function Notice({ tone = "ok", children }: { tone?: "ok" | "warn"; childr
   return (
     <div role="status" className={`mb-6 flex items-start gap-3 rounded-2xl px-4 py-3.5 text-[0.93rem] leading-snug ${tone === "ok" ? "bg-ink text-white" : "bg-ember/10 text-ember ring-1 ring-ember/25"}`}>
       {tone === "ok" && (
-        <span className="mt-px grid h-5 w-5 shrink-0 place-items-center rounded-full bg-porch text-ink">
+        <span className="mt-px grid h-5 w-5 shrink-0 place-items-center rounded-full bg-porch text-white">
           <Check size={12} strokeWidth={3.5} />
         </span>
       )}

@@ -36,14 +36,14 @@ export default async function TeamAdmin() {
                     <div className="min-w-0 flex-1">
                       <p className="flex items-center gap-2 font-medium">
                         <span className="truncate">{u.name || u.email}</span>
-                        {self && <span className="mono shrink-0 text-[0.68rem] uppercase text-moss">You</span>}
+                        {self && <span className="mono shrink-0 text-[0.78rem] text-moss">You</span>}
                       </p>
                       <p className="truncate text-[0.86rem] text-moss">
                         {u.name ? `${u.email} · ` : ""}
                         {u.lastLoginAt ? `Last in ${shortDate(u.lastLoginAt)}` : "Hasn't logged in yet"}
                       </p>
                     </div>
-                    <span className={`mono inline-flex h-6 items-center rounded-full px-2.5 text-[0.7rem] font-medium uppercase ${u.role === "OWNER" ? "bg-ink text-white" : "bg-ink/[.06] text-ink"}`}>
+                    <span className={`mono inline-flex h-6 items-center rounded-full px-2.5 text-[0.8rem] font-medium ${u.role === "OWNER" ? "bg-ink text-white" : "bg-ink/[.06] text-ink"}`}>
                       {ROLE[u.role]}
                     </span>
                     {isOwner && !self && (

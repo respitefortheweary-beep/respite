@@ -129,7 +129,7 @@ function Rows<T>({ items, onChange, blank, max, addLabel, noun, render }: { item
       {items.map((item, i) => (
         <div key={i} className="rounded-xl bg-oat p-3 sm:p-4">
           <div className="mb-2 flex items-center justify-between">
-            <span className="mono tabular text-[0.72rem] uppercase text-moss">
+            <span className="mono tabular text-[0.8rem] text-moss">
               {noun} {i + 1}
             </span>
             <span className="flex items-center">
@@ -167,7 +167,7 @@ function SaveBar({ s, onReset }: { s: { save: () => void; state: FormState; pend
         <p role="status" className={`min-w-0 flex-1 text-[0.88rem] ${s.state?.error ? "text-[#ff9b84]" : "text-white/70"}`}>
           {s.state?.error ?? (s.dirty ? "Unsaved changes" : s.state?.ok ?? "Everything is saved")}
         </p>
-        <button type="button" onClick={confirmReset} disabled={s.pending} className="press inline-flex h-10 items-center gap-1.5 rounded-full px-3 text-[0.86rem] text-white/60 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50">
+        <button type="button" onClick={confirmReset} disabled={s.pending} className="press inline-flex h-10 items-center gap-1.5 rounded-xl px-3 text-[0.86rem] text-white/60 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50">
           <RotateCcw size={14} /> <span className="hidden sm:inline">Original words</span>
         </button>
         <button type="button" onClick={s.save} disabled={!s.dirty || s.pending} className={`${btnPrimary} !bg-white !text-ink hover:!bg-porch-glow disabled:opacity-50`}>

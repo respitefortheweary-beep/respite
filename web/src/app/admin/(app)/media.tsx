@@ -30,7 +30,7 @@ export function MediaPicker({ files, onChange, max = 20, label = "Add photos or 
           ) : (
             <img src={previews[i]} alt="" className="h-full w-full object-cover" />
           )}
-          {i === firstPhoto && <span className="mono absolute bottom-1 left-1 rounded-full bg-porch px-2 py-0.5 text-[0.62rem] font-semibold uppercase text-ink">Cover</span>}
+          {i === firstPhoto && <span className="mono absolute bottom-1 left-1 rounded-full bg-porch px-2 py-0.5 text-[0.72rem] font-semibold text-white">Cover</span>}
           <button
             type="button"
             aria-label={`Take ${f.name} out`}

@@ -7,7 +7,7 @@ import { ArrowRight, Phone, X } from "lucide-react";
 import { Logo } from "./brand";
 
 /**
- * Phone navigation: a full-screen dark sheet.
+ * Phone navigation: a full-screen white sheet.
  * Rendered into <body>, not inside the header: the header's blur makes it the
  * containing block for fixed children, which would trap the sheet in a 64px strip.
  */
@@ -28,7 +28,7 @@ export function MobileMenu({ links, phone, phoneHref }: { links: readonly (reado
     root.style.overflow = "hidden";
     closer.current?.focus();
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
-    const onResize = () => window.innerWidth >= 768 && setOpen(false);
+    const onResize = () => window.innerWidth >= 1024 && setOpen(false);
     window.addEventListener("keydown", onKey);
     window.addEventListener("resize", onResize);
     const button = opener.current;
@@ -48,18 +48,18 @@ export function MobileMenu({ links, phone, phoneHref }: { links: readonly (reado
       role="dialog"
       aria-modal="true"
       aria-label="Menu"
-      className={`fixed inset-0 z-[100] flex flex-col overflow-y-auto bg-night text-white transition-[opacity,visibility] duration-300 md:hidden ${
+      className={`fixed inset-0 z-[100] flex flex-col overflow-y-auto bg-white text-ink transition-[opacity,visibility] duration-300 lg:hidden ${
         open ? "visible opacity-100" : "invisible opacity-0"
       }`}
     >
       <div className="flex h-16 shrink-0 items-center justify-between px-4 sm:px-6">
-        <Logo light />
+        <Logo />
         <button
           ref={closer}
           type="button"
           aria-label="Close menu"
           onClick={close}
-          className="press inline-flex h-10 w-10 items-center justify-center rounded-full ring-1 ring-white/20"
+          className="press inline-flex h-10 w-10 items-center justify-center rounded-full ring-1 ring-line-strong"
         >
           <X size={18} />
         </button>
@@ -76,10 +76,10 @@ export function MobileMenu({ links, phone, phoneHref }: { links: readonly (reado
               <Link
                 href={href}
                 onClick={close}
-                className="flex items-center justify-between border-b border-white/10 py-3.5 text-[1.5rem] font-semibold leading-tight tracking-[-0.04em] active:text-porch"
+                className="flex items-center justify-between border-b border-line py-3.5 text-[1.35rem] font-bold leading-tight tracking-[-0.02em] active:text-porch"
               >
                 {label}
-                <ArrowRight size={18} className="text-white/30" />
+                <ArrowRight size={18} className="text-moss/50" />
               </Link>
             </li>
           ))}
@@ -87,10 +87,10 @@ export function MobileMenu({ links, phone, phoneHref }: { links: readonly (reado
       </nav>
 
       <div className="grid shrink-0 gap-2.5 px-4 pt-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:px-6">
-        <Link href="/apply" onClick={close} className="btn btn-porch press !h-12 w-full">
+        <Link href="/apply" onClick={close} className="btn btn-primary press !h-12 w-full">
           Request a room <ArrowRight size={17} />
         </Link>
-        <a href={phoneHref} className="btn press mono !h-12 w-full text-white ring-1 ring-white/20">
+        <a href={phoneHref} className="btn btn-ghost press !h-12 w-full">
           <Phone size={15} /> {phone}
         </a>
       </div>
@@ -106,7 +106,7 @@ export function MobileMenu({ links, phone, phoneHref }: { links: readonly (reado
         aria-expanded={open}
         aria-controls="mobile-menu"
         onClick={() => setOpen(true)}
-        className="press inline-flex h-10 w-10 items-center justify-center rounded-full ring-1 ring-current/20 md:hidden"
+        className="press inline-flex h-10 w-10 items-center justify-center rounded-full ring-1 ring-line-strong lg:hidden"
       >
         <span className="relative block h-3 w-4" aria-hidden>
           <span className="absolute left-0 top-0.5 h-[1.5px] w-4 rounded bg-current" />

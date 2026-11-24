@@ -54,7 +54,7 @@ export function InPerson({ action, chargeIds, planned, address }: { action: (f: 
         <legend className="text-[0.95rem] font-medium">How will you pay?</legend>
         <div className="mt-3 grid grid-cols-2 gap-2">
           {WAYS.map(([v, label]) => (
-            <label key={v} className="flex h-12 cursor-pointer items-center gap-2.5 rounded-xl px-3 text-[0.92rem] ring-1 ring-white/15 transition-colors has-[:checked]:bg-porch has-[:checked]:text-ink has-[:checked]:ring-porch">
+            <label key={v} className="flex h-12 cursor-pointer items-center gap-2.5 rounded-xl px-3 text-[0.92rem] ring-1 ring-white/15 transition-colors has-[:checked]:bg-porch has-[:checked]:text-white has-[:checked]:ring-porch">
               <input type="radio" name="method" value={v} required defaultChecked={v === (planned ?? "CASH")} className="sr-only" />
               {label}
             </label>

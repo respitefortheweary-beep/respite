@@ -3,7 +3,7 @@ import { ArrowDown, ArrowUp, ChevronRight, EyeOff, Pencil, Plus } from "lucide-r
 import { admin } from "@/lib/api";
 import type { Property, RoomWithBeds } from "@/lib/types";
 import { money, parseList } from "@/lib/format";
-import { WindowRow } from "@/components/house";
+import { BedDots } from "@/components/bed-dots";
 import { availabilityText } from "@/components/room-card";
 import { moveHouse, moveRoom } from "../../actions";
 import { Notice, Page, btnQuiet } from "../ui";
@@ -28,7 +28,7 @@ function Arrows({ name, at, count, move }: { name: string; at: number; count: nu
 
 function Hidden() {
   return (
-    <span className="mono inline-flex h-5 shrink-0 items-center gap-1 rounded-full bg-ink/[.06] px-2 text-[0.66rem] font-medium uppercase text-moss">
+    <span className="mono inline-flex h-5 shrink-0 items-center gap-1 rounded-full bg-ink/[.06] px-2 text-[0.75rem] font-medium text-moss">
       <EyeOff size={11} /> Hidden
     </span>
   );
@@ -79,7 +79,7 @@ export default async function HousesAdmin({ searchParams }: { searchParams: Prom
                   <h2 id={`house-${h.id}-name`} className="flex flex-wrap items-center gap-2 text-[1.35rem] font-semibold tracking-[-0.03em]">
                     <span className="min-w-0 truncate">{h.name}</span>
                     {h.hidden && <Hidden />}
-                    {!parseList(h.photos).length && <span className="mono text-[0.68rem] font-medium uppercase text-ember">Needs photos</span>}
+                    {!parseList(h.photos).length && <span className="mono text-[0.78rem] font-medium text-ember">Needs photos</span>}
                   </h2>
                   <p className="mt-0.5 text-[0.88rem] text-moss">
                     {h.address || h.town || "No address yet"}
@@ -115,7 +115,7 @@ export default async function HousesAdmin({ searchParams }: { searchParams: Prom
                               {r.kind === "PRIVATE" ? "" : " a bed"} a month
                             </p>
                             <p className="mt-2.5 flex items-center gap-2 text-[0.85rem]">
-                              <WindowRow states={r.states.map((s) => s.state)} size={8} />{" "}
+                              <BedDots states={r.states.map((s) => s.state)} />{" "}
                               <span className="truncate">{availabilityText(r).replace(" · join the waitlist", "")}</span>
                             </p>
                           </div>

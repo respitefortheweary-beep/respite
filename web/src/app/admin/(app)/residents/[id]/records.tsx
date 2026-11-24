@@ -20,7 +20,7 @@ function Feedback({ state, pending }: { state: FormState; pending: boolean }) {
       </p>
     );
   return (
-    <span className="mono flex min-h-4 items-center gap-1 text-[0.72rem] uppercase text-moss" aria-live="polite">
+    <span className="mono flex min-h-4 items-center gap-1 text-[0.8rem] text-moss" aria-live="polite">
       {!pending && state?.ok && (
         <>
           <Check size={12} strokeWidth={3} /> {state.ok}
@@ -72,7 +72,7 @@ export function NotesCard({ residentId, notes, firstName }: { residentId: string
                 <div className="min-w-0 flex-1">
                   <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[0.8rem] text-moss">
                     <span
-                      className={`mono inline-flex h-6 items-center rounded-full px-2.5 text-[0.7rem] font-medium uppercase ${n.kind === "INCIDENT" ? "bg-ember text-white" : n.kind === "CHECKIN" ? "bg-porch-glow text-ink" : "bg-ink/[.06] text-ink"}`}
+                      className={`mono inline-flex h-6 items-center rounded-full px-2.5 text-[0.8rem] font-medium ${n.kind === "INCIDENT" ? "bg-ember text-white" : n.kind === "CHECKIN" ? "bg-porch-glow text-ink" : "bg-ink/[.06] text-ink"}`}
                     >
                       {KIND[n.kind] ?? n.kind}
                     </span>
@@ -224,7 +224,7 @@ export function DepositCard({
             ["Kept", paidCents - returnedCents],
           ].map(([l, v]) => (
             <div key={l as string} className="rounded-xl bg-ink/[.04] px-2 py-3">
-              <dt className="text-[0.68rem] uppercase text-moss">{l}</dt>
+              <dt className="text-[0.78rem] text-moss">{l}</dt>
               <dd className="mt-1 text-[1.05rem] font-medium">{money(v as number)}</dd>
             </div>
           ))}

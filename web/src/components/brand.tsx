@@ -27,9 +27,9 @@ export function LogoMark({ className = "h-[24px] w-[27px]", onDark = false }: { 
 
 export function Logo({ light = false }: { light?: boolean }) {
   return (
-    <Link href="/" className="group inline-flex items-center gap-2" aria-label="Respite for the Weary home">
+    <Link href="/" className="group inline-flex shrink-0 items-center gap-2 whitespace-nowrap" aria-label="Respite for the Weary home">
       <LogoMark onDark={light} className={`h-[24px] w-[27px] ${light ? "text-white" : "text-ink"}`} />
-      <span className={`text-[1.06rem] font-semibold leading-none tracking-[-0.045em] ${light ? "text-white" : ""}`}>
+      <span className={`text-[1.1rem] font-extrabold leading-none tracking-[-0.03em] ${light ? "text-white" : ""}`}>
         Respite <span className={`hidden font-normal min-[420px]:inline ${light ? "text-white/55" : "opacity-60"}`}>for the Weary</span>
       </span>
     </Link>

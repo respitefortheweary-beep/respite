@@ -70,22 +70,21 @@ export default async function ResidentDetail({ params, searchParams }: { params:
 
       <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
         {/* What they owe and how they pay */}
-        <section className="relative overflow-hidden rounded-2xl bg-night p-5 text-white sm:p-6 lg:col-start-2 lg:row-start-1">
-          {owed > 0 && <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(60%_100%_at_85%_0%,rgb(240_165_58/0.16),transparent_70%)]" />}
-          <div className="relative">
-            <p className="mono text-[0.7rem] uppercase tracking-[0.02em] text-white/55">{owed ? (late ? "Past due" : "Waiting to be paid") : "Balance"}</p>
-            <p className={`mono tabular mt-2 text-[2.6rem] font-medium leading-none tracking-[-0.055em] ${owed ? "text-porch-glow" : ""}`}>{owed ? money(owed) : "Paid up"}</p>
-            <p className="mt-2.5 text-[0.86rem] text-white/55">
+        <section className="rounded-2xl bg-white p-5 ring-1 ring-line sm:p-6 lg:col-start-2 lg:row-start-1">
+          <div>
+            <p className={`text-[0.85rem] font-semibold ${late ? "text-ember" : "text-moss"}`}>{owed ? (late ? "Past due" : "Waiting to be paid") : "Balance"}</p>
+            <p className={`tabular mt-2 text-[2.4rem] font-extrabold leading-none tracking-[-0.04em] ${owed ? "text-porch" : ""}`}>{owed ? money(owed) : "Paid up"}</p>
+            <p className="mt-2.5 text-[0.88rem] text-moss">
               {money(r.rentCents)} a month · {money(paid)} paid so far
             </p>
-            <div className="mt-5 border-t border-white/10 pt-4">
-              <p className="mb-2 text-[0.86rem] font-medium text-white/80">Pay link</p>
+            <div className="mt-5 border-t border-line pt-4">
+              <p className="mb-2 text-[0.88rem] font-semibold">Pay link</p>
               <PayLink url={portal} phone={r.phone} firstName={first} hasEmail={!!r.email} send={sendPayLink.bind(null, r.id)} />
               {me.role === "OWNER" && (
                 <ConfirmAction
                   action={replacePayLink.bind(null, r.id)}
                   label="Replace this link"
-                  className="press mt-1 inline-flex h-10 items-center rounded-full text-[0.84rem] text-white/60 underline underline-offset-4 hover:text-white"
+                  className="press mt-1 inline-flex h-10 items-center rounded-xl text-[0.85rem] text-moss underline decoration-line-strong underline-offset-4 hover:text-ink"
                   title={`Give ${first} a new pay link?`}
                   body={
                     <>

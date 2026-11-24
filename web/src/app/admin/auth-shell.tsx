@@ -2,23 +2,22 @@ import Link from "next/link";
 import { Logo } from "@/components/brand";
 
 export const authInput =
-  "h-12 w-full rounded-xl bg-white/[.07] px-4 text-[1rem] text-white outline-none ring-1 ring-white/15 transition-shadow focus:ring-2 focus:ring-porch";
+  "h-12 w-full rounded-xl bg-white px-4 text-[1rem] text-ink outline-none ring-1 ring-line-strong transition-shadow placeholder:text-moss/70 focus:ring-2 focus:ring-porch";
 export const authButton =
-  "press mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-porch text-[1rem] font-medium text-ink transition-colors hover:bg-porch-glow disabled:opacity-70";
-export const authCard = "rounded-3xl bg-white/[.05] p-6 ring-1 ring-white/10 sm:p-7";
+  "press mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-porch text-[1rem] font-semibold text-white transition-colors hover:bg-porch-deep disabled:opacity-70";
+export const authCard = "rounded-[20px] bg-white p-6 ring-1 ring-line shadow-[0_12px_40px_-16px_rgba(20,24,28,0.18)] sm:p-7";
 
-/** The night backdrop shared by forgot password and reset password. */
+/** The light backdrop shared by log in, forgot password and reset password. */
 export function AuthShell({ children }: { children: React.ReactNode }) {
   return (
-    <main id="main" tabIndex={-1} className="relative grid min-h-dvh place-items-center overflow-hidden bg-night px-4 text-white">
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[60vh] bg-[radial-gradient(50%_60%_at_50%_0%,rgb(240_165_58/0.16),transparent_70%)]" />
-      <div className="relative w-full max-w-sm">
-        <div className="mb-9 flex justify-center">
-          <Logo light />
+    <main id="main" tabIndex={-1} className="grid min-h-dvh place-items-center bg-oat px-4 text-ink">
+      <div className="w-full max-w-sm">
+        <div className="mb-8 flex justify-center">
+          <Logo />
         </div>
         {children}
-        <p className="mt-6 text-center text-[0.86rem] text-white/55">
-          <Link href="/admin/login" className="text-white/75 underline decoration-white/25 underline-offset-4 hover:text-white">
+        <p className="mt-6 text-center text-[0.9rem] text-moss">
+          <Link href="/admin/login" className="font-semibold text-ink underline decoration-line-strong underline-offset-4 hover:text-porch">
             Back to log in
           </Link>
         </p>

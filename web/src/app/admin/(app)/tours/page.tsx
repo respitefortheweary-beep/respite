@@ -22,7 +22,7 @@ function Who({ t }: { t: Tour }) {
     <div className="min-w-0 flex-1">
       <p className="font-medium leading-snug">
         {t.name}
-        {t.bookedBy === "HOUSE" && <span className="mono ml-2 text-[0.7rem] uppercase text-moss">booked by phone</span>}
+        {t.bookedBy === "HOUSE" && <span className="mono ml-2 text-[0.8rem] text-moss">booked by phone</span>}
       </p>
       {t.houseName && (
         <p className="mt-1 inline-flex items-center gap-1.5 text-[0.86rem] font-medium text-ink/80">
@@ -120,7 +120,7 @@ export default async function Tours({ searchParams }: { searchParams: Promise<{ 
                       </div>
                       <Who t={t} />
                       <div className="flex shrink-0 flex-wrap items-center gap-2">
-                        <span className={`mono rounded-md px-2 py-1 text-[0.72rem] uppercase ${t.status === "DONE" ? "bg-ink text-white" : "bg-ink/[.06] text-moss"}`}>
+                        <span className={`mono rounded-md px-2 py-1 text-[0.8rem] ${t.status === "DONE" ? "bg-ink text-white" : "bg-ink/[.06] text-moss"}`}>
                           {PAST_LABEL[t.status]}
                           {t.status === "CANCELLED" && t.cancelledBy && ` by ${t.cancelledBy === "HOUSE" ? "you" : "them"}`}
                         </span>

@@ -38,7 +38,7 @@ export function MediaGrid({
         <div key={p} className="relative aspect-[4/3] overflow-hidden rounded-xl bg-ink/[.05] ring-1 ring-line">
           <img src={p} alt="" className="h-full w-full object-cover" />
           {i === 0 ? (
-            <span className="mono absolute bottom-1.5 left-1.5 inline-flex h-6 items-center rounded-full bg-porch px-2.5 text-[0.68rem] font-semibold uppercase text-ink">Cover</span>
+            <span className="mono absolute bottom-1.5 left-1.5 inline-flex h-6 items-center rounded-full bg-porch px-2.5 text-[0.78rem] font-semibold text-white">Cover</span>
           ) : (
             <form action={cover(p)} className="absolute bottom-1.5 left-1.5">
               <button className="press inline-flex h-8 items-center rounded-full bg-night/75 px-3 text-[0.78rem] font-medium text-white backdrop-blur-sm transition-colors hover:bg-night">Make cover</button>
@@ -50,7 +50,7 @@ export function MediaGrid({
       {videos.map((v) => (
         <div key={v} className="relative aspect-[4/3] overflow-hidden rounded-xl bg-night ring-1 ring-line">
           <video src={v} controls playsInline preload="metadata" className="h-full w-full object-cover" />
-          <span className="mono pointer-events-none absolute bottom-1.5 left-1.5 inline-flex h-6 items-center rounded-full bg-night/75 px-2.5 text-[0.68rem] font-semibold uppercase text-white">Video</span>
+          <span className="mono pointer-events-none absolute bottom-1.5 left-1.5 inline-flex h-6 items-center rounded-full bg-night/75 px-2.5 text-[0.78rem] font-semibold text-white">Video</span>
           {remove(removeVideo(v), "video")}
         </div>
       ))}

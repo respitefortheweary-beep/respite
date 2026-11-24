@@ -90,7 +90,7 @@ export default async function RoomEdit({ params, searchParams }: { params: Promi
                   <li key={b.id} className="px-5 py-4 sm:px-6">
                     <div className="flex items-center justify-between gap-3">
                       <span className="flex min-w-0 items-center gap-2.5">
-                        <span aria-hidden className={`h-3.5 w-2.5 shrink-0 rounded-[2px] ${who ? "bg-ink/15" : "bg-porch shadow-[0_0_10px_rgb(240_165_58/.7)]"}`} />
+                        <span aria-hidden className={`h-3.5 w-2.5 shrink-0 rounded-[2px] ${who ? "bg-ink/15" : "bg-porch shadow-[0_0_10px_rgb(14_124_116/.7)]"}`} />
                         <span className="font-medium">{b.label}</span>
                       </span>
                       {who ? (
@@ -98,7 +98,7 @@ export default async function RoomEdit({ params, searchParams }: { params: Promi
                           {who.name}
                         </Link>
                       ) : (
-                        <span className="mono text-[0.72rem] uppercase text-moss">Open now</span>
+                        <span className="mono text-[0.8rem] text-moss">Open now</span>
                       )}
                     </div>
                     {who && (

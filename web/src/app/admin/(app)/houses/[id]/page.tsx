@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowUpRight, ChevronRight, EyeOff } from "lucide-react";
 import { admin } from "@/lib/api";
 import type { Property, RoomWithBeds } from "@/lib/types";
-import { WindowRow } from "@/components/house";
+import { BedDots } from "@/components/bed-dots";
 import { availabilityText } from "@/components/room-card";
 import { money } from "@/lib/format";
 import { NewRoom } from "../../rooms/new-room";
@@ -97,7 +97,7 @@ export default async function HouseEdit({ params }: { params: Promise<{ id: stri
                         {r.kind === "PRIVATE" ? "" : " a bed"} a month
                       </p>
                       <p className="mt-1.5 flex items-center gap-2 text-[0.85rem]">
-                        <WindowRow states={r.states.map((b) => b.state)} size={8} />
+                        <BedDots states={r.states.map((b) => b.state)} />
                         <span className="truncate">{availabilityText(r).replace(" · join the waitlist", "")}</span>
                       </p>
                     </div>

@@ -9,7 +9,7 @@ import { breadcrumbLd, SITE_NAME } from "@/lib/seo";
 import { siteUrl } from "@/lib/site";
 import { SiteHeader, SiteFooter } from "./site-chrome";
 import { HouseCard, houseGrid } from "./house-card";
-import { Reveal } from "./reveal";
+import { freshPhoto } from "@/lib/photos";
 import { JsonLd } from "./json-ld";
 
 export async function programMetadata(key: ProgramKey): Promise<Metadata> {
@@ -76,21 +76,21 @@ export async function ProgramPage({ program: key }: { program: ProgramKey }) {
             </div>
             <p className="mt-5 text-[0.95rem] text-ink/60">
               <span className="font-semibold text-ink">
-                {open} bed {open === 1 ? "space" : "spaces"} open
+                {open} {open === 1 ? "bed" : "beds"} free
               </span>{" "}
               · {houses.length} {houses.length === 1 ? "house" : "houses"} in {town}
             </p>
           </div>
           {chapter?.photo.src && (
             <div className="aspect-[4/3] overflow-hidden rounded-2xl bg-oat">
-              <img src={chapter.photo.src} alt={chapter.photo.alt || ""} className="h-full w-full object-cover" />
+              <img src={freshPhoto(chapter.photo.src)} alt={chapter.photo.alt || ""} className="h-full w-full object-cover" />
             </div>
           )}
         </div>
 
         {chapter && (
           <section className="rounded-2xl bg-oat p-7 sm:p-10">
-            <h2 className="text-[1.6rem] font-medium leading-[1.15] tracking-[-0.035em]">
+            <h2 className="text-[1.5rem] font-extrabold leading-[1.2] tracking-[-0.02em]">
               {chapter.word} {chapter.line}
             </h2>
             <p className="mt-4 max-w-3xl text-moss">{chapter.body}</p>
@@ -110,7 +110,7 @@ export async function ProgramPage({ program: key }: { program: ProgramKey }) {
         <div className="mt-16 grid gap-10 md:grid-cols-3">
           {p.sections.map((s) => (
             <section key={s.title}>
-              <h2 className="text-[1.25rem] font-semibold tracking-[-0.02em]">{s.title}</h2>
+              <h2 className="text-[1.2rem] font-bold tracking-[-0.015em]">{s.title}</h2>
               <p className="mt-3 leading-relaxed text-ink/75" style={{ textWrap: "pretty" }}>
                 {s.body(town)}
               </p>
@@ -122,10 +122,8 @@ export async function ProgramPage({ program: key }: { program: ProgramKey }) {
           <section className="mt-20">
             <h2 className="display text-[clamp(1.8rem,3.6vw,2.6rem)]">Houses in {town}</h2>
             <div className={`mt-8 ${houseGrid(houses.length)}`}>
-              {houses.map((h, i) => (
-                <Reveal key={h.id} delay={(i % 3) * 60}>
-                  <HouseCard house={h} rooms={rooms.filter((r) => r.houseId === h.id)} wide={houses.length === 1} />
-                </Reveal>
+              {houses.map((h) => (
+                <HouseCard key={h.id} house={h} rooms={rooms.filter((r) => r.houseId === h.id)} />
               ))}
             </div>
           </section>

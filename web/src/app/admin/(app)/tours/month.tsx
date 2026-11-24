@@ -65,7 +65,7 @@ export function MonthView({ month, tours }: { month: string; tours: Tour[] }) {
         </div>
         <div className="grid grid-cols-7 border-t border-line" role="grid" aria-label={`Tours in ${MONTHS[m - 1]} ${y}`}>
           {HEAD.map((h) => (
-            <div key={h} role="columnheader" className="mono border-b border-line py-2 text-center text-[0.66rem] uppercase text-moss">
+            <div key={h} role="columnheader" className="mono border-b border-line py-2 text-center text-[0.75rem] text-moss">
               {h}
             </div>
           ))}
@@ -90,7 +90,7 @@ export function MonthView({ month, tours }: { month: string; tours: Tour[] }) {
                       <>
                         {/* phones: a dot count; wider screens: the times and names */}
                         <span className="mt-1 flex justify-center sm:hidden" aria-hidden>
-                          <span className="mono grid h-5 min-w-5 place-items-center rounded-full bg-porch px-1 text-[0.66rem] font-medium text-ink">{list.length}</span>
+                          <span className="mono grid h-5 min-w-5 place-items-center rounded-full bg-porch px-1 text-[0.66rem] font-medium text-white">{list.length}</span>
                         </span>
                         <ul className="mt-1 hidden space-y-1 sm:block">
                           {list.slice(0, 3).map((t) => (
@@ -126,7 +126,7 @@ export function MonthView({ month, tours }: { month: string; tours: Tour[] }) {
                     {t.name}
                     {t.houseName && <span className="font-normal text-moss"> · {t.houseName}</span>}
                   </span>
-                  {t.status !== "BOOKED" && <span className="mono text-[0.7rem] uppercase text-moss">{t.status === "DONE" ? "Came" : "No show"}</span>}
+                  {t.status !== "BOOKED" && <span className="mono text-[0.8rem] text-moss">{t.status === "DONE" ? "Came" : "No show"}</span>}
                 </li>
               )),
             )}

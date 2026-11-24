@@ -39,7 +39,7 @@ export function PayForm({
         </div>
       )}
       <PayButton>{part ? (valid ? `Pay ${money(typed)}` : "Pay part") : `Pay ${money(total)}`}</PayButton>
-      {state?.error && <p role="alert" className="mt-3 text-center text-[0.86rem] text-porch-glow">{state.error}</p>}
+      {state?.error && <p role="alert" className="mt-3 text-center text-[0.86rem] text-[#8fd8cf]">{state.error}</p>}
       <p className="mt-3 text-center text-[0.8rem] text-white/50">{note}</p>
       {canPart && (
         <button

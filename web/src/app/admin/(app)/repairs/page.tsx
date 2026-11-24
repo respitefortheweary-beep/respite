@@ -19,10 +19,10 @@ function Repair({ x }: { x: RepairWithResident }) {
     <li className="px-5 py-5 sm:px-6">
       <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
         {x.urgent && x.status !== "DONE" && (
-          <span className="mono inline-flex h-6 items-center rounded-full bg-ember px-2.5 text-[0.7rem] font-medium uppercase text-white">Urgent</span>
+          <span className="mono inline-flex h-6 items-center rounded-full bg-ember px-2.5 text-[0.8rem] font-medium text-white">Urgent</span>
         )}
         <span
-          className={`mono inline-flex h-6 items-center rounded-full px-2.5 text-[0.7rem] font-medium uppercase ${x.status === "OPEN" ? "bg-porch-glow text-ink" : "bg-ink/[.06] text-ink"}`}
+          className={`mono inline-flex h-6 items-center rounded-full px-2.5 text-[0.8rem] font-medium ${x.status === "OPEN" ? "bg-porch-glow text-ink" : "bg-ink/[.06] text-ink"}`}
         >
           {STATUS[x.status]}
         </span>

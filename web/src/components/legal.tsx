@@ -7,7 +7,7 @@ export function LegalPage({ title, intro, updated, children }: { title: string; 
       <SiteHeader />
       <main id="main" className="mx-auto max-w-[680px] px-4 pb-28 pt-16 sm:px-6 sm:pt-24">
         <p className="eyebrow">Last updated {updated}</p>
-        <h1 className="display-2 mt-3 text-[clamp(2.1rem,5.4vw,3rem)]" style={{ textWrap: "balance" }}>
+        <h1 className="mt-3 text-[clamp(1.8rem,4.5vw,2.5rem)] font-extrabold leading-tight tracking-[-0.03em]" style={{ textWrap: "balance" }}>
           {title}
         </h1>
         <p className="mt-5 text-[1.05rem] leading-relaxed text-ink/70" style={{ textWrap: "pretty" }}>

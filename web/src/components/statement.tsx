@@ -25,7 +25,7 @@ export function StatementSheet({ s, back }: { s: Statement; back: React.ReactNod
             {s.house.phone && <p className="mono tabular text-[0.84rem] text-moss">{s.house.phone}</p>}
           </div>
           <div className="text-right">
-            <p className="mono text-[0.7rem] uppercase tracking-[0.02em] text-moss">Rent statement</p>
+            <p className="mono text-[0.8rem] text-moss">Rent statement</p>
             <p className="mt-1 text-[0.88rem]">{longDate(s.generatedAt)}</p>
           </div>
         </header>
@@ -47,7 +47,7 @@ export function StatementSheet({ s, back }: { s: Statement; back: React.ReactNod
         {s.charges.length ? (
           <table className="mt-4 w-full text-left text-[0.88rem]">
             <thead>
-              <tr className="mono text-[0.68rem] uppercase text-moss">
+              <tr className="mono text-[0.78rem] text-moss">
                 <th className="py-2 pr-3 font-medium">Due</th>
                 <th className="py-2 pr-3 font-medium">For</th>
                 <th className="hidden py-2 pr-3 font-medium sm:table-cell print:table-cell">Paid</th>

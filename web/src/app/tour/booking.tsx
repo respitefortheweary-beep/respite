@@ -89,10 +89,10 @@ export function Booking({
   return (
     <div className="flex min-h-dvh flex-col bg-white">
       <header className="mx-auto flex w-full max-w-3xl items-center gap-4 px-4 pt-5 sm:px-6">
-        <Link href="/" aria-label="Close and go home" className="press grid h-10 w-10 shrink-0 place-items-center rounded-full text-ink/60 hover:bg-ink/5 hover:text-ink">
+        <Link href="/" aria-label="Close and go home" className="press grid h-10 w-10 shrink-0 place-items-center rounded-xl text-moss hover:bg-oat hover:text-ink">
           <X size={22} />
         </Link>
-        <p className="mono text-[0.78rem] uppercase text-moss">Book a tour</p>
+        <p className="mono text-[0.78rem] text-moss">Book a tour</p>
       </header>
 
       <main id="main" className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pb-36 pt-10 sm:px-6 sm:pt-16">
@@ -105,10 +105,10 @@ export function Booking({
               transition={{ type: "spring", duration: 0.6, bounce: 0.2 }}
               className="flex flex-col items-center text-center"
             >
-              <span className="grid h-16 w-16 place-items-center rounded-full bg-porch text-ink shadow-[0_0_40px_rgb(240_165_58/.55)]">
+              <span className="grid h-16 w-16 place-items-center rounded-full bg-porch text-white">
                 <CalendarCheck size={28} />
               </span>
-              <h1 className="display-2 mt-7 text-[clamp(2.2rem,5.6vw,3.6rem)]" style={{ textWrap: "balance" }}>
+              <h1 className="mt-6 text-[clamp(1.9rem,5vw,2.8rem)] font-extrabold leading-tight tracking-[-0.03em]" style={{ textWrap: "balance" }}>
                 See you {done.when}.
               </h1>
               <p className="mt-4 max-w-md text-[1.05rem] text-ink/70" style={{ textWrap: "pretty" }}>
@@ -120,7 +120,7 @@ export function Booking({
                 .
               </p>
               <div className="mt-8 flex flex-col items-center gap-2">
-                <p className="mono text-[0.72rem] uppercase text-moss">Add it to your calendar</p>
+                <p className="mono text-[0.8rem] text-moss">Add it to your calendar</p>
                 <div className="flex flex-wrap justify-center gap-2">
                   <a href={done.cal.google} target="_blank" rel="noopener noreferrer" className="btn btn-ghost press !h-11 !px-5">
                     <CalendarPlus size={16} /> Google Calendar
@@ -220,7 +220,7 @@ export function Booking({
                                 }}
                                 className={`${tile(on)} !w-[4.6rem] shrink-0 !items-center !px-2 !py-3.5 text-center`}
                               >
-                                <span className="mono text-[0.72rem] uppercase text-ink/60">{c.weekday}</span>
+                                <span className="mono text-[0.8rem] text-ink/60">{c.weekday}</span>
                                 <span className="mt-0.5 text-[1.5rem] font-semibold leading-none tabular">{c.day}</span>
                                 <span className="mt-1 text-[0.78rem] text-ink/60">{c.month}</span>
                               </button>
@@ -270,7 +270,7 @@ export function Booking({
                             type="button"
                             aria-pressed={program === v}
                             onClick={() => setProgram(program === v ? undefined : v)}
-                            className={`press h-11 rounded-full px-4 text-[0.95rem] font-medium ring-1 transition-colors ${program === v ? "bg-ink text-white ring-ink" : "bg-paper ring-line hover:ring-line-strong"}`}
+                            className={`press h-11 rounded-xl px-4 text-[0.95rem] font-medium ring-1 transition-colors ${program === v ? "bg-porch/[.06] text-porch-deep ring-2 ring-porch" : "bg-paper ring-line hover:ring-line-strong"}`}
                           >
                             {label}
                           </button>
@@ -285,7 +285,7 @@ export function Booking({
                         rows={3}
                         maxLength={1000}
                         placeholder="Coming with a family member, need a ramp, running late…"
-                        className="w-full resize-none rounded-2xl bg-paper p-5 text-[1.05rem] ring-1 ring-line outline-none transition-shadow placeholder:text-ink/60 focus:ring-2 focus:ring-pine"
+                        className="w-full resize-none rounded-2xl bg-paper p-5 text-[1.05rem] ring-1 ring-line outline-none transition-shadow placeholder:text-ink/60 focus:ring-2 focus:ring-porch"
                       />
                     </label>
                   </div>
@@ -312,7 +312,7 @@ export function Booking({
                 type="button"
                 onClick={step === "you" ? submit : () => { setError(null); setStep(step === "house" ? "when" : "you"); }}
                 disabled={(step === "house" ? !house : step === "when" ? !time : !canSend) || pending}
-                className="btn press !h-12 min-w-[9.5rem] shrink-0 bg-ink text-white shadow-[0_4px_0_#000] transition-[transform,box-shadow,opacity] active:translate-y-[3px] active:shadow-[0_1px_0_#000] disabled:opacity-35 disabled:shadow-none"
+                className="btn btn-primary press min-w-[9.5rem] shrink-0 disabled:opacity-35"
               >
                 {pending ? <Loader2 size={18} className="animate-spin" /> : step === "you" ? "Book the tour" : "Continue"}
               </button>

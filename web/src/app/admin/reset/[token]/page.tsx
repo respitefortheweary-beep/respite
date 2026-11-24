@@ -15,9 +15,9 @@ export default async function ResetPage({ params }: { params: Promise<{ token: s
     return (
       <AuthShell>
         <div className={authCard}>
-          <p className="mono text-[0.7rem] uppercase tracking-[0.02em] text-white/55">Reset link</p>
-          <h1 className="mt-2 text-[1.5rem] font-semibold leading-tight tracking-[-0.03em]">This link has run out.</h1>
-          <p className="mt-2 text-[0.93rem] leading-snug text-white/60 [text-wrap:pretty]">
+          <p className="text-[0.85rem] font-semibold text-porch">Reset link</p>
+          <h1 className="mt-2 text-[1.5rem] font-extrabold leading-tight tracking-[-0.03em]">This link has run out.</h1>
+          <p className="mt-2 text-[0.93rem] leading-snug text-moss [text-wrap:pretty]">
             Reset links work once, for one hour. Ask for a fresh one and open the newest email.
           </p>
           <Link href="/admin/forgot" className={authButton}>

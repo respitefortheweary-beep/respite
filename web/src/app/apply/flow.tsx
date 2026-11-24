@@ -4,7 +4,6 @@ import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { X, ArrowLeft, Check, User, Users, Briefcase, Medal, Sprout, Armchair, Loader2 } from "lucide-react";
 import { submitRequest, type RequestInput } from "./actions";
-import { House, WindowRow } from "@/components/house";
 import type { BedState } from "@/lib/availability";
 import { money, shortDate } from "@/lib/format";
 
@@ -80,17 +79,16 @@ export function Flow({ rooms, initialRoom, initialFor, phone }: { rooms: RoomOpt
     <div className="flex min-h-dvh flex-col bg-white">
       {/* Top bar: close + progress */}
       <header className="mx-auto flex w-full max-w-3xl items-center gap-4 px-4 pt-5 sm:px-6">
-        <Link href="/" aria-label="Close and go home" className="press grid h-10 w-10 shrink-0 place-items-center rounded-full text-ink/60 hover:bg-ink/5 hover:text-ink">
+        <Link href="/" aria-label="Close and go home" className="press grid h-10 w-10 shrink-0 place-items-center rounded-xl text-moss hover:bg-oat hover:text-ink">
           <X size={22} />
         </Link>
-        <div className="relative h-3.5 flex-1 overflow-hidden rounded-full bg-ink/10" role="progressbar" aria-label="Progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
+        <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-oat" role="progressbar" aria-label="Progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
           <motion.div
             className="absolute inset-y-0 left-0 rounded-full bg-porch"
             initial={false}
             animate={{ width: `${Math.max(progress * 100, 4)}%` }}
             transition={reduce ? { duration: 0 } : { type: "spring", duration: 0.6, bounce: 0.25 }}
           >
-            <span className="absolute inset-x-2 top-[3px] h-[3px] rounded-full bg-paper/30" />
           </motion.div>
         </div>
       </header>
@@ -168,15 +166,14 @@ export function Flow({ rooms, initialRoom, initialFor, phone }: { rooms: RoomOpt
                         >
                           <span className="flex w-full items-start justify-between gap-3">
                             <span>
-                              {r.house && <span className="mono block text-[0.7rem] uppercase tracking-[0.02em] text-ink/55">{r.house}</span>}
+                              {r.house && <span className="mono block text-[0.8rem] text-ink/55">{r.house}</span>}
                               <span className="block text-[1.05rem] font-semibold">{r.name}</span>
                               <span className="block text-[0.9rem] text-ink/60">
                                 {r.kind === "PRIVATE" ? "Private" : "Shared"} · {r.floor === "Ground" ? "No stairs" : "Upstairs"} · {money(r.rentCents)}/mo
                               </span>
                             </span>
-                            <WindowRow states={r.states} size={9} />
                           </span>
-                          <span className={`mt-3 block text-[0.85rem] font-medium ${r.open ? "text-pine" : "text-ink/60"}`}>
+                          <span className={`mt-3 block text-[0.85rem] font-medium ${r.open ? "text-porch" : "text-moss"}`}>
                             {r.open ? `${r.open} open now` : r.soon ? `Opens ${shortDate(r.soon)}` : "Full — waitlist"}
                           </span>
                         </button>
@@ -242,7 +239,7 @@ export function Flow({ rooms, initialRoom, initialFor, phone }: { rooms: RoomOpt
                     rows={5}
                     maxLength={1500}
                     placeholder={data.forWhom === "PROFESSIONAL" ? "Discharge date, mobility needs, best time to call…" : "Questions, timing, anything that would help…"}
-                    className="w-full resize-none rounded-[22px] bg-paper p-5 text-[1.05rem] ring-1 ring-line outline-none transition-shadow placeholder:text-ink/60 focus:ring-2 focus:ring-pine"
+                    className="w-full resize-none rounded-2xl bg-paper p-5 text-[1.05rem] ring-1 ring-line outline-none transition-shadow placeholder:text-ink/60 focus:ring-2 focus:ring-porch"
                   />
                   <Summary data={data} rooms={rooms} />
                 </Q>
@@ -269,7 +266,7 @@ export function Flow({ rooms, initialRoom, initialFor, phone }: { rooms: RoomOpt
                 type="button"
                 onClick={isLast ? submit : () => go(1)}
                 disabled={!canContinue[step] || pending}
-                className="btn press !h-12 min-w-[9.5rem] bg-ink text-white shadow-[0_4px_0_#000] transition-[transform,box-shadow,opacity] active:translate-y-[3px] active:shadow-[0_1px_0_#000] disabled:opacity-35 disabled:shadow-none"
+                className="btn btn-primary press min-w-[9.5rem] disabled:opacity-35"
               >
                 {pending ? <Loader2 size={18} className="animate-spin" /> : isLast ? "Send request" : "Continue"}
               </button>
@@ -283,14 +280,14 @@ export function Flow({ rooms, initialRoom, initialFor, phone }: { rooms: RoomOpt
 
 export const tile = (on: boolean) =>
   `press group flex w-full flex-col items-start rounded-2xl bg-paper p-5 text-left ring-1 transition-[box-shadow,background-color] duration-200 ${
-    on ? "ring-2 ring-ink bg-[#fff8ea] shadow-[0_3px_0_var(--ink)]" : "ring-line shadow-[0_3px_0_rgb(23_33_28/.12)] hover:ring-line-strong"
+    on ? "ring-2 ring-porch bg-porch/[.05]" : "ring-line hover:ring-line-strong hover:bg-oat/60"
   }`;
 
 export function Q({ title, hint, children }: { title: string; hint?: React.ReactNode; children: React.ReactNode }) {
   return (
     <section>
-      <h1 tabIndex={-1} className="display-2 text-[clamp(2.1rem,5.4vw,3.4rem)] outline-none">{title}</h1>
-      {hint && <p className="mt-3 text-[1.05rem] text-ink/60">{hint}</p>}
+      <h1 tabIndex={-1} className="text-[clamp(1.8rem,4.5vw,2.6rem)] font-extrabold leading-tight tracking-[-0.03em] outline-none">{title}</h1>
+      {hint && <p className="mt-2 text-[1.05rem] text-moss">{hint}</p>}
       <div className="mt-9">{children}</div>
     </section>
   );
@@ -304,7 +301,7 @@ function Choices({ value, onPick, options }: { value?: string; onPick: (v: strin
         return (
           <button key={v} type="button" onClick={() => onPick(v)} aria-pressed={on} className={`${tile(on)} !flex-row !items-center gap-4`}>
             {Icon && (
-              <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl transition-colors ${on ? "bg-porch text-ink" : "bg-oat text-ink"}`}>
+              <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl transition-colors ${on ? "bg-porch text-white" : "bg-oat text-ink"}`}>
                 <Icon size={22} />
               </span>
             )}
@@ -312,7 +309,7 @@ function Choices({ value, onPick, options }: { value?: string; onPick: (v: strin
               <span className="block text-[1.08rem] font-semibold">{label}</span>
               {sub && <span className="block text-[0.92rem] text-ink/60">{sub}</span>}
             </span>
-            <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full transition-[transform,opacity] duration-200 ease-[var(--ease-out)] ${on ? "scale-100 bg-pine text-paper opacity-100" : "scale-75 opacity-0"}`}>
+            <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full transition-[transform,opacity] duration-200 ease-[var(--ease-out)] ${on ? "scale-100 bg-porch text-white opacity-100" : "scale-75 opacity-0"}`}>
               <Check size={15} strokeWidth={3} />
             </span>
           </button>
@@ -334,7 +331,7 @@ export function Field({ label, value, onChange, type = "text", ...rest }: { labe
         type={type}
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value)}
-        className="h-14 w-full rounded-2xl bg-paper px-5 text-[1.05rem] ring-1 ring-line outline-none transition-shadow placeholder:text-ink/60 focus:ring-2 focus:ring-pine"
+        className="h-14 w-full rounded-2xl bg-paper px-5 text-[1.05rem] ring-1 ring-line outline-none transition-shadow placeholder:text-ink/60 focus:ring-2 focus:ring-porch"
         {...rest}
       />
     </label>
@@ -350,7 +347,7 @@ function Summary({ data, rooms }: { data: Data; rooms: RoomOpt[] }) {
     data.referrerName ? ["Referred by", `${data.referrerName}${data.referrerOrg ? `, ${data.referrerOrg}` : ""}`] : null,
   ].filter(Boolean) as [string, string][];
   return (
-    <dl className="mt-6 divide-y divide-line rounded-[22px] bg-paper/60 px-5 ring-1 ring-line">
+    <dl className="mt-6 divide-y divide-line rounded-2xl bg-oat px-5 ring-1 ring-line">
       {rows.map(([k, v]) => (
         <div key={k} className="flex justify-between gap-4 py-3 text-[0.95rem]">
           <dt className="text-ink/60">{k}</dt>
@@ -362,7 +359,6 @@ function Summary({ data, rooms }: { data: Data; rooms: RoomOpt[] }) {
 }
 
 function Done({ name, rooms, phone }: { name: string; rooms: RoomOpt[]; phone: { label: string; href: string } }) {
-  const states = rooms.flatMap((r) => r.states);
   return (
     <motion.section
       initial={{ opacity: 0, scale: 0.97 }}
@@ -370,10 +366,11 @@ function Done({ name, rooms, phone }: { name: string; rooms: RoomOpt[]; phone: {
       transition={{ type: "spring", duration: 0.6, bounce: 0.2 }}
       className="flex flex-col items-center text-center"
     >
-      {/* Every window lights up for the celebration */}
-      <House states={states.slice(0, 6).map(() => "open")} className="w-64 sm:w-80" />
-      <h1 tabIndex={-1} className="display-2 mt-6 text-[clamp(2.4rem,6vw,3.8rem)] outline-none">Request sent, {name}.</h1>
-      <p className="mt-4 max-w-md text-[1.08rem] text-ink/70">
+      <span className="grid h-16 w-16 place-items-center rounded-full bg-porch text-white">
+        <Check size={30} strokeWidth={3} />
+      </span>
+      <h1 tabIndex={-1} className="mt-6 text-[clamp(1.9rem,5vw,2.8rem)] font-extrabold leading-tight tracking-[-0.03em] outline-none">Request sent, {name}.</h1>
+      <p className="mt-3 max-w-md text-[1.05rem] text-moss">
         We&apos;ll call within one business day. If it&apos;s urgent, call us at{" "}
         <a href={phone.href} className="font-semibold text-ink underline underline-offset-4">
           {phone.label}

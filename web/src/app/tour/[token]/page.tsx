@@ -26,13 +26,13 @@ export default async function YourTour({ params, searchParams }: { params: Promi
 
   return (
     <Shell>
-      <p className="mono text-[0.72rem] uppercase text-white/55">{tour.status === "CANCELLED" ? "Cancelled" : live ? "Your tour" : "Past tour"}
+      <p className="text-[0.85rem] font-semibold text-porch">{tour.status === "CANCELLED" ? "Cancelled" : live ? "Your tour" : "Past tour"}
         {tour.house && ` · ${tour.house.name}`}
       </p>
       <h1 className="display-2 mt-3 text-[clamp(2rem,7vw,2.8rem)]" style={{ textWrap: "balance" }}>
         {tour.when}
       </h1>
-      <p className="mx-auto mt-4 max-w-sm text-[0.98rem] leading-relaxed text-white/60" style={{ textWrap: "pretty" }}>
+      <p className="mx-auto mt-4 max-w-sm text-[0.98rem] leading-relaxed text-moss" style={{ textWrap: "pretty" }}>
         {tour.status === "CANCELLED"
           ? `This tour is cancelled, ${tour.firstName}. Pick another time whenever you're ready.`
           : live
@@ -41,13 +41,13 @@ export default async function YourTour({ params, searchParams }: { params: Promi
       </p>
 
       {live && !cancel && (
-        <p className="mt-6 text-[0.9rem] text-white/55">
+        <p className="mt-6 text-[0.9rem] text-moss">
           Add it to{" "}
-          <a href={cal.google} target="_blank" rel="noopener noreferrer" className="font-medium text-white underline decoration-white/30 underline-offset-4 hover:decoration-white">
+          <a href={cal.google} target="_blank" rel="noopener noreferrer" className="font-semibold text-ink underline decoration-ink/30 underline-offset-4 hover:decoration-ink">
             Google Calendar
           </a>{" "}
           or{" "}
-          <a href={cal.ics} className="font-medium text-white underline decoration-white/30 underline-offset-4 hover:decoration-white">
+          <a href={cal.ics} className="font-semibold text-ink underline decoration-ink/30 underline-offset-4 hover:decoration-ink">
             Apple and Outlook
           </a>
         </p>

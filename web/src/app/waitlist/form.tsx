@@ -14,9 +14,9 @@ const PROGRAMS: [Program, string][] = [
   ["SENIOR", "Independent senior"],
 ];
 
-export function WaitlistForm({ rooms, initialRoom, openBeds, phone }: { rooms: RoomOpt[]; initialRoom?: string; openBeds: number; phone: { label: string; href: string } }) {
+export function WaitlistForm({ rooms, initialRoom, initialEmail, openBeds, phone }: { rooms: RoomOpt[]; initialRoom?: string; initialEmail?: string; openBeds: number; phone: { label: string; href: string } }) {
   const [room, setRoom] = useState(rooms.some((r) => r.slug === initialRoom) ? initialRoom! : "");
-  const [form, setForm] = useState({ name: "", email: "", phone: "" });
+  const [form, setForm] = useState({ name: "", email: (initialEmail ?? "").slice(0, 200), phone: "" });
   const [program, setProgram] = useState<Program | undefined>();
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<{ firstName: string; again: boolean } | null>(null);
@@ -37,10 +37,10 @@ export function WaitlistForm({ rooms, initialRoom, openBeds, phone }: { rooms: R
   return (
     <div className="flex min-h-dvh flex-col bg-white">
       <header className="mx-auto flex w-full max-w-3xl items-center gap-4 px-4 pt-5 sm:px-6">
-        <Link href="/" aria-label="Close and go home" className="press grid h-10 w-10 shrink-0 place-items-center rounded-full text-ink/60 hover:bg-ink/5 hover:text-ink">
+        <Link href="/" aria-label="Close and go home" className="press grid h-10 w-10 shrink-0 place-items-center rounded-xl text-moss hover:bg-oat hover:text-ink">
           <X size={22} />
         </Link>
-        <p className="mono text-[0.78rem] uppercase text-moss">Waitlist</p>
+        <p className="mono text-[0.78rem] text-moss">Waitlist</p>
       </header>
 
       <main id="main" className="mx-auto w-full max-w-3xl flex-1 px-4 pb-24 pt-10 sm:px-6 sm:pt-16">
@@ -51,10 +51,10 @@ export function WaitlistForm({ rooms, initialRoom, openBeds, phone }: { rooms: R
             transition={{ type: "spring", duration: 0.6, bounce: 0.2 }}
             className="flex flex-col items-center text-center"
           >
-            <span className="grid h-16 w-16 place-items-center rounded-full bg-porch text-ink shadow-[0_0_40px_rgb(240_165_58/.55)]">
+            <span className="grid h-16 w-16 place-items-center rounded-full bg-porch text-white">
               <BellRing size={28} />
             </span>
-            <h1 className="display-2 mt-7 text-[clamp(2.2rem,5.6vw,3.6rem)]" style={{ textWrap: "balance" }}>
+            <h1 className="mt-6 text-[clamp(1.9rem,5vw,2.8rem)] font-extrabold leading-tight tracking-[-0.03em]" style={{ textWrap: "balance" }}>
               {done.again ? `Updated, ${done.firstName}.` : `You're on the list, ${done.firstName}.`}
             </h1>
             <p className="mt-4 max-w-md text-[1.05rem] text-ink/70" style={{ textWrap: "pretty" }}>
@@ -107,7 +107,7 @@ export function WaitlistForm({ rooms, initialRoom, openBeds, phone }: { rooms: R
                         type="button"
                         aria-pressed={program === v}
                         onClick={() => setProgram(program === v ? undefined : v)}
-                        className={`press h-11 rounded-full px-4 text-[0.95rem] font-medium ring-1 transition-colors ${program === v ? "bg-ink text-white ring-ink" : "bg-paper ring-line hover:ring-line-strong"}`}
+                        className={`press h-11 rounded-xl px-4 text-[0.95rem] font-medium ring-1 transition-colors ${program === v ? "bg-porch/[.06] text-porch-deep ring-2 ring-porch" : "bg-paper ring-line hover:ring-line-strong"}`}
                       >
                         {label}
                       </button>
@@ -123,7 +123,7 @@ export function WaitlistForm({ rooms, initialRoom, openBeds, phone }: { rooms: R
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <button
                   disabled={!canSend || pending}
-                  className="btn press !h-12 min-w-[12rem] bg-ink text-white shadow-[0_4px_0_#000] transition-[transform,box-shadow,opacity] active:translate-y-[3px] active:shadow-[0_1px_0_#000] disabled:opacity-35 disabled:shadow-none"
+                  className="btn btn-primary press min-w-[12rem] disabled:opacity-35"
                 >
                   {pending ? <Loader2 size={18} className="animate-spin" /> : "Add me to the waitlist"}
                 </button>

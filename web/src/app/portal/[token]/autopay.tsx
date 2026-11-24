@@ -8,7 +8,7 @@ function Submit({ children, quiet }: { children: React.ReactNode; quiet?: boolea
   return (
     <button
       disabled={pending}
-      className={`press inline-flex h-11 items-center justify-center gap-2 rounded-full px-5 text-[0.92rem] font-medium disabled:opacity-70 ${quiet ? "text-moss ring-1 ring-line hover:bg-ink/[.04] hover:text-ink" : "bg-ink text-white hover:bg-[#2a2d2b]"}`}
+      className={`press inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-[0.92rem] font-medium disabled:opacity-70 ${quiet ? "text-moss ring-1 ring-line hover:bg-ink/[.04] hover:text-ink" : "bg-ink text-white hover:bg-[#2a2d2b]"}`}
     >
       {pending && <Loader2 size={15} className="animate-spin" />}
       {pending ? "One moment" : children}
@@ -30,7 +30,7 @@ export function Autopay({
       <h2 className="eyebrow">Autopay</h2>
       <div className="mt-3 rounded-2xl bg-paper p-5 ring-1 ring-line">
         <div className="flex items-start gap-3">
-          <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${on ? "bg-porch text-ink" : "bg-ink/[.06] text-moss"}`}>
+          <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${on ? "bg-porch text-white" : "bg-ink/[.06] text-moss"}`}>
             <CalendarCheck size={17} />
           </span>
           <div className="min-w-0 flex-1">
@@ -52,7 +52,7 @@ export function Autopay({
           {on && !confirming && (
             <>
               {(failed || stripe) && <form action={start}><Submit quiet>Use a different card</Submit></form>}
-              <button type="button" onClick={() => setConfirming(true)} className="press inline-flex h-11 items-center rounded-full px-4 text-[0.92rem] text-moss hover:text-ink">
+              <button type="button" onClick={() => setConfirming(true)} className="press inline-flex h-11 items-center rounded-xl px-4 text-[0.92rem] text-moss hover:text-ink">
                 Turn off
               </button>
             </>
@@ -60,7 +60,7 @@ export function Autopay({
           {on && confirming && (
             <>
               <form action={stop}><Submit>Yes, turn it off</Submit></form>
-              <button type="button" onClick={() => setConfirming(false)} className="press inline-flex h-11 items-center rounded-full px-4 text-[0.92rem] text-moss hover:text-ink">
+              <button type="button" onClick={() => setConfirming(false)} className="press inline-flex h-11 items-center rounded-xl px-4 text-[0.92rem] text-moss hover:text-ink">
                 Keep it on
               </button>
             </>

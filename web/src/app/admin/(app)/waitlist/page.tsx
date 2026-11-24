@@ -23,7 +23,7 @@ export default async function Waitlist() {
       <div className="min-w-0 flex-1">
         <p className="flex flex-wrap items-baseline gap-x-2 font-medium leading-snug">
           {w.name}
-          <span className="mono text-[0.72rem] font-normal uppercase text-moss">joined {timeAgo(w.createdAt)}</span>
+          <span className="mono text-[0.8rem] font-normal text-moss">joined {timeAgo(w.createdAt)}</span>
         </p>
         <p className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[0.86rem] text-moss">
           <a href={`mailto:${w.email}`} className="inline-flex min-w-0 items-center gap-1.5 truncate hover:text-ink">

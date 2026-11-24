@@ -81,7 +81,7 @@ export function ChargeActions({ record, voidIt, remind, planned, amountCents }: 
           className="absolute right-0 top-full z-30 mt-1 w-60 origin-top-right rounded-2xl bg-paper p-1.5 text-left shadow-[0_18px_44px_-14px_rgb(15_17_16/.45)] ring-1 ring-line-strong [animation:menu-pop_150ms_var(--ease-out)]"
         >
           <label className="block px-3 pb-2 pt-2">
-            <span className="mono text-[0.68rem] uppercase tracking-[0.02em] text-moss">Amount received</span>
+            <span className="mono text-[0.78rem] text-moss">Amount received</span>
             <span className="mt-1 flex h-10 items-center rounded-lg bg-ink/[.04] px-3 ring-1 ring-line focus-within:ring-ink">
               <span className="mono text-moss">$</span>
               <input
@@ -93,7 +93,7 @@ export function ChargeActions({ record, voidIt, remind, planned, amountCents }: 
               />
             </span>
           </label>
-          <p className="mono px-3 pb-1 pt-1 text-[0.68rem] uppercase tracking-[0.02em] text-moss">Paid in person with</p>
+          <p className="mono px-3 pb-1 pt-1 text-[0.78rem] text-moss">Paid in person with</p>
           {OFFLINE.map(([v, label]) => (
             <button
               key={v}
@@ -110,7 +110,7 @@ export function ChargeActions({ record, voidIt, remind, planned, amountCents }: 
               }
             >
               <span className="flex-1">{label}</span>
-              {v === planned && <span className="mono rounded-full bg-porch-glow px-2 py-0.5 text-[0.64rem] uppercase text-ink">They said</span>}
+              {v === planned && <span className="mono rounded-full bg-porch-glow px-2 py-0.5 text-[0.75rem] text-ink">They said</span>}
             </button>
           ))}
           <div className="my-1.5 h-px bg-line" />

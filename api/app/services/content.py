@@ -128,30 +128,28 @@ DEFAULTS: dict[str, dict] = {
         "address": "Chester, Virginia 23831",
         "town": "Chester, Virginia",
         "tourNote": "Tours by appointment.",
-        "footerBlurb": "Sober, shared homes in and around Chester, Virginia, for veterans, people in recovery and independent seniors.",
+        "footerBlurb": "Sober, shared homes for veterans, people in recovery and independent seniors.",
         "footerTagline": "Real support. Lasting hope.",
     },
     "home": {
-        "heroLine1": "The porch light",
-        "heroLine2": "is on.",
-        "heroText": "Sober, shared homes in and around Chester, Virginia for veterans, people in recovery and independent seniors. Rent includes rides to appointments and help with the paperwork.",
+        "heroLine1": "A calm, sober home",
+        "heroLine2": "while you get back on your feet",
+        "heroText": "Furnished rooms in shared houses for veterans, people in recovery and independent seniors. Rent by the bed or by the room, paid monthly.",
         "statement": "Quiet houses with a room waiting. Rides to the VA, help with the paperwork, homes that stay sober, and people around the kitchen table when you want them.",
-        "includedTitle": "More than a room.",
-        "includedText": "Rent covers a furnished room and the help that makes a fresh start stick. We don't provide medical care. We make sure residents get to the people who do.",
+        "includedTitle": "What's included",
+        "includedText": "Every house comes furnished, with utilities and Wi-Fi included. Rent is paid monthly.",
         "included": [
-            {"label": "Rides", "title": "To what matters", "body": "VA appointments, the pharmacy, meetings, interviews and the grocery store. The Richmond VA Medical Center is about 15 minutes away."},
-            {"label": "Mental health", "title": "Someone to call", "body": "We find counselors, book the appointment and follow up afterwards."},
-            {"label": "Social work", "title": "The paperwork, handled", "body": "Benefits, IDs, applications and community referrals."},
-            {"label": "Services", "title": "We know who to call", "body": "Outpatient programs, home care, food assistance and job training in Chesterfield County."},
-            {"label": "The home", "title": "Furnished and ready", "body": "Bed, dresser and linens in every room. Shared kitchen, living room, laundry and Wi‑Fi."},
-            {"label": "House rules", "title": "Sober, calm, fair", "body": "No alcohol or drugs anywhere on the property. Rules everyone agrees to before moving in."},
+            {"label": "The home", "title": "Furnished and ready", "body": "Bed, dresser and linens in every room. Shared kitchen, laundry and Wi-Fi."},
+            {"label": "Rides", "title": "Rides to what matters", "body": "VA appointments, the pharmacy, meetings and the grocery store."},
+            {"label": "Benefits", "title": "VA benefits accepted", "body": "We help with benefits, IDs and the rest of the paperwork."},
+            {"label": "House rules", "title": "Sober, calm, fair", "body": "No alcohol or drugs on the property. House rules agreed before move-in."},
         ],
-        "referralsLine1": "Placing a client?",
-        "referralsLine2": "See open beds before you call.",
-        "referralsText": "Availability on this site is live. Send a referral in two minutes and we'll call you back within one business day.",
-        "closingLine1": "Come see where you'd live",
+        "referralsLine1": "Referring a client?",
+        "referralsLine2": "See which beds are free before you call.",
+        "referralsText": "This site shows which beds are free right now. Send a referral in two minutes and we will call you back within one business day.",
+        "closingLine1": "Come and see a house",
         "closingLine2": "before you decide.",
-        "closingText": "Request a room and we'll set up a tour at a time that suits you. Rather talk first? Give us a call.",
+        "closingText": "Request a room and we will set up a tour at a time that suits you. Would you rather talk first? Give us a call.",
         "photos": {
             "kitchen": {"src": "/images/kitchen.webp", "alt": "Morning coffee on the kitchen table", "caption": "The kitchen table, 7:40 a.m."},
             "road": {"src": "/images/road.webp", "alt": "A quiet country road between oak trees and white fences on a clear morning", "caption": "The drive to the VA, about 15 minutes"},
@@ -163,7 +161,7 @@ DEFAULTS: dict[str, dict] = {
         "chapters": [
             {
                 "key": "VETERAN", "word": "Veterans", "line": "who want a steady place to land.",
-                "body": "A respectful, structured home after service. We help with VA appointments, benefits paperwork and rides to the Richmond VA Medical Center, about 15 minutes away.",
+                "body": "A respectful, structured home after service. We help with VA appointments, benefits paperwork and rides to the VA.",
                 "referred": "VA social workers, HUD-VASH case managers, veteran service officers",
                 "good": ["Living independently", "Wants community, not a facility", "Paying with VA benefits is fine"],
                 "photo": {"src": "/images/veteran.webp", "alt": "", "caption": ""},
@@ -272,6 +270,61 @@ OLD_WORDING: dict[str, dict[str, tuple[str, str]]] = {
 }
 
 
+# The defaults before the redesign. A saved section still holding one of these exact values is moved to
+# today's default on startup, the same way as OLD_WORDING. Anything the owners wrote themselves is left alone.
+PRE_REDESIGN: dict[str, dict] = {
+    "house": {"footerBlurb": "Sober, shared homes in and around Chester, Virginia, for veterans, people in recovery and independent seniors."},
+    "home": {
+        "heroLine1": "The porch light",
+        "heroLine2": "is on.",
+        "heroText": "Sober, shared homes in and around Chester, Virginia for veterans, people in recovery and independent seniors. Rent includes rides to appointments and help with the paperwork.",
+        "includedTitle": "More than a room.",
+        "includedText": "Rent covers a furnished room and the help that makes a fresh start stick. We don't provide medical care. We make sure residents get to the people who do.",
+        "included": [
+                {
+                        "label": "Rides",
+                        "title": "To what matters",
+                        "body": "VA appointments, the pharmacy, meetings, interviews and the grocery store. The Richmond VA Medical Center is about 15 minutes away."
+                },
+                {
+                        "label": "Mental health",
+                        "title": "Someone to call",
+                        "body": "We find counselors, book the appointment and follow up afterwards."
+                },
+                {
+                        "label": "Social work",
+                        "title": "The paperwork, handled",
+                        "body": "Benefits, IDs, applications and community referrals."
+                },
+                {
+                        "label": "Services",
+                        "title": "We know who to call",
+                        "body": "Outpatient programs, home care, food assistance and job training in Chesterfield County."
+                },
+                {
+                        "label": "The home",
+                        "title": "Furnished and ready",
+                        "body": "Bed, dresser and linens in every room. Shared kitchen, living room, laundry and Wi‑Fi."
+                },
+                {
+                        "label": "House rules",
+                        "title": "Sober, calm, fair",
+                        "body": "No alcohol or drugs anywhere on the property. Rules everyone agrees to before moving in."
+                }
+        ],
+        "referralsLine1": "Placing a client?",
+        "referralsLine2": "See open beds before you call.",
+        "referralsText": "Availability on this site is live. Send a referral in two minutes and we'll call you back within one business day.",
+        "closingLine1": "Come see where you'd live",
+        "closingLine2": "before you decide.",
+        "closingText": "Request a room and we'll set up a tour at a time that suits you. Rather talk first? Give us a call."
+    },
+}
+PRE_REDESIGN_CHAPTER = {
+    "VETERAN": "A respectful, structured home after service. We help with VA appointments, benefits paperwork and rides to the Richmond VA Medical Center, about 15 minutes away.",
+}
+
+
 OLD_PORCH_WORDS = {
     "alt": ("Rocking chairs on the porch at dusk", DEFAULTS["home"]["photos"]["porch"]["alt"]),
     "caption": ("The porch, after supper", DEFAULTS["home"]["photos"]["porch"]["caption"]),
@@ -305,5 +358,36 @@ def refresh_old_wording(db: Session) -> None:
         if hit:
             found.value = json.dumps(data)
             changed = True
+    changed = _move_pre_redesign(db) or changed
     if changed:
         db.commit()
+
+
+def _move_pre_redesign(db: Session) -> bool:
+    """Saved sections still on the pre-redesign defaults get the new wording, field by field."""
+    changed = False
+    for key in ("house", "home", "who"):
+        found = db.get(SiteContent, key)
+        if not found:
+            continue
+        try:
+            data = json.loads(found.value)
+        except ValueError:
+            continue
+        if not isinstance(data, dict):
+            continue
+        hit = False
+        for field, old in PRE_REDESIGN.get(key, {}).items():
+            if data.get(field) == old:
+                data[field] = DEFAULTS[key][field]
+                hit = True
+        if key == "who":
+            defaults = {c["key"]: c for c in DEFAULTS["who"]["chapters"]}
+            for c in data.get("chapters") or []:
+                if isinstance(c, dict) and PRE_REDESIGN_CHAPTER.get(c.get("key")) == c.get("body"):
+                    c["body"] = defaults[c["key"]]["body"]
+                    hit = True
+        if hit:
+            found.value = json.dumps(data)
+            changed = True
+    return changed

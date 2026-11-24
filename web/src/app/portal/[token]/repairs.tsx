@@ -80,7 +80,7 @@ export function Repairs({ token, repairs, phone }: { token: string; repairs: Rep
                 <span>
                   {x.area} · {day(x.createdAt)}
                 </span>
-                <span className={`mono rounded-full px-2 py-0.5 text-[0.66rem] font-medium uppercase ${x.status === "DONE" ? "bg-ink/[.06] text-ink" : "bg-porch-glow text-ink"}`}>
+                <span className={`mono rounded-full px-2 py-0.5 text-[0.75rem] font-medium ${x.status === "DONE" ? "bg-ink/[.06] text-ink" : "bg-porch-glow text-ink"}`}>
                   {STATUS[x.status]}
                 </span>
               </p>

@@ -40,7 +40,7 @@ export function StatusSteps({ id, status }: { id: string; status: string }) {
                 className={`press flex h-12 w-full items-center gap-3 rounded-xl px-3 text-left transition-colors duration-150 ${on ? "bg-ink text-white" : "hover:bg-ink/[.05]"}`}
               >
                 <span
-                  className={`mono grid h-6 w-6 shrink-0 place-items-center rounded-full text-[0.72rem] font-medium ${on ? "bg-porch text-ink" : done ? "bg-ink/[.08] text-ink" : "text-moss ring-1 ring-line-strong"}`}
+                  className={`mono grid h-6 w-6 shrink-0 place-items-center rounded-full text-[0.72rem] font-medium ${on ? "bg-porch text-white" : done ? "bg-ink/[.08] text-ink" : "text-moss ring-1 ring-line-strong"}`}
                 >
                   {done ? <Check size={12} strokeWidth={3} /> : i + 1}
                 </span>
@@ -57,11 +57,11 @@ export function StatusSteps({ id, status }: { id: string; status: string }) {
         <button
           type="button"
           onClick={() => set(declined ? "NEW" : "DECLINED")}
-          className="press h-10 rounded-full px-3 text-[0.88rem] text-moss transition-colors hover:bg-ink/[.05] hover:text-ink"
+          className="press h-10 rounded-xl px-3 text-[0.88rem] text-moss transition-colors hover:bg-ink/[.05] hover:text-ink"
         >
           {declined ? "Reopen this request" : "Mark as not a fit"}
         </button>
-        <span className="mono pr-2 text-[0.72rem] uppercase text-moss" aria-live="polite">
+        <span className="mono pr-2 text-[0.8rem] text-moss" aria-live="polite">
           {pending ? "Saving" : declined ? "Not a fit" : ""}
         </span>
       </div>
@@ -92,7 +92,7 @@ export function Notes({ id, initial }: { id: string; initial: string }) {
         placeholder="Call notes, tour time, anything to remember"
         className="block w-full resize-y rounded-xl bg-oat p-3.5 text-[1rem] leading-relaxed outline-none ring-1 ring-transparent transition-shadow placeholder:text-ink/60 focus:bg-paper focus:ring-2 focus:ring-ink sm:text-[0.95rem]"
       />
-      <p className="mono mt-2 h-4 text-[0.72rem] uppercase text-moss" aria-live="polite">
+      <p className="mono mt-2 h-4 text-[0.8rem] text-moss" aria-live="polite">
         {state === "saving" ? "Saving" : state === "saved" ? "Saved" : "Only you can see this"}
       </p>
     </div>
