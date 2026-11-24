@@ -160,6 +160,8 @@ const houseBody = (form: FormData) => ({
   town: str(form, "town").trim(),
   summary: str(form, "summary").trim(),
   hidden: !form.has("visible"),
+  // only forms that show the amenity boxes send the list, so others leave it as it is
+  ...(form.has("amenitiesShown") ? { amenities: form.getAll("amenity").map(String) } : {}),
 });
 
 /** For the one-page Add a house form: makes the house and hands back its id, so its photos and rooms can follow. */

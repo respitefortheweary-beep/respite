@@ -65,7 +65,7 @@ export default async function HouseEdit({ params }: { params: Promise<{ id: stri
             title="About this house"
             hint={`${house.rooms} ${house.rooms === 1 ? "room" : "rooms"} · ${house.beds} ${house.beds === 1 ? "bed" : "beds"} · ${house.open} open`}
           />
-          <HouseForm house={{ id: house.id, name: house.name, address: house.address, town: house.town, summary: house.summary, hidden: house.hidden }} />
+          <HouseForm house={{ id: house.id, name: house.name, address: house.address, town: house.town, summary: house.summary, hidden: house.hidden, amenities: parseList(house.amenities) }} />
         </Card>
         <Card>
           <CardHead title="Photos and videos" hint="Everything people see of the house: outside, shared spaces and the rooms. The cover shows first." />

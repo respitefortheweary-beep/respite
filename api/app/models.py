@@ -11,6 +11,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .db import Base, UtcDateTime, new_id, now
 
+# Every house has these, so new and existing houses start with them ticked.
+STARTER_AMENITIES = '["wifi","furnished","kitchen","living-room","laundry","utilities","rides","services"]'
+
 
 class AdminUser(Base):
     __tablename__ = "AdminUser"
@@ -42,6 +45,8 @@ class House(Base):
     photos: Mapped[str] = mapped_column(Text, default="[]", server_default=text("'[]'"))  # JSON string[], outside and shared spaces
     videos: Mapped[str] = mapped_column(Text, default="[]", server_default=text("'[]'"))  # JSON string[]
     sortOrder: Mapped[int] = mapped_column(Integer, default=0)
+    # what the house offers, as keys from the list in web/src/lib/amenities.ts. Houses start with what every house has.
+    amenities: Mapped[str] = mapped_column(Text, default=STARTER_AMENITIES, server_default=text(f"'{STARTER_AMENITIES}'"))  # JSON string[]
     # hidden houses (and every room in them) stay off the public site
     hidden: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
     createdAt: Mapped[datetime] = mapped_column(UtcDateTime, default=now)

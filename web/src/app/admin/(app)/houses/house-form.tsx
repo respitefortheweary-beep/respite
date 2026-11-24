@@ -3,8 +3,9 @@ import { useActionState } from "react";
 import { saveHouse } from "../../actions";
 import { Label, btnPrimary, input } from "../ui";
 import { SubmitButton } from "../submit";
+import { AMENITY_GROUPS } from "@/lib/amenities";
 
-type HouseFields = { id: string; name: string; address: string; town: string; summary: string; hidden: boolean };
+type HouseFields = { id: string; name: string; address: string; town: string; summary: string; hidden: boolean; amenities: string[] };
 
 function Fields({ house }: { house?: HouseFields }) {
   return (
@@ -42,6 +43,36 @@ function Fields({ house }: { house?: HouseFields }) {
   );
 }
 
+/** Tick what the house has. The house page lists these under "What this house offers". */
+function Amenities({ have }: { have: string[] }) {
+  return (
+    <fieldset className="sm:col-span-2">
+      <legend className="font-medium">What this house offers</legend>
+      <p className="mt-0.5 text-[0.86rem] text-moss">Tick everything the house has. People see the ticked ones on the house page.</p>
+      <input type="hidden" name="amenitiesShown" value="1" />
+      <div className="mt-3 space-y-4">
+        {AMENITY_GROUPS.map((g) => (
+          <div key={g.title}>
+            <p className="mb-2 text-[0.85rem] font-semibold text-moss">{g.title}</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {g.items.map(({ key, label, icon: Icon }) => (
+                <label
+                  key={key}
+                  className="flex cursor-pointer items-center gap-3 rounded-xl bg-white px-3.5 py-2.5 ring-1 ring-line transition-colors hover:bg-oat has-[:checked]:bg-porch/[.07] has-[:checked]:ring-porch/40"
+                >
+                  <input type="checkbox" name="amenity" value={key} defaultChecked={have.includes(key)} className="h-4 w-4 shrink-0 accent-[var(--porch)]" />
+                  <Icon size={17} className="shrink-0 text-ink/70" aria-hidden />
+                  <span className="text-[0.92rem]">{label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
 function Error({ text }: { text?: string }) {
   if (!text) return null;
   return (
@@ -56,6 +87,7 @@ export function HouseForm({ house }: { house: HouseFields }) {
   return (
     <form action={action} className="grid gap-4 p-5 pt-4 sm:grid-cols-2 sm:p-6 sm:pt-4">
       <Fields house={house} />
+      <Amenities have={house.amenities} />
       <Error text={state?.error} />
       <div className="sm:col-span-2">
         <SubmitButton className={`${btnPrimary} w-full disabled:opacity-60 sm:w-auto`} done={state?.error ? undefined : "Saved"}>

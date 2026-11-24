@@ -9,7 +9,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Literal
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError, field_validator
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
@@ -558,6 +558,22 @@ class HouseIn(BaseModel):
     town: str = Field(default="", max_length=80)
     summary: str = Field(default="", max_length=600)
     hidden: bool = False
+    # None leaves the list as it is (the Add a house form doesn't ask for it)
+    amenities: list[str] | None = Field(default=None, max_length=60)
+
+    @field_validator("amenities")
+    @classmethod
+    def _keys(cls, v: list[str] | None) -> list[str] | None:
+        if v is None:
+            return None
+        out = []
+        for k in v:
+            k = k.strip()
+            if not re.fullmatch(r"[a-z0-9-]{1,40}", k):
+                raise ValueError("Unknown amenity")
+            if k not in out:
+                out.append(k)
+        return out
 
 
 @router.post("/houses", status_code=201)
@@ -567,6 +583,8 @@ def create_house(body: HouseIn, db: Session = Depends(get_db)):
         slug=make_slug(db, name), name=name, address=body.address.strip(), town=body.town.strip(),
         summary=body.summary.strip(), hidden=body.hidden, sortOrder=next_sort(db),
     )
+    if body.amenities is not None:
+        house.amenities = json.dumps(body.amenities)
     db.add(house)
     db.commit()
     return row(house)
@@ -577,6 +595,8 @@ def update_house(house_id: str, body: HouseIn, db: Session = Depends(get_db)):
     house = _get(db, House, house_id, "house")
     house.name, house.address, house.town = body.name.strip(), body.address.strip(), body.town.strip()
     house.summary, house.hidden = body.summary.strip(), body.hidden
+    if body.amenities is not None:
+        house.amenities = json.dumps(body.amenities)
     db.commit()
     if not body.hidden:
         waitlist.announce(db)

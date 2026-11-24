@@ -33,7 +33,7 @@ export type BillingPolicy = { lateFeeCents: number; lateFeeAfterDays: number; pa
 /** One property. Rooms belong to a house; `states` and `labels` list its beds in order. */
 export type HouseBrief = { id: string; slug: string; name: string; town: string; address: string; hidden: boolean };
 export type Property = HouseBrief & {
-  summary: string; photos: string; videos: string; sortOrder: number; createdAt: Date;
+  summary: string; photos: string; videos: string; amenities: string; sortOrder: number; createdAt: Date;
   rooms: number; beds: number; open: number; states: BedState[]; labels: string[];
 };
 export type BedView = {

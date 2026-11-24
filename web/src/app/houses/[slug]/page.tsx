@@ -8,6 +8,7 @@ import { longDate, money, parseList } from "@/lib/format";
 import { getHouse } from "@/lib/content";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 import { HouseGallery } from "@/components/house-gallery";
+import { HouseAmenities } from "@/components/house-amenities";
 import { availabilityText } from "@/components/room-card";
 import { HouseCard, houseGrid, openText, priceLines, roomMix } from "@/components/house-card";
 import { JsonLd } from "@/components/json-ld";
@@ -162,12 +163,7 @@ export default async function HousePage({ params }: { params: Promise<{ slug: st
               <p className="mt-4 text-[0.88rem] text-moss">A private room is yours alone. In a shared room you have your own bed and share the room with one or more housemates.</p>
             </section>
 
-            <section className="border-t border-line pt-10">
-              <h2 className="mb-5 text-[1.3rem] font-extrabold tracking-[-0.02em]">Every resident shares</h2>
-              <p className="max-w-2xl text-moss">
-                The kitchen, living room and laundry. Rent also covers utilities, Wi‑Fi, rides to appointments and help connecting to services.
-              </p>
-            </section>
+            <HouseAmenities keys={parseList(home.amenities)} />
 
             <section className="border-t border-line pt-10">
               <h2 className="mb-5 text-[1.3rem] font-extrabold tracking-[-0.02em]">Where it is</h2>
